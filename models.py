@@ -91,7 +91,7 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
 
 class Location(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
-    country=orm.Column(orm.String(50),unique=True,nullable=False)
+    country=orm.Column(orm.String(50),nullable=False)
     city=orm.Column(orm.String(50),unique=True,nullable=False)
     currency_id=orm.Column(orm.Integer,orm.ForeignKey('currency.id'),nullable=False)
     home_purchase=orm.relationship('Home_Purchase',backref=orm.backref('location',lazy='dynamic'))
