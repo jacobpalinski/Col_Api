@@ -1,6 +1,6 @@
 import jwt
 import datetime
-from marshmallow import Schema, fields, pre_load
+from marshmallow import Schema, fields
 from marshmallow import validate
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -82,7 +82,7 @@ class BlacklistToken(orm.Model,ResourceAddUpdateDelete):
 class Currency(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
     abbreviation=orm.Column(orm.String(3),unique=True,nullable=False)
-    conversion_factor=orm.Column(orm.Float,nullable=False)
+    usd_to_local_exchange_rate=orm.Column(orm.Float,nullable=False) # USD is the default currency
     location=orm.relationship('Location',backref=orm.backref('currency',lazy='dynamic'))
 
     def __init__(self,abbreviation,conversion_factor):
@@ -198,7 +198,7 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
 class CurrencySchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     abbreviation=fields.String(required=True,validate=validate.Length(3))
-    conversion_factor=fields.Float()
+    usd_to_local_exchange_rate=fields.Float()
     location=fields.Nested('LocationSchema',only=['country'],many=True)
 
 class LocationSchema(ma.Schema):
