@@ -39,12 +39,15 @@ class Home_Purchase_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            home_purchase = Home_Purchase.query.join(Location, 
-            Home_Purchase.location_id == Location.id)\
+            home_purchase = Home_Purchase.query(Home_Purchase.id,
+            Home_Purchase.property_location, 
+            (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
+            Home_Purchase.mortgage_interest,
+            Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Home_Purchase.property_location.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase,many=True)
+            dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many=True)
             return dumped_home_purchase
         
         elif  None not in (country,city) and abbreviation == None:
@@ -76,23 +79,27 @@ class Home_Purchase_Resource(Resource):
             return dumped_home_purchase
         
         else:
-            home_purchase = Home_Purchase.query.join(Location, 
-            Home_Purchase.location_id == Location.id)\
+            home_purchase = Home_Purchase.query(Home_Purchase.id,
+            Home_Purchase.property_location, 
+            (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
+            Home_Purchase.mortgage_interest,
+            Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase,many = True)
+            dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
             return dumped_home_purchase
 
 class Rent_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id)\
+            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
+            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+            Rent.location_id).join(Location, Rent.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Rent.bedrooms.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent,many = True)
+            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
             return dumped_rent
         
         elif  None not in (country,city) and abbreviation == None:
@@ -124,23 +131,26 @@ class Rent_Resource(Resource):
             return dumped_rent
         
         else:
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id)\
+            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
+            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+            Rent.location_id).join(Location, Rent.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Rent.bedrooms.asc(),Rent.monthly_price.asc()).all().get_or_404()
-            dumped_rent = home_purchase_schema.dump(rent,many = True)
+            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
             return dumped_rent
 
 class Utilities_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            utilities = Utilities.query.join(Location, 
+            utilities = Utilities.query(Utilities.id,Utilities.utility,
+            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+            Utilities.location_id).join(Location, 
             Utilities.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Utilities.utility.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
+            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
             return dumped_utilities
         
         elif  None not in (country,city) and abbreviation == None:
@@ -172,11 +182,14 @@ class Utilities_Resource(Resource):
             return dumped_utilities
         
         else:
-            utilities = Utilities.query.join(Location, 
+            utilities = Utilities.query(Utilities.id,Utilities.utility,
+            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+            Utilities.location_id).join(Location, 
+            Utilities.location_id == Location.id).join(Location, 
             Utilities.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Utilities.utility.asc(),Utilities.monthly_price.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
+            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
             return dumped_utilities
 
 
@@ -184,12 +197,13 @@ class Transportation_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id)\
+            transportation = Transportation.query(Transportation.id,Transportation.type,
+            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Transportation.type.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
+            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
         
         elif  None not in (country,city) and abbreviation == None:
@@ -221,24 +235,28 @@ class Transportation_Resource(Resource):
             return dumped_transportation
         
         else:
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id)\
+            transportation = Transportation.query(Transportation.id,Transportation.type,
+            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
+            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
 
 class Food_and_Beverage_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            food_and_beverage = Food_and_Beverage.query.join(Location, 
-            Food_and_Beverage.location_id == Location.id)\
+            food_and_beverage = Food_and_Beverage.query(Food_and_Beverage.id,
+            Food_and_Beverage.item_category,Food_and_Beverage.purchase_point,
+            Food_and_Beverage.item,
+            (Food_and_Beverage.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Food_and_Beverage.location_id).join(Location, Food_and_Beverage.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Food_and_Beverage.item_category.asc(),
             Food_and_Beverage.purchase_point.asc()).all().get_or_404()
-            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage,many = True)
+            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage._asdict(),many = True)
             return dumped_food_and_beverage
         
         elif  None not in (country,city) and abbreviation == None:
@@ -274,24 +292,28 @@ class Food_and_Beverage_Resource(Resource):
             return dumped_food_and_beverage
         
         else:
-            food_and_beverage = Food_and_Beverage.query.join(Location, 
-            Food_and_Beverage.location_id == Location.id)\
+            food_and_beverage = Food_and_Beverage.query(Food_and_Beverage.id,
+            Food_and_Beverage.item_category,Food_and_Beverage.purchase_point,
+            Food_and_Beverage.item,
+            (Food_and_Beverage.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Food_and_Beverage.location_id).join(Location, Food_and_Beverage.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Food_and_Beverage.item_category.asc(),
             Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404()
-            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage,many = True)
+            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage._asdict(),many = True)
             return dumped_food_and_beverage
 
 class Childcare_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id)\
+            childcare = Childcare.query(Childcare.id, Childcare.type,
+            (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
+            Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Childcare.type.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare,many = True)
+            dumped_childcare = childcare_schema.dump(childcare._asdict(),many = True)
             return dumped_childcare
         
         elif  None not in (country,city) and abbreviation == None:
@@ -323,23 +345,25 @@ class Childcare_Resource(Resource):
             return dumped_childcare
         
         else:
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id)\
+            childcare = Childcare.query(Childcare.id, Childcare.type,
+            (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
+            Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare,many = True)
+            dumped_childcare = childcare_schema.dump(childcare._asdict(),many = True)
             return dumped_childcare
 
 class Apparel_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            apparel = Apparel.query.join(Location, 
-            Apparel.location_id == Location.id)\
+            apparel = Apparel.query(Apparel.id, Apparel.item,
+            (Apparel.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Apparel.location_id).join(Location, Apparel.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Apparel.item.asc()).all().get_or_404()
-            dumped_apparel = apparel_schema.dump(apparel,many = True)
+            dumped_apparel = apparel_schema.dump(apparel._asdict(),many = True)
             return dumped_apparel
         
         elif  None not in (country,city) and abbreviation == None:
@@ -371,23 +395,26 @@ class Apparel_Resource(Resource):
             return dumped_apparel
         
         else:
-            apparel = Apparel.query.join(Location, 
-            Apparel.location_id == Location.id)\
+            apparel = Apparel.query(Apparel.id, Apparel.item,
+            (Apparel.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Apparel.location_id).join(Location, Apparel.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404()
-            dumped_apparel = apparel_schema.dump(apparel,many = True)
+            dumped_apparel = apparel_schema.dump(apparel._asdict(),many = True)
             return dumped_apparel
 
 class Leisure_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
 
         if None not in (country,city,abbreviation):
-            leisure = Leisure.query.join(Location, 
+            leisure = Leisure.query(Leisure.id, Leisure.activity,
+            (Leisure.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Leisure.location_id).join(Location, 
             Leisure.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Leisure.activity.asc()).all().get_or_404()
-            dumped_leisure = leisure_schema.dump(leisure,many = True)
+            dumped_leisure = leisure_schema.dump(leisure._asdict(),many = True)
             return dumped_leisure
         
         elif  None not in (country,city) and abbreviation == None:
@@ -419,11 +446,13 @@ class Leisure_Resource(Resource):
             return dumped_leisure
         
         else:
-            leisure = Leisure.query.join(Location, 
+            leisure = Leisure.query(Leisure.id, Leisure.activity,
+            (Leisure.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Leisure.location_id).join(Location, 
             Leisure.location_id == Location.id)\
             .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
             .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
-            dumped_leisure = leisure_schema.dump(leisure,many = True)
+            dumped_leisure = leisure_schema.dump(leisure._asdict(),many = True)
             return dumped_leisure
 
         
