@@ -1,10 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from httpstatus import HttpStatus
-from models import (orm, ma, Currency, CurrencySchema, Location, LocationSchema, 
-Home_Purchase, Home_PurchaseSchema, Rent, RentSchema, Utilities, UtilitiesSchema,
-Transportation, TransportationSchema, Food_and_Beverage, Food_and_BeverageSchema,
-Childcare, ChildcareSchema, Apparel, ApparelSchema, Leisure, LeisureSchema)
+from models import *
 from sqlalchemy.exc import SQLAlchemyError
 
 cost_of_living_blueprint = Blueprint('cost_of_living', __name__)
@@ -21,19 +18,69 @@ leisure_schema = LeisureSchema()
 cost_of_living = Api(cost_of_living_blueprint)
 
 class CurrencyListResource(Resource):
-    def get():
+    def get(self):
         currencies = Currency.query.all()
         dumped_currencies = currency_schema.dump(currencies,many = True)
         return dumped_currencies
+    
+    def post(self):
+        currency_dict = request.get_json()
+
+        if not currency_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+
+        errors = currency_schema.validate(currency_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            currency = Currency(currency['abbreviation'],currency['usd_to_local_exchange_rate'])
+            currency.add(currency)
+            query = Currency.query.get(currency.id)
+            dump_result = currency_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
+
 
 class LocationListResource(Resource):
-    def get():
+    def get(self):
         locations = Location.query.all()
         dumped_locations = location_schema.dump(locations,many = True)
         return dumped_locations
+    
+    def post(self):
+        location_dict = request.get_json()
+        if not location_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = location_schema.validate(location_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            currency_abbreviation = location_dict['currency']['abbreviation']
+            currency = Currency.query.filter_by(abbreviation = currency_abbreviation).first()
 
-class LocationListResource(Resource):
-    pass
+            if currency is None:
+                response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            location = Location(country = location_dict['country'], city = location_dict['city'])
+            location.add(location)
+            query = Location.query.get(location.id)
+            dump_result = location_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Home_Purchase_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -88,6 +135,38 @@ class Home_Purchase_Resource(Resource):
             .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404()
             dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
             return dumped_home_purchase
+        
+    def post(self):
+        home_purchase_dict = request.get_json()
+        if not home_purchase_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = home_purchase_schema.validate(home_purchase_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = home_purchase_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            home_purchase = Home_Purchase(property_location = home_purchase_dict['property_location'], 
+            price_per_sqm = home_purchase_dict['price_per_sqm'], 
+            mortgage_interest = home_purchase_dict['mortgage_interest'])
+            home_purchase.add(home_purchase)
+            query = Home_Purchase.query.get(home_purchase.id)
+            dump_result = home_purchase_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
+
 
 class Rent_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -138,6 +217,36 @@ class Rent_Resource(Resource):
             .order_by(Rent.bedrooms.asc(),Rent.monthly_price.asc()).all().get_or_404()
             dumped_rent = rent_schema.dump(rent._asdict(),many = True)
             return dumped_rent
+
+    def post(self):
+        rent_dict = request.get_json()
+        if not rent_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = rent_schema.validate(rent_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = rent_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            rent = Rent(property_location = rent_dict['property_location'], 
+            bedrooms = rent_dict['bedrooms'], monthly_price = rent_dict['monthly_price'])
+            rent.add(rent)
+            query = Rent.query.get(rent.id)
+            dump_result = rent_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Utilities_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -191,6 +300,36 @@ class Utilities_Resource(Resource):
             .order_by(Utilities.utility.asc(),Utilities.monthly_price.asc()).all().get_or_404()
             dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
             return dumped_utilities
+    
+    def post(self):
+        utilities_dict = request.get_json()
+        if not utilities_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = utilities_schema.validate(utilities_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = utilities_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            utilities = Utilities(utility = utilities_dict['utility'], 
+            monthly_price = utilities_dict['monthly_price'])
+            utilities.add(utilities)
+            query = Utilities.query.get(utilities.id)
+            dump_result = utilities_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 
 class Transportation_Resource(Resource):
@@ -242,6 +381,36 @@ class Transportation_Resource(Resource):
             .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404()
             dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
+        
+    def post(self):
+        transportation_dict = request.get_json()
+        if not transportation_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = transportation_schema.validate(transportation_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = transportation_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            transportation = Transportation(type = transportation_dict['price'], 
+            price = transportation_dict['monthly_price'])
+            transportation.add(transportation)
+            query = Transportation.query.get(transportation.id)
+            dump_result = transportation_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Food_and_Beverage_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -302,6 +471,38 @@ class Food_and_Beverage_Resource(Resource):
             Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404()
             dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage._asdict(),many = True)
             return dumped_food_and_beverage
+    
+    def post(self):
+        food_and_beverage_dict = request.get_json()
+        if not food_and_beverage_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = food_and_beverage_schema.validate(food_and_beverage_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = food_and_beverage_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            food_and_beverage = Food_and_Beverage(item_category = food_and_beverage_dict['item_category'], 
+            purchase_point = food_and_beverage_dict['purchase_point'],
+            item = food_and_beverage_dict['item'],
+            price = food_and_beverage_dict['price'])
+            food_and_beverage.add(food_and_beverage)
+            query = Food_and_Beverage.query.get(food_and_beverage.id)
+            dump_result = food_and_beverage_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Childcare_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -352,6 +553,36 @@ class Childcare_Resource(Resource):
             .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404()
             dumped_childcare = childcare_schema.dump(childcare._asdict(),many = True)
             return dumped_childcare
+    
+    def post(self):
+        childcare_dict = request.get_json()
+        if not childcare_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = childcare_schema.validate(childcare_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = childcare_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            childcare = Childcare(type = childcare_dict['type'], 
+            annual_price = childcare_dict['annual_price'])
+            childcare.add(childcare)
+            query = Childcare.query.get(childcare.id)
+            dump_result = childcare_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Apparel_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -402,6 +633,36 @@ class Apparel_Resource(Resource):
             .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404()
             dumped_apparel = apparel_schema.dump(apparel._asdict(),many = True)
             return dumped_apparel
+    
+    def post(self):
+        apparel_dict = request.get_json()
+        if not apparel_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = apparel_schema.validate(apparel_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = apparel_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
+
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            apparel = Apparel(item = apparel_dict['item'], 
+            price = apparel_dict['price'])
+            apparel.add(apparel)
+            query = Apparel.query.get(apparel.id)
+            dump_result = apparel_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Leisure_Resource(Resource):
     def get(self,country=None,city=None,abbreviation=None):
@@ -454,10 +715,36 @@ class Leisure_Resource(Resource):
             .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
             dumped_leisure = leisure_schema.dump(leisure._asdict(),many = True)
             return dumped_leisure
-
         
+    def post(self):
+        leisure_dict = request.get_json()
+        if not leisure_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = leisure_schema.validate(leisure_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+        
+        try:
+            location_city = leisure_dict['location']['city']
+            location = Location.query.filter_by(city = location_city).first()
 
+            if location is None:
+                response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                return response, HttpStatus.notfound_404.value
+            
+            leisure = Leisure(activity = leisure_dict['activity'], 
+            price = leisure_dict['price'])
+            leisure.add(leisure)
+            query = Leisure.query.get(leisure.id)
+            dump_result = leisure_schema.dump(query)
+            return dump_result, HttpStatus.created_201.value
 
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
         
         
 cost_of_living.add_resource(CurrencyListResource, '/currencies/')

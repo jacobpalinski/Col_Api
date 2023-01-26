@@ -83,11 +83,11 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
     abbreviation=orm.Column(orm.String(3),unique=True,nullable=False)
     usd_to_local_exchange_rate=orm.Column(orm.Float,nullable=False) # USD is the default currency
-    location=orm.relationship('Location',backref=orm.backref('currency',lazy='dynamic'))
+    location=orm.relationship('Location',backref=orm.backref('currency_abbreviation',lazy='dynamic'))
 
-    def __init__(self,abbreviation,conversion_factor):
+    def __init__(self,abbreviation,usd_to_local_exchange_rate):
         self.abbreviation=abbreviation
-        self.conversion_factor=conversion_factor
+        self.usd_to_local_exchange_rate=usd_to_local_exchange_rate
 
 class Location(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
@@ -198,65 +198,65 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
 class CurrencySchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     abbreviation=fields.String(required=True,validate=validate.Length(3))
-    usd_to_local_exchange_rate=fields.Float()
+    usd_to_local_exchange_rate=fields.Float(required=True)
     location=fields.Nested('LocationSchema',only=['country'],many=True)
 
 class LocationSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    country=fields.String(required=True)
+    country=fields.String(required = True)
     city=fields.String(required=True)
 
 class Home_PurchaseSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     property_location=fields.String(required=True,validate=validate.Length(10))
-    price_per_sqm=fields.Float()
-    mortgage_interest=fields.Float()
+    price_per_sqm=fields.Float(required = True)
+    mortgage_interest=fields.Float(required = True)
 
 class RentSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    locations=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     property_location=fields.String(required=True,validate=validate.Length(10))
-    bedrooms=fields.Float()
-    monthly_price=fields.Float()
+    bedrooms=fields.Float(required = True)
+    monthly_price=fields.Float(required = True)
 
 class UtilitiesSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     utility=fields.String(required=True)
-    monthly_price=fields.Float()
+    monthly_price=fields.Float(required = True)
 
 class TransportationSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
-    type=fields.String(required=True)
-    price=fields.Float()
+    location=fields.Nested(LocationSchema,required = True)
+    type=fields.String(required = True)
+    price=fields.Float(required = True)
 
 class Food_and_BeverageSchema(ma.Schema):
     id=fields.Integer(dumpy_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     item_category=fields.String(required=True)
     purchase_point=fields.String(required=True)
-    item=fields.String(required=True)
-    price=fields.Float()
+    item=fields.String(required = True)
+    price=fields.Float(required = True)
 
 class ChildcareSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     type=fields.String(required=True)
-    annual_price=fields.Float()
+    annual_price=fields.Float(required = True)
 
 class ApparelSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     item=fields.String(required=True)
-    price=fields.Float()
+    price=fields.Float(required = True)
 
 class LeisureSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
-    location=fields.Nested(LocationSchema)
+    location=fields.Nested(LocationSchema,required = True)
     activity=fields.String(dump_only=True)
-    price=fields.Float()
+    price=fields.Float(required = True)
 
 
 
