@@ -17,6 +17,94 @@ apparel_schema = ApparelSchema()
 leisure_schema = LeisureSchema()
 cost_of_living = Api(cost_of_living_blueprint)
 
+class UserResource(Resource):
+
+    def get(self):
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            auth_token = auth_header.split(" ")[1]
+        else:
+            auth_token = ''
+        if auth_token:
+            resp = User.decode_auth_token(auth_token)
+            if not isinstance(resp,str):
+                user = User.query.filter_by(id = resp).first()
+                response = {'status': 'success',
+                'data': {
+                    'user_id': user.id,
+                    'email' : user.email,
+                    'creation_date': user.creation_date
+                    }
+                }
+                return response, HttpStatus.ok_200.value
+            response = {'status': 'fail',
+            'message': resp}
+            return response, HttpStatus.unauthorized_401.value
+        else:
+            response = {'status': 'fail',
+            'message' : 'Provide a valid auth token'
+            }
+            return response, HttpStatus.unauthorized_401.value
+                
+
+    # get the post data
+    def post(self):
+        user_register_dict = request.get_json()
+        if not user_register_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+
+        user = User.query.filter_by(email = user_register_dict['email']).first()
+        if not user:
+            try:
+                user = User(email = user_register_dict['email'], 
+                password_hash = user_register_dict['password_hash'])
+                user.add(user)
+                auth_token = user.encode_auth_token(user.id)
+                response = {'status': 'success',
+                'message': 'successfully registered',
+                'auth_token': auth_token.decode()}
+                return response, HttpStatus.created_201.value
+
+            except Exception as e:
+                response = {'status': 'fail',
+                'message' : 'Error. Please try again'}
+                return response, HttpStatus.unauthorized_401
+        
+        else:
+            response = {
+                'status' : 'fail',
+                'message' : 'User already exists. Please log in'
+            }
+            return response, HttpStatus.accepted_202
+
+class LoginResource(Resource):
+    def post(self):
+        user_dict = request.get_json()
+        if not user_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+
+        try:
+            user = User.query.filter_by(email = user_dict['email']).first()
+            if user.verify_password(user_dict['password']):
+                auth_token = user.encode_auth_token(user.id)
+                if auth_token:
+                    response = {'status' : 'success',
+                    'message': 'Successfully logged in.',
+                    'auth_token': auth_token.decode()}
+                    return response, HttpStatus.ok_200.value
+            else:
+                response = {'status': 'fail',
+                'message': 'User does not exist.'}
+                return response, HttpStatus.notfound_404
+        
+        except Exception as e:
+            print(e)
+            response = {'status': 'fail',
+            'message': 'Try again'}
+            return response, HttpStatus.internal_server_error.value
+
 class CurrencyResource(Resource):
     def get(self,id=None):
 
@@ -1184,7 +1272,8 @@ class Leisure_Resource(Resource):
             response = {"error":str(e)}
             return response, HttpStatus.unauthorized_401.value
         
-        
+
+cost_of_living.add_resource(UserResource,'/auth/user')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(Home_Purchase_Resource,'/homepurchase/<string:country>/<string:city>/\

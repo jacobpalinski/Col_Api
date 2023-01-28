@@ -30,6 +30,9 @@ class User(orm.Model,ResourceAddUpdateDelete):
     def __init__(self,email,password):
         self.email=email
         self.password=password_context.hash(password)
+    
+    def verify_password(self,password):
+        return password_context.verify(password, self.password_hash)
 
     def encode_auth_token(self,user_id):
         # Generate Auth Token
@@ -56,7 +59,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again'
             else:
-                return payload
+                return payload['sub']
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
