@@ -80,6 +80,19 @@ class CurrencyResource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        currency = Currency.query.get_or_404(id)
+        
+        try:
+            currency.delete(currency)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class LocationListResource(Resource):
     def get(self,id):
@@ -122,6 +135,19 @@ class LocationListResource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        location = Location.query.get_or_404(id)
+        
+        try:
+            location.delete(location)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Home_Purchase_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -243,7 +269,18 @@ class Home_Purchase_Resource(Resource):
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
 
-
+    def delete(self,id):
+        home_purchase = Home_Purchase.query.get_or_404(id)
+        
+        try:
+            home_purchase.delete(home_purchase)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Rent_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -359,6 +396,19 @@ class Rent_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        rent = Rent.query.get_or_404(id)
+        
+        try:
+            rent.delete(rent)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Utilities_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -474,6 +524,19 @@ class Utilities_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        utilities = Utilities.query.get_or_404(id)
+        
+        try:
+            utilities.delete(utilities)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 
 class Transportation_Resource(Resource):
@@ -587,6 +650,19 @@ class Transportation_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        transportation = Transportation.query.get_or_404(id)
+        
+        try:
+            transportation.delete(transportation)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Food_and_Beverage_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -717,6 +793,19 @@ class Food_and_Beverage_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+        
+        try:
+            food_and_beverage.delete(food_and_beverage)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Childcare_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -829,6 +918,19 @@ class Childcare_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        childcare = Childcare.query.get_or_404(id)
+        
+        try:
+            childcare.delete(childcare)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Apparel_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -941,6 +1043,19 @@ class Apparel_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def delete(self,id):
+        apparel = Apparel.query.get_or_404(id)
+        
+        try:
+            apparel.delete(apparel)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
 
 class Leisure_Resource(Resource):
     def get(self,id=None,country=None,city=None,abbreviation=None):
@@ -1055,6 +1170,19 @@ class Leisure_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+        
+    def delete(self,id):
+        leisure = Leisure.query.get_or_404(id)
+        
+        try:
+            leisure.delete(leisure)
+            response = make_response()
+            return response, HttpStatus.no_content_204.value
+        
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error":str(e)}
+            return response, HttpStatus.unauthorized_401.value
         
         
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
