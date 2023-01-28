@@ -17,11 +17,18 @@ apparel_schema = ApparelSchema()
 leisure_schema = LeisureSchema()
 cost_of_living = Api(cost_of_living_blueprint)
 
-class CurrencyListResource(Resource):
-    def get(self):
-        currencies = Currency.query.all()
-        dumped_currencies = currency_schema.dump(currencies,many = True)
-        return dumped_currencies
+class CurrencyResource(Resource):
+    def get(self,id=None):
+
+        if id != None:
+            currency = Currency.query.get_or_404(id)
+            dumped_currency = currency_schema.dump(currency)
+            return dumped_currency
+        
+        else:
+            currencies = Currency.query.all()
+            dumped_currencies = currency_schema.dump(currencies,many = True)
+            return dumped_currencies
     
     def post(self):
         currency_dict = request.get_json()
@@ -35,7 +42,8 @@ class CurrencyListResource(Resource):
             return errors, HttpStatus.bad_request_400.value
 
         try:
-            currency = Currency(currency['abbreviation'],currency['usd_to_local_exchange_rate'])
+            currency = Currency(abbreviation = currency_dict['abbreviation'],
+            usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate'])
             currency.add(currency)
             query = Currency.query.get(currency.id)
             dump_result = currency_schema.dump(query)
@@ -45,13 +53,46 @@ class CurrencyListResource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        currency = Currency.query.get_or_404(id)
+        
+        currency_dict = request.get_json(force = True)
+        if not currency_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = currency_schema.validate(currency_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
 
+        try:
+            if 'abbreviation' in currency_dict and currency_dict['abbreviation'] != None:
+                currency.abbreviation = currency_dict['abbreviation']
+            if 'usd_to_local_exchange_rate' in currency_dict and \
+            currency_dict['usd_to_local_exchange_rate'] != None:
+                currency.usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate']
+        
+            currency.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class LocationListResource(Resource):
-    def get(self):
-        locations = Location.query.all()
-        dumped_locations = location_schema.dump(locations,many = True)
-        return dumped_locations
+    def get(self,id):
+
+        if id != None:
+            location = Location.query.get_or_404(id)
+            dumped_location = location_schema.dump(location)
+            return dumped_location
+
+        else:
+            locations = Location.query.all()
+            dumped_locations = location_schema.dump(locations,many = True)
+            return dumped_locations
     
     def post(self):
         location_dict = request.get_json()
@@ -83,9 +124,14 @@ class LocationListResource(Resource):
             return response, HttpStatus.bad_request_400.value
 
 class Home_Purchase_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            home_purchase = Home_Purchase.query.get_or_404(id)
+            dumped_home_purchase = home_purchase_schema.dump(home_purchase)
+            return dumped_home_purchase
+
+        elif None not in (country,city,abbreviation):
             home_purchase = Home_Purchase.query(Home_Purchase.id,
             Home_Purchase.property_location, 
             (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
@@ -166,12 +212,48 @@ class Home_Purchase_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        home_purchase = Home_Purchase.query.get_or_404(id)
+        
+        home_purchase_dict = request.get_json(force = True)
+        if not home_purchase_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = home_purchase_schema.validate(home_purchase_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'property_location' in home_purchase_dict and home_purchase_dict['property_location'] != None:
+                home_purchase.property_location = home_purchase_dict['property_location']
+            if 'price_per_sqm' in home_purchase_dict and \
+            home_purchase_dict['price_per_sqm'] != None:
+                home_purchase.price_per_sqm = home_purchase_dict['price_per_sqm']
+            if 'mortgage_interest' in home_purchase_dict and \
+            home_purchase_dict['mortgage_interest'] != None:
+                home_purchase.mortgage_interest = home_purchase_dict['mortgage_interest']
+        
+            home_purchase.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
+
 
 
 class Rent_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            rent = Rent.query.get_or_404(id)
+            dumped_rent = rent_schema.dump(rent)
+            return dumped_rent
+
+        elif None not in (country,city,abbreviation):
             rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
             (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
             Rent.location_id).join(Location, Rent.location_id == Location.id)\
@@ -247,11 +329,46 @@ class Rent_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        rent = Rent.query.get_or_404(id)
+        
+        rent_dict = request.get_json(force = True)
+        if not rent_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = rent_schema.validate(rent_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'property_location' in rent_dict and rent_dict['property_location'] != None:
+                rent.property_location = rent_dict['property_location']
+            if 'price_per_sqm' in rent_dict and \
+            rent_dict['bedrooms'] != None:
+                rent.bedrooms = rent_dict['bedrooms']
+            if 'monthly_price' in rent_dict and \
+            rent_dict['monthly_price'] != None:
+                rent.monthly_price = rent_dict['monthly_price']
+        
+            rent.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Utilities_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            utilities = Utilities.query.get_or_404(id)
+            dumped_utilities = utilities_schema.dump(utilities)
+            return dumped_utilities
+
+        elif None not in (country,city,abbreviation):
             utilities = Utilities.query(Utilities.id,Utilities.utility,
             (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
             Utilities.location_id).join(Location, 
@@ -330,12 +447,44 @@ class Utilities_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        utilities = Utilities.query.get_or_404(id)
+        
+        utilities_dict = request.get_json(force = True)
+        if not utilities_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = utilities_schema.validate(utilities_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'utility' in utilities_dict and utilities_dict['utility'] != None:
+                utilities.utility = utilities_dict['utility']
+            if 'monthly_price' in utilities_dict and \
+            utilities_dict['monthly_price'] != None:
+                utilities.monthly_price = utilities_dict['monthly_price']
+        
+            utilities.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 
 class Transportation_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            transportation = Transportation.query.get_or_404(id)
+            dumped_transportation = transportation_schema.dump(transportation)
+            return dumped_transportation
+
+        elif None not in (country,city,abbreviation):
             transportation = Transportation.query(Transportation.id,Transportation.type,
             (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
             Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
@@ -411,11 +560,43 @@ class Transportation_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        transportation = Transportation.query.get_or_404(id)
+        
+        transportation_dict = request.get_json(force = True)
+        if not transportation_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = transportation_schema.validate(transportation_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'type' in transportation_dict and transportation_dict['type'] != None:
+                transportation.type = transportation_dict['type']
+            if 'price' in transportation_dict and \
+            transportation_dict['price'] != None:
+                transportation.price = transportation_dict['price']
+        
+            transportation.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Food_and_Beverage_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
+            return dumped_food_and_beverage
+
+        elif None not in (country,city,abbreviation):
             food_and_beverage = Food_and_Beverage.query(Food_and_Beverage.id,
             Food_and_Beverage.item_category,Food_and_Beverage.purchase_point,
             Food_and_Beverage.item,
@@ -503,11 +684,49 @@ class Food_and_Beverage_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+        
+        food_and_beverage_dict = request.get_json(force = True)
+        if not food_and_beverage_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = food_and_beverage_schema.validate(food_and_beverage_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'item_category' in food_and_beverage_dict and food_and_beverage_dict['item_category'] != None:
+                food_and_beverage.item_category = food_and_beverage_dict['item_category']
+            if 'purchase_point' in food_and_beverage_dict and \
+            food_and_beverage_dict['purchase_point'] != None:
+                food_and_beverage.purchase_point = food_and_beverage_dict['purchase_point']
+            if 'item' in food_and_beverage_dict and \
+            food_and_beverage_dict['item'] != None:
+                food_and_beverage.item = food_and_beverage_dict['item']
+            if 'price' in food_and_beverage_dict and \
+            food_and_beverage_dict['price'] != None:
+                food_and_beverage.price = food_and_beverage_dict['price']
+        
+            food_and_beverage.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Childcare_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            childcare = Childcare.query.get_or_404(id)
+            dumped_childcare = childcare_schema.dump(childcare)
+            return dumped_childcare
+
+        elif None not in (country,city,abbreviation):
             childcare = Childcare.query(Childcare.id, Childcare.type,
             (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
             Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
@@ -583,11 +802,43 @@ class Childcare_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        childcare = Childcare.query.get_or_404(id)
+        
+        childcare_dict = request.get_json(force = True)
+        if not childcare_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = childcare_schema.validate(childcare_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'type' in childcare_dict and childcare_dict['type'] != None:
+                childcare.type = childcare_dict['type']
+            if 'annual_price' in childcare_dict and \
+            childcare_dict['annual_price'] != None:
+                childcare.annual_price = childcare_dict['annual_price']
+        
+            childcare.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Apparel_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            apparel = Apparel.query.get_or_404(id)
+            dumped_apparel = apparel_schema.dump(apparel)
+            return dumped_apparel
+
+        elif None not in (country,city,abbreviation):
             apparel = Apparel.query(Apparel.id, Apparel.item,
             (Apparel.price * Currency.usd_to_local_exchange_rate).label("price"),
             Apparel.location_id).join(Location, Apparel.location_id == Location.id)\
@@ -663,11 +914,43 @@ class Apparel_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+        
+    def patch(self,id):
+        apparel = Apparel.query.get_or_404(id)
+        
+        apparel_dict = request.get_json(force = True)
+        if not apparel_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = apparel_schema.validate(apparel_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'item' in apparel_dict and apparel_dict['item'] != None:
+                apparel.item = apparel_dict['item']
+            if 'price' in apparel_dict and \
+            apparel_dict['price'] != None:
+                apparel.price = apparel_dict['price']
+        
+            apparel.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
 
 class Leisure_Resource(Resource):
-    def get(self,country=None,city=None,abbreviation=None):
+    def get(self,id=None,country=None,city=None,abbreviation=None):
 
-        if None not in (country,city,abbreviation):
+        if id != None:
+            leisure = Leisure.query.get_or_404(id)
+            dumped_leisure = leisure_schema.dump(leisure)
+            return dumped_leisure
+
+        elif None not in (country,city,abbreviation):
             leisure = Leisure.query(Leisure.id, Leisure.activity,
             (Leisure.price * Currency.usd_to_local_exchange_rate).label("price"),
             Leisure.location_id).join(Location, 
@@ -745,23 +1028,50 @@ class Leisure_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
+    
+    def patch(self,id):
+        leisure = Leisure.query.get_or_404(id)
+        
+        leisure_dict = request.get_json(force = True)
+        if not leisure_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        errors = leisure_schema.validate(leisure_dict)
+        if errors:
+            return errors, HttpStatus.bad_request_400.value
+
+        try:
+            if 'item' in leisure_dict and leisure_dict['item'] != None:
+                leisure.item = leisure_dict['item']
+            if 'price' in leisure_dict and \
+            leisure_dict['price'] != None:
+                leisure.price = leisure_dict['price']
+        
+            leisure.update()
+            self.get(id)
+
+        except SQLAlchemyError as e:
+            orm.session.rollback()
+            response = {"error": str(e)}
+            return response, HttpStatus.bad_request_400.value
         
         
-cost_of_living.add_resource(CurrencyListResource, '/currencies/')
-cost_of_living.add_resource(LocationListResource, '/locations/')
+cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
+cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(Home_Purchase_Resource,'/homepurchase/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>', '/homepurchase/<int:id>')
 cost_of_living.add_resource(Rent_Resource,'/rent/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/rent/<int:id>')
 cost_of_living.add_resource(Utilities_Resource,'/utilites/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/utilities/<int:id>')
 cost_of_living.add_resource(Transportation_Resource,'/transportation/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/transportation/<int:id>')
 cost_of_living.add_resource(Food_and_Beverage_Resource,'/foodbeverage/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/foodbeverage/<int:id>')
 cost_of_living.add_resource(Childcare_Resource,'/childcare/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/childcare/<int:id>')
 cost_of_living.add_resource(Apparel_Resource,'/apparel/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/apparel/<int:id>')
 cost_of_living.add_resource(Leisure_Resource,'/leisure/<string:country>/<string:city>/\
-<string:abbreviation>')
+<string:abbreviation>','/leisure/<int:id>')
