@@ -19,7 +19,7 @@ leisure_schema = LeisureSchema()
 cost_of_living = Api(cost_of_living_blueprint)
 
 class UserResource(Resource):
-
+    @jwt_required
     def get(self):
         auth_header = request.headers['Authorization']
         if auth_header:
@@ -57,10 +57,9 @@ class UserResource(Resource):
         user = User.query.filter_by(email = user_register_dict['email']).first()
         if not user:
             try:
-                user = User(email = user_register_dict['email'], 
-                password_hash = user_register_dict['password_hash'])
+                user = User(email = user_register_dict['email'])
+                user.check_password_strength_and_hash_if_ok(user_register_dict['password_hash'])
                 user.add(user)
-                auth_token = user.encode_auth_token(user.id)
                 response = {'message': 'successfully registered'}
                 return response, HttpStatus.created_201.value
 
@@ -98,6 +97,7 @@ class LoginResource(Resource):
             return response, HttpStatus.internal_server_error.value
 
 class LogoutResource(Resource):
+    @jwt_required
     def post(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
@@ -134,7 +134,7 @@ class ResetPasswordResource(Resource):
         try:
             user = User.query.filter_by(email = reset_password_dict['email']).first()
             if user:
-                user.modify_password(new_password = reset_password_dict['password'])
+                user.check_password_strength_and_hash_if_ok(reset_password_dict['password_hash'])
                 response = {'message': 'Password reset successful'}
                 return response, HttpStatus.ok_200.value
             else:

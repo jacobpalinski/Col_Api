@@ -1,5 +1,6 @@
 import jwt
 import datetime
+import re
 from marshmallow import Schema, fields
 from marshmallow import validate
 from flask_sqlalchemy import SQLAlchemy
@@ -28,17 +29,28 @@ class User(orm.Model,ResourceAddUpdateDelete):
     admin = orm.Column(orm.Boolean, default = False)
     creation_date=orm.Column(orm.TIMESTAMP,server_default=orm.func.current_timestamp(),nullable=False)
 
-    def __init__(self,email,password,admin):
-        self.email=email
-        self.password_hash=password_context.hash(password)
-        if admin == 'Code only I know':
-            self.admin = True
+    def check_password_strength_and_hash_if_ok(self, password):
+        if len(password) < 8:
+            return 'The password is too short. Please, specify a password with at least 8 characters'
+        if len(password) > 32:
+            return 'The password is too long. Please, specify a password with no more than 32 characters.'
+        if re.search(r'[A-Z]', password) == None:
+            return 'The password must include at least one uppercase letter'
+        if re.search(r'[a-z]', password) == None:
+            return 'The password must include at least one lowercase letter'
+        if re.search(r'\d', password) == None:
+            return 'The password must include at least one digit'
+        if re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) == None:
+            return 'The password must include at least one symbol'
+        self.password_hash = password_context.hash(password)
     
     def verify_password(self,password):
         return password_context.verify(password, self.password_hash)
-    
-    def modify_password(self,new_password):
-        self.password_hash = password_context.hash(new_password)
+
+    def __init__(self,email,admin):
+        self.email=email
+        if admin == 'Code only I know': # Delete this piece of code once I create myself as admin
+            self.admin = True
 
     def encode_auth_token(self,user_id):
         # Generate Auth Token
@@ -204,6 +216,11 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
         self.activity=activity
         self.price=price
 
+class UserSchema(ma.Schema):
+    id = fields.Integer(dump_only = True)
+    email = fields.String(required = True)
+    password = fields.String()
+
 class CurrencySchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     abbreviation=fields.String(required=True,validate=validate.Length(3))
@@ -264,8 +281,13 @@ class ApparelSchema(ma.Schema):
 class LeisureSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
-    activity=fields.String(dump_only=True)
+    activity=fields.String()
     price=fields.Float(required = True)
+
+class UserSchema(ma.Schema):
+    id = fields.Integer(dump_only = True)
+    email = fields.String(required = True)
+    password = fields.String()
 
 
 
