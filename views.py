@@ -22,7 +22,13 @@ class UserResource(Resource):
     def get(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
-            auth_token = auth_header.split(" ")[1]
+            try:
+                auth_token = auth_header.split(" ")[1]
+            except IndexError:
+                response = {'status': 'fail',
+                'message': 'Bearer token malformed'}
+                return response, HttpStatus.unauthorized_401.value
+
         else:
             auth_token = ''
         if auth_token:
@@ -104,6 +110,39 @@ class LoginResource(Resource):
             response = {'status': 'fail',
             'message': 'Try again'}
             return response, HttpStatus.internal_server_error.value
+
+class LogoutResource(Resource):
+    def post(self):
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            auth_token = auth_header.split(" ")[1]
+        else:
+            auth_token = ''
+        if auth_token:
+            resp = User.decode_auth_token(auth_token)
+            if not isinstance(resp,str):
+                blacklist_token = BlacklistToken(token = auth_token)
+                try:
+                    blacklist_token.add(blacklist_token)
+                    response = {'status': 'success',
+                    'message' : 'Successfully logged out'}
+                    return response, HttpStatus.ok_200.value
+                except Exception as e:
+                    response = {'status': 'fail',
+                    'message': e}
+                    return response, HttpStatus.bad_request_400.value
+            else:
+                response = {'status': 'fail',
+                'message' : resp}
+                return response, HttpStatus.unauthorized_401.value
+            
+        else:
+            response = {'status' : 'fail',
+            'message' : 'Provide a valid auth token.'}
+            return response, HttpStatus.forbidden_403.value
+            
+
+
 
 class CurrencyResource(Resource):
     def get(self,id=None):
@@ -1273,7 +1312,9 @@ class Leisure_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
         
 
-cost_of_living.add_resource(UserResource,'/auth/user')        
+cost_of_living.add_resource(UserResource,'/auth/user')
+cost_of_living.add_resource(LoginResource,'/auth/login')
+cost_of_living.add_resource(LogoutResource, '/auth/logout')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(Home_Purchase_Resource,'/homepurchase/<string:country>/<string:city>/\
