@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
+from flask_jwt_extended import jwt_required
 from httpstatus import HttpStatus
 from models import *
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,13 +21,12 @@ cost_of_living = Api(cost_of_living_blueprint)
 class UserResource(Resource):
 
     def get(self):
-        auth_header = request.headers.get('Authorization')
+        auth_header = request.headers['Authorization']
         if auth_header:
             try:
                 auth_token = auth_header.split(" ")[1]
             except IndexError:
-                response = {'status': 'fail',
-                'message': 'Bearer token malformed'}
+                response = {'message': 'Bearer token malformed'}
                 return response, HttpStatus.unauthorized_401.value
 
         else:
@@ -35,25 +35,19 @@ class UserResource(Resource):
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp,str):
                 user = User.query.filter_by(id = resp).first()
-                response = {'status': 'success',
-                'data': {
+                response = {'data': {
                     'user_id': user.id,
                     'email' : user.email,
                     'creation_date': user.creation_date
                     }
                 }
                 return response, HttpStatus.ok_200.value
-            response = {'status': 'fail',
-            'message': resp}
+            response = {'message': resp}
             return response, HttpStatus.unauthorized_401.value
         else:
-            response = {'status': 'fail',
-            'message' : 'Provide a valid auth token'
-            }
+            response = {'message' : 'Provide a valid auth token'}
             return response, HttpStatus.unauthorized_401.value
                 
-
-    # get the post data
     def post(self):
         user_register_dict = request.get_json()
         if not user_register_dict:
@@ -67,22 +61,16 @@ class UserResource(Resource):
                 password_hash = user_register_dict['password_hash'])
                 user.add(user)
                 auth_token = user.encode_auth_token(user.id)
-                response = {'status': 'success',
-                'message': 'successfully registered',
-                'auth_token': auth_token.decode()}
+                response = {'message': 'successfully registered'}
                 return response, HttpStatus.created_201.value
 
             except Exception as e:
-                response = {'status': 'fail',
-                'message' : 'Error. Please try again'}
-                return response, HttpStatus.unauthorized_401
+                response = {'message' : 'Error. Please try again'}
+                return response, HttpStatus.unauthorized_401.value
         
         else:
-            response = {
-                'status' : 'fail',
-                'message' : 'User already exists. Please log in'
-            }
-            return response, HttpStatus.accepted_202
+            response = {'message' : 'User already exists. Please log in'}
+            return response, HttpStatus.conflict_409.value
 
 class LoginResource(Resource):
     def post(self):
@@ -96,19 +84,17 @@ class LoginResource(Resource):
             if user.verify_password(user_dict['password']):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
-                    response = {'status' : 'success',
+                    response = {
                     'message': 'Successfully logged in.',
                     'auth_token': auth_token.decode()}
                     return response, HttpStatus.ok_200.value
             else:
-                response = {'status': 'fail',
-                'message': 'User does not exist.'}
+                response = {'message': 'User does not exist.'}
                 return response, HttpStatus.notfound_404
         
         except Exception as e:
             print(e)
-            response = {'status': 'fail',
-            'message': 'Try again'}
+            response = {'message': 'Try again'}
             return response, HttpStatus.internal_server_error.value
 
 class LogoutResource(Resource):
@@ -124,27 +110,44 @@ class LogoutResource(Resource):
                 blacklist_token = BlacklistToken(token = auth_token)
                 try:
                     blacklist_token.add(blacklist_token)
-                    response = {'status': 'success',
-                    'message' : 'Successfully logged out'}
+                    response = {'message' : 'Successfully logged out'}
                     return response, HttpStatus.ok_200.value
                 except Exception as e:
-                    response = {'status': 'fail',
-                    'message': e}
+                    response = {'message': e}
                     return response, HttpStatus.bad_request_400.value
             else:
-                response = {'status': 'fail',
-                'message' : resp}
+                response = {'message' : resp}
                 return response, HttpStatus.unauthorized_401.value
             
         else:
-            response = {'status' : 'fail',
-            'message' : 'Provide a valid auth token.'}
+            response = {'message' : 'Provide a valid auth token.'}
             return response, HttpStatus.forbidden_403.value
+
+class ResetPasswordResource(Resource):
+    def post(self):
+        reset_password_dict = request.get_json()
+
+        if not reset_password_dict:
+            response = {'message': 'No input data provided'}
+            return response, HttpStatus.bad_request_400.value
+        
+        try:
+            user = User.query.filter_by(email = reset_password_dict['email']).first()
+            if user:
+                user.modify_password(new_password = reset_password_dict['password'])
+                response = {'message': 'Password reset successful'}
+                return response, HttpStatus.ok_200.value
+            else:
+                response = {'message': 'User does not exist'}
+                return response, HttpStatus.unauthorized_401.value
+        
+        except Exception as e:
+            print(e)
+            response = {'message': 'Try again'}
+            return response, HttpStatus.internal_server_error.value
             
-
-
-
 class CurrencyResource(Resource):
+    @jwt_required
     def get(self,id=None):
 
         if id != None:
@@ -222,6 +225,7 @@ class CurrencyResource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class LocationListResource(Resource):
+    @jwt_required
     def get(self,id):
 
         if id != None:
@@ -277,6 +281,7 @@ class LocationListResource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Home_Purchase_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -334,7 +339,7 @@ class Home_Purchase_Resource(Resource):
             .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404()
             dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
             return dumped_home_purchase
-        
+ 
     def post(self):
         home_purchase_dict = request.get_json()
         if not home_purchase_dict:
@@ -410,6 +415,7 @@ class Home_Purchase_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Rent_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -538,6 +544,7 @@ class Rent_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Utilities_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -667,6 +674,7 @@ class Utilities_Resource(Resource):
 
 
 class Transportation_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -720,7 +728,7 @@ class Transportation_Resource(Resource):
             .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404()
             dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
-        
+    
     def post(self):
         transportation_dict = request.get_json()
         if not transportation_dict:
@@ -792,6 +800,7 @@ class Transportation_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Food_and_Beverage_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -935,6 +944,7 @@ class Food_and_Beverage_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Childcare_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -1060,6 +1070,7 @@ class Childcare_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Apparel_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -1143,7 +1154,7 @@ class Apparel_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
-        
+  
     def patch(self,id):
         apparel = Apparel.query.get_or_404(id)
         
@@ -1170,7 +1181,7 @@ class Apparel_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
-    
+
     def delete(self,id):
         apparel = Apparel.query.get_or_404(id)
         
@@ -1185,6 +1196,7 @@ class Apparel_Resource(Resource):
             return response, HttpStatus.unauthorized_401.value
 
 class Leisure_Resource(Resource):
+    @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
         if id != None:
@@ -1240,7 +1252,7 @@ class Leisure_Resource(Resource):
             .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
             dumped_leisure = leisure_schema.dump(leisure._asdict(),many = True)
             return dumped_leisure
-        
+    
     def post(self):
         leisure_dict = request.get_json()
         if not leisure_dict:
@@ -1297,7 +1309,7 @@ class Leisure_Resource(Resource):
             orm.session.rollback()
             response = {"error": str(e)}
             return response, HttpStatus.bad_request_400.value
-        
+    
     def delete(self,id):
         leisure = Leisure.query.get_or_404(id)
         
@@ -1314,7 +1326,8 @@ class Leisure_Resource(Resource):
 
 cost_of_living.add_resource(UserResource,'/auth/user')
 cost_of_living.add_resource(LoginResource,'/auth/login')
-cost_of_living.add_resource(LogoutResource, '/auth/logout')        
+cost_of_living.add_resource(LogoutResource, '/auth/logout')
+cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(Home_Purchase_Resource,'/homepurchase/<string:country>/<string:city>/\

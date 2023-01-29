@@ -25,14 +25,20 @@ class User(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
     email=orm.Column(orm.String(50),unique=True,nullable=False)
     password_hash=orm.Column(orm.String(120),nullable=False)
+    admin = orm.Column(orm.Boolean, default = False)
     creation_date=orm.Column(orm.TIMESTAMP,server_default=orm.func.current_timestamp(),nullable=False)
 
-    def __init__(self,email,password):
+    def __init__(self,email,password,admin):
         self.email=email
-        self.password=password_context.hash(password)
+        self.password_hash=password_context.hash(password)
+        if admin == 'Code only I know':
+            self.admin = True
     
     def verify_password(self,password):
         return password_context.verify(password, self.password_hash)
+    
+    def modify_password(self,new_password):
+        self.password_hash = password_context.hash(new_password)
 
     def encode_auth_token(self,user_id):
         # Generate Auth Token

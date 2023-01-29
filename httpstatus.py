@@ -9,6 +9,7 @@ class HttpStatus(Enum):
     unauthorized_401=401
     forbidden_403=403
     notfound_404=404
+    conflict_409=409
     internal_server_error=500
     not_implemented_501=501
     bad_gateway_error=502
