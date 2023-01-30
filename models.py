@@ -105,6 +105,7 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     id=orm.Column(orm.Integer,primary_key=True)
     abbreviation=orm.Column(orm.String(3),unique=True,nullable=False)
     usd_to_local_exchange_rate=orm.Column(orm.Float,nullable=False) # USD is the default currency
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
     location=orm.relationship('Location',backref=orm.backref('currency_abbreviation',lazy='dynamic'))
 
     def __init__(self,abbreviation,usd_to_local_exchange_rate):
@@ -135,6 +136,7 @@ class Home_Purchase(orm.Model,ResourceAddUpdateDelete):
     price_per_sqm=orm.Column(orm.Float,nullable=False)
     mortgage_interest=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,property_location,price_per_sqm,mortgage_interest):
         self.property_location=property_location
@@ -147,6 +149,7 @@ class Rent(orm.Model,ResourceAddUpdateDelete):
     bedrooms=orm.Column(orm.Integer,nullable=False)
     monthly_price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,property_location,bedrooms,monthly_price):
         self.property_location=property_location
@@ -158,6 +161,7 @@ class Utilities(orm.Model,ResourceAddUpdateDelete):
     utility=orm.Column(orm.String(80),nullable=False)
     monthly_price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,utility,monthly_price):
         self.utility=utility
@@ -168,6 +172,7 @@ class Transportation(orm.Model,ResourceAddUpdateDelete):
     type=orm.Column(orm.String(70),nullable=False)
     price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,type,price):
         self.type=type
@@ -180,6 +185,7 @@ class Food_and_Beverage(orm.Model,ResourceAddUpdateDelete):
     item=orm.Column(orm.String(30),nullable=False)
     price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,item_category,purchase_point,item,price):
         self.item_category=item_category
@@ -192,6 +198,7 @@ class Childcare(orm.Model,ResourceAddUpdateDelete):
     type=orm.Column(orm.String(80),nullable=False)
     annual_price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,type,annual_price):
         self.type=type
@@ -202,6 +209,7 @@ class Apparel(orm.Model,ResourceAddUpdateDelete):
     item=orm.Column(orm.String(70),nullable=False)
     price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,item,price):
         self.item=item
@@ -212,6 +220,7 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
     activity=orm.Column(orm.String(50),nullable=False)
     price=orm.Column(orm.Float,nullable=False)
     location_id=orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique=True,nullable=False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     def __init__(self,activity,price):
         self.activity=activity
@@ -226,6 +235,7 @@ class CurrencySchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     abbreviation=fields.String(required=True,validate=validate.Length(3))
     usd_to_local_exchange_rate=fields.Float(required=True)
+    last_updated = fields.DateTime()
     location=fields.Nested('LocationSchema',only=['country'],many=True)
 
 class LocationSchema(ma.Schema):
@@ -239,6 +249,7 @@ class Home_PurchaseSchema(ma.Schema):
     property_location=fields.String(required=True,validate=validate.Length(10))
     price_per_sqm=fields.Float(required = True)
     mortgage_interest=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class RentSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
@@ -246,18 +257,21 @@ class RentSchema(ma.Schema):
     property_location=fields.String(required=True,validate=validate.Length(10))
     bedrooms=fields.Float(required = True)
     monthly_price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class UtilitiesSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
     utility=fields.String(required=True)
     monthly_price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class TransportationSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
     type=fields.String(required = True)
     price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class Food_and_BeverageSchema(ma.Schema):
     id=fields.Integer(dumpy_only=True)
@@ -266,29 +280,28 @@ class Food_and_BeverageSchema(ma.Schema):
     purchase_point=fields.String(required=True)
     item=fields.String(required = True)
     price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class ChildcareSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
     type=fields.String(required=True)
     annual_price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class ApparelSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
     item=fields.String(required=True)
     price=fields.Float(required = True)
+    last_updated = fields.DateTime()
 
 class LeisureSchema(ma.Schema):
     id=fields.Integer(dump_only=True)
     location=fields.Nested(LocationSchema,required = True)
     activity=fields.String()
     price=fields.Float(required = True)
-
-class UserSchema(ma.Schema):
-    id = fields.Integer(dump_only = True)
-    email = fields.String(required = True)
-    password = fields.String()
+    last_updated = fields.DateTime()
 
 
 
