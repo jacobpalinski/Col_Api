@@ -50,9 +50,7 @@ class UserResource(Resource):
                 
     def post(self):
         user_register_dict = request.get_json()
-        if not user_register_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
+        request_not_empty(user_register_dict)
 
         user = User.query.filter_by(email = user_register_dict['email']).first()
         if not user:
@@ -74,9 +72,7 @@ class UserResource(Resource):
 class LoginResource(Resource):
     def post(self):
         user_dict = request.get_json()
-        if not user_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
+        request_not_empty(user_dict)
 
         try:
             user = User.query.filter_by(email = user_dict['email']).first()
@@ -126,10 +122,7 @@ class LogoutResource(Resource):
 class ResetPasswordResource(Resource):
     def post(self):
         reset_password_dict = request.get_json()
-
-        if not reset_password_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
+        request_not_empty(reset_password_dict)
         
         try:
             user = User.query.filter_by(email = reset_password_dict['email']).first()
@@ -162,14 +155,8 @@ class CurrencyResource(Resource):
     
     def post(self):
         currency_dict = request.get_json()
-
-        if not currency_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-
-        errors = currency_schema.validate(currency_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(currency_dict)
+        validate_request(currency_schema,currency_dict)
 
         try:
             currency = Currency(abbreviation = currency_dict['abbreviation'],
@@ -180,21 +167,14 @@ class CurrencyResource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         currency = Currency.query.get_or_404(id)
         
         currency_dict = request.get_json(force = True)
-        if not currency_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = currency_schema.validate(currency_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(currency_dict)
+        validate_request(currency_schema,currency_dict)
 
         try:
             if 'abbreviation' in currency_dict and currency_dict['abbreviation'] != None:
@@ -207,22 +187,16 @@ class CurrencyResource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         currency = Currency.query.get_or_404(id)
         
         try:
-            currency.delete(currency)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(currency)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class LocationListResource(Resource):
     @jwt_required
@@ -240,13 +214,8 @@ class LocationListResource(Resource):
     
     def post(self):
         location_dict = request.get_json()
-        if not location_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = location_schema.validate(location_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(location_dict)
+        validate_request(location_schema,location_dict)
         
         try:
             currency_abbreviation = location_dict['currency']['abbreviation']
@@ -263,22 +232,16 @@ class LocationListResource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         location = Location.query.get_or_404(id)
         
         try:
-            location.delete(location)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(location)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Home_Purchase_Resource(Resource):
     @jwt_required
@@ -342,13 +305,8 @@ class Home_Purchase_Resource(Resource):
  
     def post(self):
         home_purchase_dict = request.get_json()
-        if not home_purchase_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = home_purchase_schema.validate(home_purchase_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(home_purchase_dict)
+        validate_request(home_purchase_schema,home_purchase_dict)
         
         try:
             location_city = home_purchase_dict['location']['city']
@@ -367,21 +325,14 @@ class Home_Purchase_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         home_purchase = Home_Purchase.query.get_or_404(id)
         
         home_purchase_dict = request.get_json(force = True)
-        if not home_purchase_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = home_purchase_schema.validate(home_purchase_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(home_purchase_dict)
+        validate_request(home_purchase_schema,home_purchase_dict)
 
         try:
             if 'property_location' in home_purchase_dict and home_purchase_dict['property_location'] != None:
@@ -397,22 +348,16 @@ class Home_Purchase_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
 
     def delete(self,id):
         home_purchase = Home_Purchase.query.get_or_404(id)
         
         try:
-            home_purchase.delete(home_purchase)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(home_purchase)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Rent_Resource(Resource):
     @jwt_required
@@ -472,13 +417,8 @@ class Rent_Resource(Resource):
 
     def post(self):
         rent_dict = request.get_json()
-        if not rent_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = rent_schema.validate(rent_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(rent_dict)
+        validate_request(rent_schema,rent_dict)
         
         try:
             location_city = rent_dict['location']['city']
@@ -496,21 +436,14 @@ class Rent_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         rent = Rent.query.get_or_404(id)
         
         rent_dict = request.get_json(force = True)
-        if not rent_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = rent_schema.validate(rent_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(rent_dict)
+        validate_request(rent_schema,rent_dict)
 
         try:
             if 'property_location' in rent_dict and rent_dict['property_location'] != None:
@@ -526,22 +459,16 @@ class Rent_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         rent = Rent.query.get_or_404(id)
         
         try:
-            rent.delete(rent)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(rent)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Utilities_Resource(Resource):
     @jwt_required
@@ -604,13 +531,8 @@ class Utilities_Resource(Resource):
     
     def post(self):
         utilities_dict = request.get_json()
-        if not utilities_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = utilities_schema.validate(utilities_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(utilities_dict)
+        validate_request(utilities_schema,utilities_dict)
         
         try:
             location_city = utilities_dict['location']['city']
@@ -628,21 +550,14 @@ class Utilities_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         utilities = Utilities.query.get_or_404(id)
         
         utilities_dict = request.get_json(force = True)
-        if not utilities_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = utilities_schema.validate(utilities_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(utilities_dict)
+        validate_request(utilities_schema,utilities_dict)
 
         try:
             if 'utility' in utilities_dict and utilities_dict['utility'] != None:
@@ -655,22 +570,16 @@ class Utilities_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         utilities = Utilities.query.get_or_404(id)
         
         try:
-            utilities.delete(utilities)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(utilities)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 
 class Transportation_Resource(Resource):
@@ -731,13 +640,8 @@ class Transportation_Resource(Resource):
     
     def post(self):
         transportation_dict = request.get_json()
-        if not transportation_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = transportation_schema.validate(transportation_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(transportation_dict)
+        validate_request(transportation_schema,transportation_dict)
         
         try:
             location_city = transportation_dict['location']['city']
@@ -755,21 +659,14 @@ class Transportation_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         transportation = Transportation.query.get_or_404(id)
         
         transportation_dict = request.get_json(force = True)
-        if not transportation_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = transportation_schema.validate(transportation_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(transportation_dict)
+        validate_request(transportation_schema,transportation_dict)
 
         try:
             if 'type' in transportation_dict and transportation_dict['type'] != None:
@@ -782,22 +679,16 @@ class Transportation_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         transportation = Transportation.query.get_or_404(id)
         
         try:
-            transportation.delete(transportation)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(transportation)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Food_and_Beverage_Resource(Resource):
     @jwt_required
@@ -867,13 +758,8 @@ class Food_and_Beverage_Resource(Resource):
     
     def post(self):
         food_and_beverage_dict = request.get_json()
-        if not food_and_beverage_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = food_and_beverage_schema.validate(food_and_beverage_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(food_and_beverage_dict)
+        validate_request(food_and_beverage_schema,food_and_beverage_dict)
         
         try:
             location_city = food_and_beverage_dict['location']['city']
@@ -893,21 +779,14 @@ class Food_and_Beverage_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
         
         food_and_beverage_dict = request.get_json(force = True)
-        if not food_and_beverage_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = food_and_beverage_schema.validate(food_and_beverage_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(food_and_beverage_dict)
+        validate_request(food_and_beverage_schema,food_and_beverage_dict)
 
         try:
             if 'item_category' in food_and_beverage_dict and food_and_beverage_dict['item_category'] != None:
@@ -926,22 +805,16 @@ class Food_and_Beverage_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
         
         try:
-            food_and_beverage.delete(food_and_beverage)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(food_and_beverage)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Childcare_Resource(Resource):
     @jwt_required
@@ -1001,13 +874,8 @@ class Childcare_Resource(Resource):
     
     def post(self):
         childcare_dict = request.get_json()
-        if not childcare_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = childcare_schema.validate(childcare_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(childcare_dict)
+        validate_request(childcare_schema,childcare_dict)
         
         try:
             location_city = childcare_dict['location']['city']
@@ -1025,21 +893,14 @@ class Childcare_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         childcare = Childcare.query.get_or_404(id)
         
         childcare_dict = request.get_json(force = True)
-        if not childcare_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = childcare_schema.validate(childcare_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(childcare_dict)
+        validate_request(childcare_schema,childcare_dict)
 
         try:
             if 'type' in childcare_dict and childcare_dict['type'] != None:
@@ -1060,14 +921,10 @@ class Childcare_Resource(Resource):
         childcare = Childcare.query.get_or_404(id)
         
         try:
-            childcare.delete(childcare)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(childcare)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Apparel_Resource(Resource):
     @jwt_required
@@ -1127,13 +984,8 @@ class Apparel_Resource(Resource):
     
     def post(self):
         apparel_dict = request.get_json()
-        if not apparel_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = apparel_schema.validate(apparel_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(apparel_dict)
+        validate_request(apparel_schema,apparel_dict)
         
         try:
             location_city = apparel_dict['location']['city']
@@ -1151,21 +1003,14 @@ class Apparel_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
   
     def patch(self,id):
         apparel = Apparel.query.get_or_404(id)
         
         apparel_dict = request.get_json(force = True)
-        if not apparel_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = apparel_schema.validate(apparel_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(apparel_dict)
+        validate_request(apparel_schema,apparel_dict)
 
         try:
             if 'item' in apparel_dict and apparel_dict['item'] != None:
@@ -1178,22 +1023,16 @@ class Apparel_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
 
     def delete(self,id):
         apparel = Apparel.query.get_or_404(id)
         
         try:
-            apparel.delete(apparel)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(apparel)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
 
 class Leisure_Resource(Resource):
     @jwt_required
@@ -1255,13 +1094,8 @@ class Leisure_Resource(Resource):
     
     def post(self):
         leisure_dict = request.get_json()
-        if not leisure_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = leisure_schema.validate(leisure_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(leisure_dict)
+        validate_request(leisure_schema,leisure_dict)
         
         try:
             location_city = leisure_dict['location']['city']
@@ -1279,21 +1113,14 @@ class Leisure_Resource(Resource):
             return dump_result, HttpStatus.created_201.value
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def patch(self,id):
         leisure = Leisure.query.get_or_404(id)
         
         leisure_dict = request.get_json(force = True)
-        if not leisure_dict:
-            response = {'message': 'No input data provided'}
-            return response, HttpStatus.bad_request_400.value
-        
-        errors = leisure_schema.validate(leisure_dict)
-        if errors:
-            return errors, HttpStatus.bad_request_400.value
+        request_not_empty(leisure_dict)
+        validate_request(leisure_schema,leisure_dict)
 
         try:
             if 'item' in leisure_dict and leisure_dict['item'] != None:
@@ -1306,22 +1133,16 @@ class Leisure_Resource(Resource):
             self.get(id)
 
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error": str(e)}
-            return response, HttpStatus.bad_request_400.value
+            sql_alchemy_error_response(e)
     
     def delete(self,id):
         leisure = Leisure.query.get_or_404(id)
         
         try:
-            leisure.delete(leisure)
-            response = make_response()
-            return response, HttpStatus.no_content_204.value
+            delete_object(leisure)
         
         except SQLAlchemyError as e:
-            orm.session.rollback()
-            response = {"error":str(e)}
-            return response, HttpStatus.unauthorized_401.value
+            sql_alchemy_error_response(e)
         
 
 cost_of_living.add_resource(UserResource,'/auth/user')
