@@ -1151,19 +1151,27 @@ cost_of_living.add_resource(LogoutResource, '/auth/logout')
 cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
-cost_of_living.add_resource(Home_Purchase_Resource,'/homepurchase/<string:country>/<string:city>/\
-<string:abbreviation>', '/homepurchase/<int:id>')
-cost_of_living.add_resource(Rent_Resource,'/rent/<string:country>/<string:city>/\
-<string:abbreviation>','/rent/<int:id>')
-cost_of_living.add_resource(Utilities_Resource,'/utilites/<string:country>/<string:city>/\
-<string:abbreviation>','/utilities/<int:id>')
-cost_of_living.add_resource(Transportation_Resource,'/transportation/<string:country>/<string:city>/\
-<string:abbreviation>','/transportation/<int:id>')
-cost_of_living.add_resource(Food_and_Beverage_Resource,'/foodbeverage/<string:country>/<string:city>/\
-<string:abbreviation>','/foodbeverage/<int:id>')
-cost_of_living.add_resource(Childcare_Resource,'/childcare/<string:country>/<string:city>/\
-<string:abbreviation>','/childcare/<int:id>')
-cost_of_living.add_resource(Apparel_Resource,'/apparel/<string:country>/<string:city>/\
-<string:abbreviation>','/apparel/<int:id>')
-cost_of_living.add_resource(Leisure_Resource,'/leisure/<string:country>/<string:city>/\
-<string:abbreviation>','/leisure/<int:id>')
+cost_of_living.add_resource(Home_Purchase_Resource, '/home_purchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
+<string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
+'/home_purchase/<string:city>/<string:abbreviation>', '/home_purchase/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Rent_Resource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
+<string:abbreviation>','/rent/<string:country>/<string:city>', '/rent/<string:country>', 
+'/rent/<string:city>/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Utilities_Resource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
+<string:abbreviation>','/utilities/<string:country>/<string:city>', '/utiilties/<string:country>', 
+'/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Transportation_Resource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
+<string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
+'/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Food_and_Beverage_Resource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
+<string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
+'/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Childcare_Resource,'/childcare/', '/childcare/<int:id>','/childcare/<string:country>/<string:city>/\
+<string:abbreviation>','/childcare/<string:country>/<string:city>', '/childcare/<string:country>', 
+'/childcare/<string:city>/<string:abbreviation>', '/childcare/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Apparel_Resource, '/apparel/', '/apparel/<int:id>','/apparel/<string:country>/<string:city>/\
+<string:abbreviation>','/apparel/<string:country>/<string:city>', '/apparel/<string:country>', 
+'/apparel/<string:city>/<string:abbreviation>', '/apparel/<string:city>/<string:abbreviation>')
+cost_of_living.add_resource(Leisure_Resource, '/leisure/', '/leisure/<int:id>','/leisure/<string:country>/<string:city>/\
+<string:abbreviation>','/leisure/<string:country>/<string:city>', '/leisure/<string:country>', 
+'/leisure/<string:city>/<string:abbreviation>', '/leisure/<string:city>/<string:abbreviation>')
