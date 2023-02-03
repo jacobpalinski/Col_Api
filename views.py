@@ -149,9 +149,15 @@ class CurrencyResource(Resource):
             return dumped_currency
         
         else:
-            currencies = Currency.query.all()
-            dumped_currencies = currency_schema.dump(currencies,many = True)
-            return dumped_currencies
+            pagination_helper = PaginationHelper(
+                request,
+                query = Currency.query.all(),
+                resource_for_url = 'cost_of_living.currencyresource',
+                key_name = 'results',
+                schema = currency_schema
+            )
+            paginated_currencies = pagination_helper.paginate_query()
+            return paginated_currencies
     
     def post(self):
         currency_dict = request.get_json()
@@ -208,9 +214,15 @@ class LocationListResource(Resource):
             return dumped_location
 
         else:
-            locations = Location.query.all()
-            dumped_locations = location_schema.dump(locations,many = True)
-            return dumped_locations
+            pagination_helper = PaginationHelper(
+                request,
+                query = Location.query.all(),
+                resource_for_url = 'cost_of_living.locationlistesource',
+                key_name = 'results',
+                schema = location_schema
+            )
+            paginated_locations = pagination_helper.paginate_query()
+            return paginated_locations
     
     def post(self):
         location_dict = request.get_json()
@@ -243,7 +255,7 @@ class LocationListResource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Home_Purchase_Resource(Resource):
+class HomePurchaseResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -261,8 +273,8 @@ class Home_Purchase_Resource(Resource):
             .join(Currency, Location.id==Currency.id).filter(Location.country == country,
             Location.city == city, Currency.abbreviation == abbreviation)\
             .order_by(Home_Purchase.property_location.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many=True)
-            return dumped_home_purchase
+            dumped_home_purchase = home_purchase_schema.dump(home_purchase,many=True)
+            return dumped_home_purchase    
         
         elif  None not in (country,city) and abbreviation == None:
             home_purchase = Home_Purchase.query.join(Location, 
@@ -272,18 +284,30 @@ class Home_Purchase_Resource(Resource):
             return dumped_home_purchase
         
         elif country != None and None in (city,abbreviation):
-            home_purchase = Home_Purchase.query.join(Location, 
-            Home_Purchase.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase,many = True)
-            return dumped_home_purchase
+            pagination_helper = PaginationHelper(
+                request,
+                query = Home_Purchase.query.join(Location, 
+                Home_Purchase.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.homepurchaseresource',
+                key_name = 'results',
+                schema = home_purchase_schema
+            )
+            paginated_home_purchase = pagination_helper.paginate_query()
+            return paginated_home_purchase
         
         elif None in (country,city,abbreviation):
-            home_purchase = Home_Purchase.query.join(Location, 
-            Home_Purchase.location_id == Location.id)\
-            .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase,many = True)
-            return dumped_home_purchase
+            pagination_helper = PaginationHelper(
+                request,
+                query = Home_Purchase.query.join(Location, 
+                Home_Purchase.location_id == Location.id)\
+                .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.homepurchaseresource',
+                key_name = 'results',
+                schema = home_purchase_schema
+            )
+            paginated_home_purchase = pagination_helper.paginate_query()
+            return paginated_home_purchase
         
         elif city != None and None in (country,abbreviation):
             home_purchase = Home_Purchase.query.join(Location, 
@@ -293,15 +317,19 @@ class Home_Purchase_Resource(Resource):
             return dumped_home_purchase
         
         else:
-            home_purchase = Home_Purchase.query(Home_Purchase.id,
-            Home_Purchase.property_location, 
-            (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
-            Home_Purchase.mortgage_interest,
-            Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404()
-            dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
-            return dumped_home_purchase
+            pagination_helper = PaginationHelper(
+                request,
+                query = Home_Purchase.query(Home_Purchase.id,
+                Home_Purchase.property_location, 
+                (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
+                Home_Purchase.mortgage_interest,
+                Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.homepurchaseresource',
+                key_name = 'results',
+                schema = home_purchase_schema
+            )
  
     def post(self):
         home_purchase_dict = request.get_json()
@@ -359,7 +387,7 @@ class Home_Purchase_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Rent_Resource(Resource):
+class RentResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -386,18 +414,30 @@ class Rent_Resource(Resource):
             return dumped_rent
         
         elif country != None and None in (city,abbreviation):
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent,many = True)
-            return dumped_rent
+            pagination_helper = PaginationHelper(
+                request,
+                query = Rent.query.join(Location, 
+                Rent.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.rentresource',
+                key_name = 'results',
+                schema = rent_schema
+            )
+            paginated_rent = pagination_helper.paginate_query()
+            return paginated_rent
         
         elif None in (country,city,abbreviation):
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id)\
-            .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent,many = True)
-            return dumped_rent
+            pagination_helper = PaginationHelper(
+                request,
+                query = Rent.query.join(Location, 
+                Rent.location_id == Location.id)\
+                .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.rentresource',
+                key_name = 'results',
+                schema = rent_schema
+            )
+            paginated_rent = pagination_helper.paginate_query()
+            return paginated_rent
         
         elif city != None and None in (country,abbreviation):
             rent = Rent.query.join(Location, 
@@ -407,13 +447,19 @@ class Rent_Resource(Resource):
             return dumped_rent
         
         else:
-            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
-            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Rent.location_id).join(Location, Rent.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Rent.bedrooms.asc(),Rent.monthly_price.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
-            return dumped_rent
+            pagination_helper = PaginationHelper(
+                request,
+                query = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
+                (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+                Rent.location_id).join(Location, Rent.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Rent.bedrooms.asc(),Rent.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.rentresource',
+                key_name = 'results',
+                schema = rent_schema
+            )
+            paginated_rent = pagination_helper.paginate_query()
+            return paginated_rent
 
     def post(self):
         rent_dict = request.get_json()
@@ -470,7 +516,7 @@ class Rent_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Utilities_Resource(Resource):
+class UtilitiesResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -498,18 +544,30 @@ class Utilities_Resource(Resource):
             return dumped_utilities
         
         elif country != None and None in (city,abbreviation):
-            utilities = Utilities.query.join(Location, 
-            Utilities.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
-            return dumped_utilities
+            pagination_helper = PaginationHelper(
+                request,
+                query = Utilities.query.join(Location, 
+                Utilities.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.utilitiesresource',
+                key_name = 'results',
+                schema = utilities_schema
+            )
+            paginated_utilities = pagination_helper.paginate_query()
+            return paginated_utilities
         
         elif None in (country,city,abbreviation):
-            utilities = Utilities.query.join(Location, 
-            Utilities.location_id == Location.id)\
-            .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
-            return dumped_utilities
+            pagination_helper = PaginationHelper(
+                request,
+                query = Utilities.query.join(Location, 
+                Utilities.location_id == Location.id)\
+                .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.utilitiesresource',
+                key_name = 'results',
+                schema = utilities_schema
+            )
+            paginated_utilities = pagination_helper.paginate_query()
+            return paginated_utilities
         
         elif city != None and None in (country,abbreviation):
             utilities = Utilities.query.join(Location, 
@@ -519,15 +577,21 @@ class Utilities_Resource(Resource):
             return dumped_utilities
         
         else:
-            utilities = Utilities.query(Utilities.id,Utilities.utility,
-            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Utilities.location_id).join(Location, 
-            Utilities.location_id == Location.id).join(Location, 
-            Utilities.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Utilities.utility.asc(),Utilities.monthly_price.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
-            return dumped_utilities
+            pagination_helper = PaginationHelper(
+                request,
+                query = Utilities.query(Utilities.id,Utilities.utility,
+                (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
+                Utilities.location_id).join(Location, 
+                Utilities.location_id == Location.id).join(Location, 
+                Utilities.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Utilities.utility.asc(),Utilities.monthly_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.utilitiesresource',
+                key_name = 'results',
+                schema = utilities_schema
+            )
+            paginated_utilities = pagination_helper.paginate_query()
+            return paginated_utilities
     
     def post(self):
         utilities_dict = request.get_json()
@@ -582,7 +646,7 @@ class Utilities_Resource(Resource):
             sql_alchemy_error_response(e)
 
 
-class Transportation_Resource(Resource):
+class TransportationResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -609,18 +673,30 @@ class Transportation_Resource(Resource):
             return dumped_transportation
         
         elif country != None and None in (city,abbreviation):
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
-            return dumped_transportation
+            pagination_helper = PaginationHelper(
+                request,
+                query = Transportation.query.join(Location, 
+                Transportation.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.transportationresource',
+                key_name = 'results',
+                schema = transportation_schema
+            )
+            paginated_transportation = pagination_helper.paginate_query()
+            return paginated_transportation
         
         elif None in (country,city,abbreviation):
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id)\
-            .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
-            return dumped_transportation
+            pagination_helper = PaginationHelper(
+                request,
+                query = Transportation.query.join(Location, 
+                Transportation.location_id == Location.id)\
+                .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.transportationresource',
+                key_name = 'results',
+                schema = transportation_schema
+            )
+            paginated_transportation = pagination_helper.paginate_query()
+            return paginated_transportation
         
         elif city != None and None in (country,abbreviation):
             transportation = Transportation.query.join(Location, 
@@ -630,13 +706,19 @@ class Transportation_Resource(Resource):
             return dumped_transportation
         
         else:
-            transportation = Transportation.query(Transportation.id,Transportation.type,
-            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
-            return dumped_transportation
+            pagination_helper = PaginationHelper(
+                request,
+                query = Transportation.query(Transportation.id,Transportation.type,
+                (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
+                Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.transportationresource',
+                key_name = 'results',
+                schema = transportation_schema
+            )
+            paginated_transportation = pagination_helper.paginate_query()
+            return paginated_transportation
     
     def post(self):
         transportation_dict = request.get_json()
@@ -690,7 +772,7 @@ class Transportation_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Food_and_Beverage_Resource(Resource):
+class FoodBeverageResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -721,20 +803,32 @@ class Food_and_Beverage_Resource(Resource):
             return dumped_food_and_beverage
         
         elif country != None and None in (city,abbreviation):
-            food_and_beverage = Food_and_Beverage.query.join(Location, 
-            Food_and_Beverage.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Food_and_Beverage.item_category.asc(),
-            Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404()
-            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage,many = True)
-            return dumped_food_and_beverage
+            pagination_helper = PaginationHelper(
+                request,
+                query = Food_and_Beverage.query.join(Location, 
+                Food_and_Beverage.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Food_and_Beverage.item_category.asc(),
+                Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.foodbeverageresource',
+                key_name = 'results',
+                schema = food_and_beverage_schema
+            )
+            paginated_foodbeverage = pagination_helper.paginate_query()
+            return paginated_foodbeverage
         
         elif None in (country,city,abbreviation):
-            food_and_beverage = Food_and_Beverage.query.join(Location, 
-            Food_and_Beverage.location_id == Location.id)\
-            .order_by(Food_and_Beverage.item_category.asc(),
-            Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404()
-            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage,many = True)
-            return dumped_food_and_beverage
+            pagination_helper = PaginationHelper(
+                request,
+                query = Food_and_Beverage.query.join(Location, 
+                Food_and_Beverage.location_id == Location.id)\
+                .order_by(Food_and_Beverage.item_category.asc(),
+                Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.foodbeverageresource',
+                key_name = 'results',
+                schema = food_and_beverage_schema
+            )
+            paginated_foodbeverage = pagination_helper.paginate_query()
+            return paginated_foodbeverage
         
         elif city != None and None in (country,abbreviation):
             food_and_beverage = Food_and_Beverage.query.join(Location, 
@@ -745,16 +839,22 @@ class Food_and_Beverage_Resource(Resource):
             return dumped_food_and_beverage
         
         else:
-            food_and_beverage = Food_and_Beverage.query(Food_and_Beverage.id,
-            Food_and_Beverage.item_category,Food_and_Beverage.purchase_point,
-            Food_and_Beverage.item,
-            (Food_and_Beverage.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Food_and_Beverage.location_id).join(Location, Food_and_Beverage.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Food_and_Beverage.item_category.asc(),
-            Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404()
-            dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage._asdict(),many = True)
-            return dumped_food_and_beverage
+            pagination_helper = PaginationHelper(
+                request,
+                query = Food_and_Beverage.query(Food_and_Beverage.id,
+                Food_and_Beverage.item_category,Food_and_Beverage.purchase_point,
+                Food_and_Beverage.item,
+                (Food_and_Beverage.price * Currency.usd_to_local_exchange_rate).label("price"),
+                Food_and_Beverage.location_id).join(Location, Food_and_Beverage.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Food_and_Beverage.item_category.asc(),
+                Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.foodbeverageresource',
+                key_name = 'results',
+                schema = food_and_beverage_schema
+            )
+            paginated_foodbeverage = pagination_helper.paginate_query()
+            return paginated_foodbeverage
     
     def post(self):
         food_and_beverage_dict = request.get_json()
@@ -816,7 +916,7 @@ class Food_and_Beverage_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Childcare_Resource(Resource):
+class ChildcareResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -843,18 +943,30 @@ class Childcare_Resource(Resource):
             return dumped_childcare
         
         elif country != None and None in (city,abbreviation):
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare,many = True)
-            return dumped_childcare
+            pagination_helper = PaginationHelper(
+                request,
+                query = Childcare.query.join(Location, 
+                Childcare.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.childcareresource',
+                key_name = 'results',
+                schema = childcare_schema
+            )
+            paginated_childcare = pagination_helper.paginate_query()
+            return paginated_childcare
         
         elif None in (country,city,abbreviation):
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id)\
-            .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare,many = True)
-            return dumped_childcare
+            pagination_helper = PaginationHelper(
+                request,
+                query = Childcare.query.join(Location, 
+                Childcare.location_id == Location.id)\
+                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.childcareresource',
+                key_name = 'results',
+                schema = childcare_schema
+            )
+            paginated_childcare = pagination_helper.paginate_query()
+            return paginated_childcare
         
         elif city != None and None in (country,abbreviation):
             childcare = Childcare.query.join(Location, 
@@ -864,13 +976,19 @@ class Childcare_Resource(Resource):
             return dumped_childcare
         
         else:
-            childcare = Childcare.query(Childcare.id, Childcare.type,
-            (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
-            Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare._asdict(),many = True)
-            return dumped_childcare
+            pagination_helper = PaginationHelper(
+                request,
+                query = Childcare.query(Childcare.id, Childcare.type,
+                (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
+                Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.childcareresource',
+                key_name = 'results',
+                schema = childcare_schema
+            )
+            paginated_childcare = pagination_helper.paginate_query()
+            return paginated_childcare
     
     def post(self):
         childcare_dict = request.get_json()
@@ -926,7 +1044,7 @@ class Childcare_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Apparel_Resource(Resource):
+class ApparelResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -953,18 +1071,30 @@ class Apparel_Resource(Resource):
             return dumped_apparel
         
         elif country != None and None in (city,abbreviation):
-            apparel = Apparel.query.join(Location, 
-            Apparel.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404()
-            dumped_apparel = apparel_schema.dump(apparel,many = True)
-            return dumped_apparel
+            pagination_helper = PaginationHelper(
+                request,
+                query = Apparel.query.join(Location, 
+                Apparel.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.apparelresource',
+                key_name = 'results',
+                schema = apparel_schema
+            )
+            paginated_apparel = pagination_helper.paginate_query()
+            return paginated_apparel
         
         elif None in (country,city,abbreviation):
-            apparel = Apparel.query.join(Location, 
-            Apparel.location_id == Location.id)\
-            .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404()
-            dumped_apparel = apparel_schema.dump(apparel,many = True)
-            return dumped_apparel
+            pagination_helper = PaginationHelper(
+                request,
+                query = Apparel.query.join(Location, 
+                Apparel.location_id == Location.id)\
+                .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.apparelresource',
+                key_name = 'results',
+                schema = apparel_schema
+            )
+            paginated_apparel = pagination_helper.paginate_query()
+            return paginated_apparel
         
         elif city != None and None in (country,abbreviation):
             apparel = Apparel.query.join(Location, 
@@ -974,13 +1104,19 @@ class Apparel_Resource(Resource):
             return dumped_apparel
         
         else:
-            apparel = Apparel.query(Apparel.id, Apparel.item,
-            (Apparel.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Apparel.location_id).join(Location, Apparel.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404()
-            dumped_apparel = apparel_schema.dump(apparel._asdict(),many = True)
-            return dumped_apparel
+            pagination_helper = PaginationHelper(
+                request,
+                query = Apparel.query(Apparel.id, Apparel.item,
+                (Apparel.price * Currency.usd_to_local_exchange_rate).label("price"),
+                Apparel.location_id).join(Location, Apparel.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Apparel.item.asc(),Apparel.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.apparelresource',
+                key_name = 'results',
+                schema = apparel_schema
+            )
+            paginated_apparel = pagination_helper.paginate_query()
+            return paginated_apparel
     
     def post(self):
         apparel_dict = request.get_json()
@@ -1034,7 +1170,7 @@ class Apparel_Resource(Resource):
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
 
-class Leisure_Resource(Resource):
+class LeisureResource(Resource):
     @jwt_required
     def get(self,id=None,country=None,city=None,abbreviation=None):
 
@@ -1151,27 +1287,27 @@ cost_of_living.add_resource(LogoutResource, '/auth/logout')
 cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
-cost_of_living.add_resource(Home_Purchase_Resource, '/home_purchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
+cost_of_living.add_resource(HomePurchaseResource, '/home_purchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
 <string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
 '/home_purchase/<string:city>/<string:abbreviation>', '/home_purchase/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Rent_Resource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
+cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
 <string:abbreviation>','/rent/<string:country>/<string:city>', '/rent/<string:country>', 
 '/rent/<string:city>/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Utilities_Resource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
+cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
 <string:abbreviation>','/utilities/<string:country>/<string:city>', '/utiilties/<string:country>', 
 '/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Transportation_Resource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
+cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
 <string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
 '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Food_and_Beverage_Resource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
+cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
 <string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
 '/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Childcare_Resource,'/childcare/', '/childcare/<int:id>','/childcare/<string:country>/<string:city>/\
+cost_of_living.add_resource(ChildcareResource,'/childcare/', '/childcare/<int:id>','/childcare/<string:country>/<string:city>/\
 <string:abbreviation>','/childcare/<string:country>/<string:city>', '/childcare/<string:country>', 
 '/childcare/<string:city>/<string:abbreviation>', '/childcare/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Apparel_Resource, '/apparel/', '/apparel/<int:id>','/apparel/<string:country>/<string:city>/\
+cost_of_living.add_resource(ApparelResource, '/apparel/', '/apparel/<int:id>','/apparel/<string:country>/<string:city>/\
 <string:abbreviation>','/apparel/<string:country>/<string:city>', '/apparel/<string:country>', 
 '/apparel/<string:city>/<string:abbreviation>', '/apparel/<string:city>/<string:abbreviation>')
-cost_of_living.add_resource(Leisure_Resource, '/leisure/', '/leisure/<int:id>','/leisure/<string:country>/<string:city>/\
+cost_of_living.add_resource(LeisureResource, '/leisure/', '/leisure/<int:id>','/leisure/<string:country>/<string:city>/\
 <string:abbreviation>','/leisure/<string:country>/<string:city>', '/leisure/<string:country>', 
 '/leisure/<string:city>/<string:abbreviation>', '/leisure/<string:city>/<string:abbreviation>')
