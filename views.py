@@ -6,6 +6,7 @@ from models import *
 from sqlalchemy.exc import SQLAlchemyError
 
 cost_of_living_blueprint = Blueprint('cost_of_living', __name__)
+user_schema = UserSchema()
 currency_schema = CurrencySchema()
 location_schema = LocationSchema()
 home_purchase_schema = Home_PurchaseSchema()
@@ -51,6 +52,7 @@ class UserResource(Resource):
     def post(self):
         user_register_dict = request.get_json()
         request_not_empty(user_register_dict)
+        validate_request(user_schema,user_register_dict)
 
         user = User.query.filter_by(email = user_register_dict['email']).first()
         if not user:
@@ -73,6 +75,7 @@ class LoginResource(Resource):
     def post(self):
         user_dict = request.get_json()
         request_not_empty(user_dict)
+        validate_request(user_schema,user_dict)
 
         try:
             user = User.query.filter_by(email = user_dict['email']).first()
@@ -123,6 +126,7 @@ class ResetPasswordResource(Resource):
     def post(self):
         reset_password_dict = request.get_json()
         request_not_empty(reset_password_dict)
+        validate_request(user_schema,reset_password_dict)
         
         try:
             user = User.query.filter_by(email = reset_password_dict['email']).first()
