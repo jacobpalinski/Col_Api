@@ -1,6 +1,7 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+SECRET_KEY = os.getenv('SECRET_KEY','aijf3298t483w2w')
 SQLALCHEMY_ECHO = False
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 # Replace your_user_name with the user name you configured for the database
