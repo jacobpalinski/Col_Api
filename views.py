@@ -87,7 +87,7 @@ class LoginResource(Resource):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
                     response = {
-                    'message': 'Successfully logged in.',
+                    'message': 'successfully logged in.',
                     'auth_token': auth_token.decode()}
                     return response, HttpStatus.ok_200.value
             else:
