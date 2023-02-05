@@ -62,7 +62,7 @@ class UserResource(Resource):
         if not user:
             try:
                 user = User(email = user_register_dict['email'])
-                user.check_password_strength_and_hash_if_ok(user_register_dict['password_hash'])
+                user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
                 response = {'message': 'successfully registered'}
                 return response, HttpStatus.created_201.value
