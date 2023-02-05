@@ -1,13 +1,11 @@
 import jwt
 import datetime
 import re
-from helpers import *
 from marshmallow import Schema, fields
 from marshmallow import validate
+from passlib.apps import custom_app_context as password_context
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from passlib.apps import custom_app_context as password_context
-from app import app
 
 orm = SQLAlchemy()
 ma = Marshmallow()
@@ -64,7 +62,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
             }
             return jwt.encode (
                 payload,
-                app.config['SECRET_KEY'],
+                "secret_key",
                 algorithm = 'HS256'
             )
         except Exception as e:
@@ -74,7 +72,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
     def decode_auth_token(auth_token):
         # Decode Auth Token
         try:
-            payload = jwt.decode(auth_token, app.config['SECRET_KEY'])
+            payload = jwt.decode(auth_token, "secret_key")
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again'

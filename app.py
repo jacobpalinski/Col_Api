@@ -1,8 +1,7 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from models import orm
 from views import cost_of_living_blueprint
+from models import orm
 
 def create_app(config_filename):
     app = Flask(__name__)

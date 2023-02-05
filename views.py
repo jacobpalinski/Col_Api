@@ -2,7 +2,11 @@ from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from flask_jwt_extended import jwt_required
 from httpstatus import HttpStatus
-from models import *
+from models import (User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
+Home_Purchase,Home_PurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
+Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
+Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
+from helpers import *
 from sqlalchemy.exc import SQLAlchemyError
 
 cost_of_living_blueprint = Blueprint('cost_of_living', __name__)
@@ -1202,18 +1206,30 @@ class LeisureResource(Resource):
             return dumped_leisure
         
         elif country != None and None in (city,abbreviation):
-            leisure = Leisure.query.join(Location, 
-            Leisure.location_id == Location.id).filter(Location.country == country)\
-            .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
-            dumped_leisure = leisure_schema.dump(leisure,many = True)
-            return dumped_leisure
+            pagination_helper = PaginationHelper(
+                request,
+                query = Leisure.query.join(Location, 
+                Leisure.location_id == Location.id).filter(Location.country == country)\
+                .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.leisureresource',
+                key_name = 'results',
+                schema = leisure_schema
+            )
+            paginated_leisure = pagination_helper.paginate_query()
+            return paginated_leisure
         
         elif None in (country,city,abbreviation):
-            leisure = Leisure.query.join(Location, 
-            Leisure.location_id == Location.id)\
-            .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
-            leisure = leisure_schema.dump(leisure,many = True)
-            return dumped_leisure
+            pagination_helper = PaginationHelper(
+                request,
+                query = Leisure.query.join(Location, 
+                Leisure.location_id == Location.id)\
+                .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.leisureresource',
+                key_name = 'results',
+                schema = leisure_schema
+            )
+            paginated_leisure = pagination_helper.paginate_query()
+            return paginated_leisure
         
         elif city != None and None in (country,abbreviation):
             leisure = Leisure.query.join(Location, 
@@ -1223,14 +1239,20 @@ class LeisureResource(Resource):
             return dumped_leisure
         
         else:
-            leisure = Leisure.query(Leisure.id, Leisure.activity,
-            (Leisure.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Leisure.location_id).join(Location, 
-            Leisure.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-            .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404()
-            dumped_leisure = leisure_schema.dump(leisure._asdict(),many = True)
-            return dumped_leisure
+            pagination_helper = PaginationHelper(
+                request,
+                query = Leisure.query(Leisure.id, Leisure.activity,
+                (Leisure.price * Currency.usd_to_local_exchange_rate).label("price"),
+                Leisure.location_id).join(Location, 
+                Leisure.location_id == Location.id)\
+                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
+                .order_by(Leisure.activity.asc(),Leisure.price.asc()).all().get_or_404(),
+                resource_for_url = 'cost_of_living.leisureresource',
+                key_name = 'results',
+                schema = leisure_schema
+            )
+            paginated_leisure = pagination_helper.paginate_query()
+            return paginated_leisure
     
     def post(self):
         leisure_dict = request.get_json()
