@@ -51,7 +51,7 @@ class UserResource(Resource):
             return response, HttpStatus.unauthorized_401.value
         else:
             response = {'message' : 'Provide a valid auth token'}
-            return response, HttpStatus.unauthorized_401.value
+            return response, HttpStatus.forbidden_403.value
                 
     def post(self):
         user_register_dict = request.get_json()
@@ -104,7 +104,11 @@ class LogoutResource(Resource):
     def post(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
-            auth_token = auth_header.split(" ")[1]
+            try:
+                auth_token = auth_header.split(" ")[1]
+            except IndexError:
+                response = {'message': 'Bearer token malformed'}
+                return response, HttpStatus.unauthorized_401.value
         else:
             auth_token = ''
         if auth_token:

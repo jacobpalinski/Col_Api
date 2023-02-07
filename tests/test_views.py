@@ -106,13 +106,19 @@ def test_user_get_valid_token(client):
     assert get_response_data['data'] == User.query(User.creation_date).filter(User.id == 1)
     assert get_response.status_code == HttpStatus.ok_200.value
 
+def test_user_get_no_token(client):
+    get_response = client.get('/auth/user',
+        headers = {"Content-Type": "application/json"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['message'] == 'Provide a valid auth token'
+    assert get_response.status_code == HttpStatus.forbidden_403.value
+
 def test_user_get_invalid_token(client):
-    response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+    get_response = client.get('/auth/user', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
-    response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'Invalid token. Please log in again.'
-    assert response.status_code == HttpStatus.bad_request_400.value
-    assert BlacklistToken.query.count() == 0
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['message'] == 'Invalid token. Please log in again.'
+    assert get_response.status_code == HttpStatus.unauthorized_401.value
 
 def test_user_get_expired_token(client):
     new_user = client.post('/auth/user',
@@ -200,6 +206,14 @@ def test_logout_valid_token(client):
     assert response.status_code == HttpStatus.ok_200.value
     assert BlacklistToken.query.count() == 1
 
+def test_logout_no_token(client):
+    response = client.post('/auth/logout',
+        headers = {"Content-Type": "application/json"})
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['message'] == 'Provide a valid auth token'
+    assert response.status_code == HttpStatus.forbidden_403.value
+    assert BlacklistToken.query.count() == 0
+
 def test_logout_invalid_token(client):
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
@@ -267,11 +281,32 @@ def test_logout_blacklisted_token(client):
     assert response.status_code == HttpStatus.unauthorized_401.value
     assert BlacklistToken.query.count() == 1
 
-def test_logout_no_token(client):
-    response = client.post('/auth/logout', headers = {"Content-Type": "application/json"})
+def test_logout_malformed_token(client):
+    new_user = client.post('/auth/user',
+        headers = {'Content-Type' : 'application/json'},
+        data = json.dumps({
+        'email' : TEST_EMAIL,
+        'password': 'X4nmasXII!'
+        }))
+    new_user_data = json.loads(new_user.get_data(as_text = True))
+    assert new_user_data['message'] == 'successfully registered'
+    assert new_user.status_code == HttpStatus.created_201.value
+    assert User.query.count() == 1
+    login = client.post('/auth/login',
+        headers = {'Content-Type' : 'application/json'},
+        data = json.dumps({
+        'email' : TEST_EMAIL,
+        'password': 'X4nmasXII!'
+        }))
+    login_data = json.loads(login.get_data(as_text = True))
+    assert login_data['message'] == 'successfully logged in'
+    assert bool(login_data.get('auth_token')) == True
+    assert login.status_code == HttpStatus.ok_200.value
+    response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer{login_data['token']}"})
     response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'Provide a valid auth token.'
-    assert response.status_code == HttpStatus.forbidden_403.value
+    assert response_data['message'] == 'Bearer token malformed'
+    assert response.status_code == HttpStatus.unauthorized_401.value
     assert BlacklistToken.query.count() == 0
 
 def test_reset_password_exist_user(client):
