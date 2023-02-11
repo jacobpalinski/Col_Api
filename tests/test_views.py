@@ -201,6 +201,140 @@ def test_reset_password_no_user(client):
     assert response_data['message'] == 'User does not exist'
     assert response.status_code == HttpStatus.unauthorized_401.value
 
+def create_currency(client, abbreviation, usd_to_local_exchange_rate):
+    response = client.post('/currencies/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'abbreviation': abbreviation,
+        'usd_to_local_exchange_rate': usd_to_local_exchange_rate
+        }))
+    return response
+
+def test_currency_post_new_currency(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+
+def test_currency_post_duplicated_currency(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    response = create_currency(client,'AUD',1.45)
+    assert response.status_code == HttpStatus.bad_request_400.value
+    assert Currency.query.count() == 1
+
+def test_currency_get_with_id(client,create_user,login):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    get_response = client.get('/currencies/1',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['abbreviation'] == 'AUD'
+    assert get_response_data['usd_to_local_exchange_rate'] == 1.45
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_currency_get_without_id(client,create_user,login):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    response = create_currency(client,'CHF',0.92)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'CHF'
+    assert response_data['usd_to_local_exchange_rate'] == 0.92
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    get_first_page_response = client.get('/currencies/',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data) == 2
+    assert get_first_page_response_data['results'][0]['abbreviation'] == 'AUD'
+    assert get_first_page_response_data['results'][0]['usd_to_local_exchange_rate'] == 1.45
+    assert get_first_page_response_data['results'][0]['abbreviation'] == 'CHF'
+    assert get_first_page_response_data['results'][0]['usd_to_local_exchange_rate'] == 0.92
+    assert get_first_page_response_data['count'] == 2
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/currencies/?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/currencies/?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_currency_update(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    patch_response = client.patch('/currencies/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'abbreviation': 'Aud',
+        'usd_to_local_exchange_rate' : 1.50
+        }))
+    assert patch_response.status_code == HttpStatus.ok_200.value
+    get_response = client.get('/currencies/1',
+        headers = {'Content-Type': 'application/json'})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['abbreviation'] == 'Aud'
+    assert get_response_data['usd_to_local_exchange_rate'] == 1.50
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_currency_update_no_id_exist(client):
+    patch_response = client.patch('/currencies/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'abbreviation': 'Aud',
+        'usd_to_local_exchange_rate' : 1.50
+        }))
+    assert patch_response.status_code == HttpStatus.notfound_404.value
+    assert Currency.query.count() == 0
+
+def test_currency_delete(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    delete_response = client.delete('/currencies/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Currency.query.count() == 0
+
+def test_currency_delete_no_id_exist(client):
+    delete_response = client.delete('/currencies/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Currency.query.count() == 0
+
+
+
+
+
+
+
+
+
 
 
 
