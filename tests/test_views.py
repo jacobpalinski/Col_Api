@@ -76,7 +76,7 @@ def test_login_invalid_user(client):
     assert response.status_code == HttpStatus.notfound_404.value
 
 @pytest.fixture
-def login(create_user,client):
+def login(client, create_user):
     login = client.post('/auth/login',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
@@ -244,6 +244,18 @@ def test_currency_get_with_id(client,create_user,login):
     assert get_response_data['usd_to_local_exchange_rate'] == 1.45
     assert get_response.status_code == HttpStatus.ok_200.value
 
+def test_currency_get_notexist_id(client,create_user,login):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    get_response = client.get('/currencies/2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    assert get_response.status_code == HttpStatus.notfound_404.value
+
 def test_currency_get_without_id(client,create_user,login):
     response = create_currency(client,'AUD',1.45)
     response_data = json.loads(response.get_data(as_text = True))
@@ -264,8 +276,8 @@ def test_currency_get_without_id(client,create_user,login):
     assert len(get_first_page_response_data) == 2
     assert get_first_page_response_data['results'][0]['abbreviation'] == 'AUD'
     assert get_first_page_response_data['results'][0]['usd_to_local_exchange_rate'] == 1.45
-    assert get_first_page_response_data['results'][0]['abbreviation'] == 'CHF'
-    assert get_first_page_response_data['results'][0]['usd_to_local_exchange_rate'] == 0.92
+    assert get_first_page_response_data['results'][1]['abbreviation'] == 'CHF'
+    assert get_first_page_response_data['results'][1]['usd_to_local_exchange_rate'] == 0.92
     assert get_first_page_response_data['count'] == 2
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
@@ -326,6 +338,162 @@ def test_currency_delete_no_id_exist(client):
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Currency.query.count() == 0
+
+def create_location(client, country, city, abbreviation):
+    response = client.post('/locations/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'country': country,
+        'city': city,
+        'abbreviation': abbreviation
+        }))
+    return response
+
+def test_location_post_new_location_currency_exist(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    post_response = create_location('Australia','Perth','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Perth'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+
+def test_location_post_new_location_currency_none(client):
+    response = create_location('Australia','Perth','AUD')
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['message'] == 'Specified currency doesnt exist in /currencies/ API endpoint'
+    assert response.status_code == HttpStatus.notfound_404.value
+    assert Location.query.count() == 0
+
+def test_location_get_with_id(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    post_response = create_location('Australia','Perth','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Perth'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    get_response = client.get('/locations/1',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['country'] == 'Australia'
+    assert get_response_data['city'] == 'Perth'
+    assert get_response_data['currency']['id'] == 1
+    assert get_response_data['currency']['abbreviation'] == 'AUD'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_location_get_notexist_id(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    post_response = create_location('Australia','Perth','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Perth'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    get_response = client.get('/locations/2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    assert get_response.status_code == HttpStatus.notfound_404.value
+
+def test_location_get_without_id(client,create_user,login):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    post_response = create_location('Australia','Perth','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Perth'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_location('Australia','Melbourne','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Melbourne'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    get_first_page_response = client.get('/locations/',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data) == 2
+    assert get_first_page_response_data['results'][0]['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['city'] == 'Perth'
+    assert get_first_page_response_data['results'][0]['currency']['id'] == 1
+    assert get_first_page_response_data['results'][0]['currency']['abbreviation'] == 'AUD'
+    assert get_first_page_response_data['results'][1]['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['currency']['id'] == 1
+    assert get_first_page_response_data['results'][1]['currency']['abbreviation'] == 'AUD'
+    assert get_first_page_response_data['count'] == 2
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/locations/?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/locations/?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_location_delete(client):
+    response = create_currency(client,'AUD',1.45)
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['abbreviation'] == 'AUD'
+    assert response_data['usd_to_local_exchange_rate'] == 1.45
+    assert response.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    post_response = create_location('Australia','Perth','AUD')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['country'] == 'Australia'
+    assert post_response_data['city'] == 'Perth'
+    assert post_response_data['currency']['id'] == 1
+    assert post_response_data['currency']['abbreviation'] == 'AUD'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    delete_response = client.delete('/locations/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Location.query.count() == 0
+
+
+
+
+
+
+
+
+
+
 
 
 

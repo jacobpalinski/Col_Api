@@ -241,6 +241,7 @@ class LocationSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
     country = fields.String(required = True)
     city = fields.String(required = True)
+    currency = fields.Nested(CurrencySchema, only = ['id','abbreviation'])
 
 class Home_PurchaseSchema(ma.Schema):
     id = fields.Integer(dump_only = True)

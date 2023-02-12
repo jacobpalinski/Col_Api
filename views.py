@@ -242,14 +242,14 @@ class LocationListResource(Resource):
         validate_request(location_schema,location_dict)
         
         try:
-            currency_abbreviation = location_dict['currency']['abbreviation']
+            currency_abbreviation = location_dict['abbreviation']
             currency = Currency.query.filter_by(abbreviation = currency_abbreviation).first()
 
             if currency is None:
                 response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
                 return response, HttpStatus.notfound_404.value
             
-            location = Location(country = location_dict['country'], city = location_dict['city'])
+            location = Location(country = location_dict['country'], city = location_dict['city'], currency = currency)
             location.add(location)
             query = Location.query.get(location.id)
             dump_result = location_schema.dump(query)
