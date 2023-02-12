@@ -349,7 +349,7 @@ class HomePurchaseResource(Resource):
         validate_request(home_purchase_schema,home_purchase_dict)
         
         try:
-            location_city = home_purchase_dict['location']['city']
+            location_city = home_purchase_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -358,7 +358,8 @@ class HomePurchaseResource(Resource):
             
             home_purchase = Home_Purchase(property_location = home_purchase_dict['property_location'], 
             price_per_sqm = home_purchase_dict['price_per_sqm'], 
-            mortgage_interest = home_purchase_dict['mortgage_interest'])
+            mortgage_interest = home_purchase_dict['mortgage_interest'],
+            location = location)
             home_purchase.add(home_purchase)
             query = Home_Purchase.query.get(home_purchase.id)
             dump_result = home_purchase_schema.dump(query)
@@ -1317,9 +1318,9 @@ cost_of_living.add_resource(LogoutResource, '/auth/logout')
 cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
-cost_of_living.add_resource(HomePurchaseResource, '/home_purchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
+cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
 <string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
-'/home_purchase/<string:city>/<string:abbreviation>', '/home_purchase/<string:city>/<string:abbreviation>')
+'/homepurchase/<string:city>/<string:abbreviation>', '/homepurchase/<string:city>/<string:abbreviation>')
 cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
 <string:abbreviation>','/rent/<string:country>/<string:city>', '/rent/<string:country>', 
 '/rent/<string:city>/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')

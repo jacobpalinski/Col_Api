@@ -241,11 +241,11 @@ class LocationSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
     country = fields.String(required = True)
     city = fields.String(required = True)
-    currency = fields.Nested(CurrencySchema, only = ['id','abbreviation'])
+    currency = fields.Nested(CurrencySchema,only = ['id','abbreviation'])
 
 class Home_PurchaseSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     property_location = fields.String(validate = validate.Length(10))
     price_per_sqm = fields.Float()
     mortgage_interest = fields.Float()
