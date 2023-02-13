@@ -485,6 +485,12 @@ def test_location_delete(client):
     assert delete_response.status_code == HttpStatus.no_content_204.value
     assert Location.query.count() == 0
 
+def test_location_delete_no_id_exist(client):
+    delete_response = client.delete('/locations/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Location.query.count() == 0
+
 def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
     response = client.post('/locations/',
         headers = {'Content-Type': 'application/json'},
@@ -1249,6 +1255,100 @@ def test_home_purchase_get_abbreviation_country_none_city_none(client,create_use
     assert get_second_page_response_data['previous'] != None
     assert get_second_page_response_data['previous'] == '/homepurchase/AUD?page=1'
     assert get_second_page_response_data['next'] == None
+
+def test_home_purchase_update(client):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['price_per_sqm'] == 6339.73
+    assert post_response_data['mortgage_interest'] == 5.09
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Home_Purchase.query.count() == 1
+    patch_response = client.patch('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'price_per_sqm': 7000,
+        'mortgage_interest': 6.01
+        }))
+    assert patch_response.status_code == HttpStatus.ok_200.value
+    get_response = client.get('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['property_location'] == 'Outside City Centre'
+    assert get_response_data['price_per_sqm'] == 7000
+    assert get_response_data['mortgage_interest'] == 6.01
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_home_purchase_update_no_id_exist(client):
+    patch_response = client.patch('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'price_per_sqm': 7000,
+        'mortgage_interest': 6.01
+        }))
+    assert patch_response.status_code == HttpStatus.notfound_404.value
+    assert Home_Purchase.query.count() == 0
+
+def test_home_purchase_delete(client):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['price_per_sqm'] == 6339.73
+    assert post_response_data['mortgage_interest'] == 5.09
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Home_Purchase.query.count() == 1
+    delete_response = client.delete('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Home_Purchase.query.count() == 0
+
+def test_home_purchase_delete_no_id_exist(client):
+    delete_response = client.delete('/locations/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Home_Purchase.query.count() == 0
+
+
+
 
 
 
