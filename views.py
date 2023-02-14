@@ -480,7 +480,7 @@ class RentResource(Resource):
         validate_request(rent_schema,rent_dict)
         
         try:
-            location_city = rent_dict['location']['city']
+            location_city = rent_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -488,7 +488,8 @@ class RentResource(Resource):
                 return response, HttpStatus.notfound_404.value
             
             rent = Rent(property_location = rent_dict['property_location'], 
-            bedrooms = rent_dict['bedrooms'], monthly_price = rent_dict['monthly_price'])
+            bedrooms = rent_dict['bedrooms'], monthly_price = rent_dict['monthly_price'],
+            location = location)
             rent.add(rent)
             query = Rent.query.get(rent.id)
             dump_result = rent_schema.dump(query)
@@ -1323,7 +1324,7 @@ cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/', '/homepurcha
 '/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>', '/homepurchase/<string:city>/<string:abbreviation>')
 cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
 <string:abbreviation>','/rent/<string:country>/<string:city>', '/rent/<string:country>', 
-'/rent/<string:city>/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')
+'/rent/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')
 cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
 <string:abbreviation>','/utilities/<string:country>/<string:city>', '/utiilties/<string:country>', 
 '/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>')

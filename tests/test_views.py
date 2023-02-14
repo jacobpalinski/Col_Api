@@ -492,7 +492,7 @@ def test_location_delete_no_id_exist(client):
     assert Location.query.count() == 0
 
 def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
-    response = client.post('/locations/',
+    response = client.post('/homepurchase/',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -502,7 +502,7 @@ def create_home_purchase(client,property_location,price_per_sqm,mortgage_interes
         }))
     return response
 
-def test_home_purchase_post_new_home_purchase_location_exist(client):
+def test_home_purchase_post_home_purchase_location_exist(client):
     currency = create_currency(client,'AUD',1.45)
     currency_data = json.loads(currency.get_data(as_text = True))
     assert currency_data['abbreviation'] == 'AUD'
@@ -519,7 +519,7 @@ def test_home_purchase_post_new_home_purchase_location_exist(client):
     assert Location.query.count() == 1
     post_response = create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
-    assert post_response_data['property_location'] == 'Australia'
+    assert post_response_data['property_location'] == 'City Centre'
     assert post_response_data['price_per_sqm'] == 6339.73
     assert post_response_data['mortgage_interest'] == 5.09
     assert post_response_data['location']['id'] == 1
@@ -528,7 +528,7 @@ def test_home_purchase_post_new_home_purchase_location_exist(client):
     assert post_response.status_code == HttpStatus.created_201.value
     assert Home_Purchase.query.count() == 1
 
-def test_home_purchase_post_new_home_purchase_location_notexist(client):
+def test_home_purchase_post_home_purchase_location_notexist(client):
     response = create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
@@ -552,7 +552,7 @@ def test_home_purchase_get_with_id(client,create_user,login):
     assert Location.query.count() == 1
     post_response = create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
-    assert post_response_data['property_location'] == 'Australia'
+    assert post_response_data['property_location'] == 'City Centre'
     assert post_response_data['price_per_sqm'] == 6339.73
     assert post_response_data['mortgage_interest'] == 5.09
     assert post_response_data['location']['id'] == 1
@@ -564,7 +564,7 @@ def test_home_purchase_get_with_id(client,create_user,login):
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['property_location'] == 'Australia'
+    assert get_response_data['property_location'] == 'City Centre'
     assert get_response_data['price_per_sqm'] == 6339.73
     assert get_response_data['mortgage_interest'] == 5.09
     assert get_response_data['location']['id'] == 1
@@ -589,7 +589,7 @@ def test_home_purchase_get_notexist_id(client,create_user,login):
     assert Location.query.count() == 1
     post_response = create_home_purchase('City Centre', 9184.02, 5.09, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
-    assert post_response_data['property_location'] == 'Australia'
+    assert post_response_data['property_location'] == 'City Centre'
     assert post_response_data['price_per_sqm'] == 6339.73
     assert post_response_data['mortgage_interest'] == 5.09
     assert post_response_data['location']['id'] == 1
@@ -1346,6 +1346,778 @@ def test_home_purchase_delete_no_id_exist(client):
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Home_Purchase.query.count() == 0
+
+def create_rent(client,property_location,bedrooms,monthly_price,city):
+    response = client.post('/locations/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': property_location,
+        'bedrooms': bedrooms,
+        'monthly_price': monthly_price,
+        'city': city
+        }))
+    return response
+
+def test_rent_post_new_rent_location_exist(client):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1642.43 , 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+
+def test_rent_post_location_notexist(client):
+    response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
+    assert response.status_code == HttpStatus.notfound_404.value
+    assert Rent.query.count() == 0
+
+def test_rent_get_with_id(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    get_response = client.get('/rent/1',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['property_location'] == 'City Centre'
+    assert get_response_data['bedrooms'] == 1
+    assert get_response_data['monthly_price'] == 1642.43
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_rent_get_notexist_id(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    get_response = client.get('/rent/2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    assert get_response.status_code == HttpStatus.notfound_404.value
+
+def test_rent_get_country_city_abbreviation(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_response = client.get('/rent/Australia/Perth/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['property_location'] == 'City Centre'
+    assert get_response_data['bedrooms'] == 1
+    assert get_response_data['monthly_price'] == 1642.43
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_rent_get_country_city_abbreviation_none(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_response = client.get('/rent/Australia/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['property_location'] == 'City Centre'
+    assert get_response_data['bedrooms'] == 1
+    assert get_response_data['monthly_price'] == 1642.43
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_rent_get_country_city_none_abbreviation_none(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_first_page_response = client.get('/rent/Australia',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][0]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 1642.43
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][1]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 1408.25
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][2]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 1999.98
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/rent/Australia?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/rent/Australia?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_rent_get_country_none_city_none_abbreviation_none(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_first_page_response = client.get('/rent/',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 4
+    assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][0]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 1642.43
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][1]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 1408.25
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][2]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 1999.98
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][3]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][3]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][3]['monthly_price'] == 2263.05
+    assert get_first_page_response_data['results'][3]['location']['id'] == 4
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['count'] == 4
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/rent/?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/homepurchase/?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_rent_get_city_country_none_abbreviation_none(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_response = client.get('/rent/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response = json.loads(get_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_rent_get_abbreviation_country_none_city_none(client,create_user,login):
+    currency = create_currency(client,'AUD',1.45)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'AUD'
+    assert currency_data['usd_to_local_exchange_rate'] == 1.45
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 1
+    currency = create_currency(client,'CHF',0.92)
+    currency_data = json.loads(currency.get_data(as_text = True))
+    assert currency_data['abbreviation'] == 'CHF'
+    assert currency_data['usd_to_local_exchange_rate'] == 0.92
+    assert currency_data.status_code == HttpStatus.created_201.value
+    assert Currency.query.count() == 2
+    location = create_location('Australia','Perth','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Perth'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 1
+    location = create_location('Australia','Melbourne','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Melbourne'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 2
+    location = create_location('Australia','Sydney','AUD')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Australia'
+    assert location_data['city'] == 'Sydney'
+    assert location_data['currency']['id'] == 1
+    assert location_data['currency']['abbreviation'] == 'AUD'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 3
+    location = create_location('Switzerland','Zurich','CHF')
+    location_data = json.loads(location.get_data(as_text = True))
+    assert location_data['country'] == 'Switzerland'
+    assert location_data['city'] == 'Zurich'
+    assert location_data['currency']['id'] == 2
+    assert location_data['currency']['abbreviation'] == 'CHF'
+    assert location.status_code == HttpStatus.created_201.value
+    assert Location.query.count() == 4
+    post_response = create_rent('City Centre', 1, 1642.43, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1642.43
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 1
+    post_response = create_rent('City Centre', 1, 1408.25, 'Melbourne')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1408.25
+    assert post_response_data['location']['id'] == 2
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Melbourne'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 2
+    post_response = create_rent('City Centre', 1, 1999.98, 'Sydney')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 1999.98
+    assert post_response_data['location']['id'] == 3
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Sydney'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 3
+    post_response = create_rent('City Centre', 1, 2263.05, 'Zurich')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['property_location'] == 'City Centre'
+    assert post_response_data['bedrooms'] == 1
+    assert post_response_data['monthly_price'] == 2263.05
+    assert post_response_data['location']['id'] == 4
+    assert post_response_data['location']['country'] == 'Switzerland'
+    assert post_response_data['location']['city'] == 'Zurich'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Rent.query.count() == 4
+    get_first_page_response = client.get('/rent/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][0]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 1642.43
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][1]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 1408.25
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
+    assert get_first_page_response_data['results'][2]['bedrooms'] == 1
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 1999.98
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/rent/AUD?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/rent/AUD?page=1'
+    assert get_second_page_response_data['next'] == None
+
+
+
+
 
 
 
