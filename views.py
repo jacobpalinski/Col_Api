@@ -508,7 +508,7 @@ class RentResource(Resource):
         try:
             if 'property_location' in rent_dict and rent_dict['property_location'] != None:
                 rent.property_location = rent_dict['property_location']
-            if 'price_per_sqm' in rent_dict and \
+            if 'bedrooms' in rent_dict and \
             rent_dict['bedrooms'] != None:
                 rent.bedrooms = rent_dict['bedrooms']
             if 'monthly_price' in rent_dict and \
@@ -613,7 +613,7 @@ class UtilitiesResource(Resource):
         validate_request(utilities_schema,utilities_dict)
         
         try:
-            location_city = utilities_dict['location']['city']
+            location_city = utilities_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -621,7 +621,8 @@ class UtilitiesResource(Resource):
                 return response, HttpStatus.notfound_404.value
             
             utilities = Utilities(utility = utilities_dict['utility'], 
-            monthly_price = utilities_dict['monthly_price'])
+            monthly_price = utilities_dict['monthly_price'],
+            location = location)
             utilities.add(utilities)
             query = Utilities.query.get(utilities.id)
             dump_result = utilities_schema.dump(query)
@@ -1321,13 +1322,13 @@ cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:i
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
 <string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
-'/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>', '/homepurchase/<string:city>/<string:abbreviation>')
+'/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>')
 cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
-<string:abbreviation>','/rent/<string:country>/<string:city>', '/rent/<string:country>', 
-'/rent/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>')
+<string:abbreviation>','/rent/<string:city>', '/rent/<string:country>', '/rent/<string:country>/<string:city>',
+'/rent/<string:abbreviation>')
 cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
-<string:abbreviation>','/utilities/<string:country>/<string:city>', '/utiilties/<string:country>', 
-'/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>')
+<string:abbreviation>','/utilities/<string:country>/<string:city>', '/utilities/<string:country>',
+'/utilities/<string:city>', '/utilities/<string:abbreviation>')
 cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
 <string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
 '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:city>/<string:abbreviation>')

@@ -253,7 +253,7 @@ class Home_PurchaseSchema(ma.Schema):
 
 class RentSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     property_location = fields.String(validate = validate.Length(10))
     bedrooms = fields.Float()
     monthly_price = fields.Float()
@@ -261,21 +261,21 @@ class RentSchema(ma.Schema):
 
 class UtilitiesSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     utility = fields.String()
     monthly_price = fields.Float()
     last_updated = fields.DateTime()
 
 class TransportationSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     type = fields.String()
     price = fields.Float()
     last_updated = fields.DateTime()
 
 class Food_and_BeverageSchema(ma.Schema):
     id = fields.Integer(dumpy_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     item_category = fields.String()
     purchase_point = fields.String()
     item = fields.String()
@@ -284,21 +284,21 @@ class Food_and_BeverageSchema(ma.Schema):
 
 class ChildcareSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     type = fields.String()
     annual_price = fields.Float()
     last_updated = fields.DateTime()
 
 class ApparelSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     item = fields.String()
     price = fields.Float()
     last_updated = fields.DateTime()
 
 class LeisureSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    location = fields.Nested(LocationSchema)
+    location = fields.Nested(LocationSchema,only = ['id','country','city'])
     activity = fields.String()
     price = fields.Float()
     last_updated = fields.DateTime()
