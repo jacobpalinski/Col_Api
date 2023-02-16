@@ -703,7 +703,7 @@ def test_home_purchase_delete(client):
     assert Home_Purchase.query.count() == 0
 
 def test_home_purchase_delete_no_id_exist(client):
-    delete_response = client.delete('/locations/1',
+    delete_response = client.delete('/homepurchase/1',
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Home_Purchase.query.count() == 0
@@ -977,6 +977,57 @@ def test_rent_get_abbreviation_country_none_city_none(client,create_user,login):
     assert get_second_page_response_data['previous'] != None
     assert get_second_page_response_data['previous'] == '/rent/AUD?page=1'
     assert get_second_page_response_data['next'] == None
+
+def test_home_rent_update(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_rent('City Centre', 1, 1642.43, 'Perth')
+    patch_response = client.patch('/rent/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'bedrooms': 3,
+        'monthly_price': 2526.62
+        }))
+    assert patch_response.status_code == HttpStatus.ok_200.value
+    get_response = client.get('/rent/1',
+        headers = {'Content-Type': 'application/json'})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['property_location'] == 'Outside City Centre'
+    assert get_response_data['bedrooms'] == 3
+    assert get_response_data['monthly_price'] == 2526.62
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_rent_update_no_id_exist(client):
+    patch_response = client.patch('/rent/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'bedrooms': 3,
+        'monthly_price': 2526.62
+        }))
+    assert patch_response.status_code == HttpStatus.notfound_404.value
+    assert Rent.query.count() == 0
+
+def test_home_purchase_delete(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_rent('City Centre', 1, 1642.43, 'Perth')
+    delete_response = client.delete('/rent/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Rent.query.count() == 0
+
+def test_home_purchase_delete_no_id_exist(client):
+    delete_response = client.delete('/rent/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Rent.query.count() == 0
+
+
 
 
 
