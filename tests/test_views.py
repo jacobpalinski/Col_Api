@@ -1327,6 +1327,305 @@ def test_utilities_delete_no_id_exist(client):
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Utilities.query.count() == 0
 
+def create_transportation(client,type,price,city):
+    response = client.post('/utilities/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': type,
+        'price': price,
+        'city': city
+        }))
+    return response
+
+def test_transportation_post_transportation_location_exist(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    post_response = create_transportation('Monthly Public Transportation Pass', 103.18, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['type'] == 'Monthly Public Transportation Pass'
+    assert post_response_data['price'] == 103.18
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Transportation.query.count() == 1
+
+def test_transportation_post_transportation_location_notexist(client):
+    response = create_transportation('Monthly Public Transportation Pass', 103.18, 'Perth')
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
+    assert response.status_code == HttpStatus.notfound_404.value
+    assert Transportation.query.count() == 0
+
+def test_transportation_get_with_id(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_transportation('Monthly Public Transportation Pass', 103.18, 'Perth')
+    get_response = client.get('/transportation/1',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['type'] == 'Monthly Public Transportation Pass'
+    assert get_response_data['price'] == 103.18
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_transportation_get_notexist_id(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    get_response = client.get('/utilities/2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    assert get_response.status_code == HttpStatus.notfound_404.value
+
+def test_transportation_get_country_city_abbreviation(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_response = client.get('/utilities/Australia/Perth/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_response_data['monthly_price'] == 210.82
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_transportation_get_country_city_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_response = client.get('/utilities/Australia/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_response_data['monthly_price'] == 210.82
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_transportation_get_country_city_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_first_page_response = client.get('/utilities/Australia',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 210.82
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 172.62
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 174.83
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/utilities/Australia?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/utilities/Australia?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_transportation_get_country_none_city_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_first_page_response = client.get('/utilities/',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 4
+    assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 210.82
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 172.62
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 174.83
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][3]['utility'] == 'City Centre'
+    assert get_first_page_response_data['results'][3]['monthly_price'] == 273.42
+    assert get_first_page_response_data['results'][3]['location']['id'] == 4
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['count'] == 4
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/utilities/?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/utilities/?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_transportation_get_city_country_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_response = client.get('/utilities/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_response_data['monthly_price'] == 210.82
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_transportation_get_abbreviation_country_none_city_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 172.62, 'Melbourne')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 174.83, 'Sydney')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 273.42, 'Zurich')
+    get_first_page_response = client.get('/utilities/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][0]['monthly_price'] == 210.82
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][1]['monthly_price'] == 172.62
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_first_page_response_data['results'][2]['monthly_price'] == 174.83
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/utilities/AUD?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/utilities/AUD?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_transportation_update(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    patch_response = client.patch('/utilities/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'utility': 'Internet',
+        'monthly_price': 55.71
+        }))
+    assert patch_response.status_code == HttpStatus.ok_200.value
+    get_response = client.get('/utilities/1',
+        headers = {'Content-Type': 'application/json'})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+    assert get_response_data['monthly_price'] == 210.82
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_transportation_update_no_id_exist(client):
+    patch_response = client.patch('/utilities/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'utility': 'Electricity, Heating, Cooling, Water and Garbage',
+        'monthly_price': 210.82
+        }))
+    assert patch_response.status_code == HttpStatus.notfound_404.value
+    assert Utilities.query.count() == 0
+
+def test_transportation_delete(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_utilities('Electricity, Heating, Cooling, Water and Garbage', 210.82, 'Perth')
+    delete_response = client.delete('/utilities/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Utilities.query.count() == 0
+
+def test_transportation_delete_no_id_exist(client):
+    delete_response = client.delete('/utilities/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Utilities.query.count() == 0
 
 
 

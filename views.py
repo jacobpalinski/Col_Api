@@ -680,11 +680,31 @@ class TransportationResource(Resource):
             dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
         
-        elif  None not in (country,city) and abbreviation == None:
+        elif None not in (country,city) and abbreviation == None:
             transportation = Transportation.query.join(Location, 
             Transportation.location_id == Location.id).filter(Location.country == country,
             Location.city == city).order_by(Transportation.type.asc()).all().get_or_404()
             dumped_transportation = transportation_schema.dump(transportation,many = True)
+            return dumped_transportation
+
+        elif None not in (country,abbreviation) and city == None:
+            transportation = Transportation.query(Transportation.id,Transportation.type,
+            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
+            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
+            Currency.abbreviation == abbreviation)\
+            .order_by(Transportation.type.asc(), "price").all().get_or_404()
+            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
+            return dumped_transportation
+        
+        elif None not in (city,abbreviation) and country == None:
+            transportation = Transportation.query(Transportation.id,Transportation.type,
+            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
+            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
+            .join(Currency, Location.id==Currency.id).filter(Location.city == city,
+            Currency.abbreviation == abbreviation)\
+            .order_by(Transportation.type.asc(), "price").all().get_or_404()
+            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
             return dumped_transportation
         
         elif country != None and None in (city,abbreviation):
@@ -741,15 +761,16 @@ class TransportationResource(Resource):
         validate_request(transportation_schema,transportation_dict)
         
         try:
-            location_city = transportation_dict['location']['city']
+            location_city = transportation_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
                 response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                 return response, HttpStatus.notfound_404.value
             
-            transportation = Transportation(type = transportation_dict['price'], 
-            price = transportation_dict['monthly_price'])
+            transportation = Transportation(type = transportation_dict['type'], 
+            price = transportation_dict['price'],
+            location = location)
             transportation.add(transportation)
             query = Transportation.query.get(transportation.id)
             dump_result = transportation_schema.dump(query)
@@ -1331,7 +1352,7 @@ cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id
 '/utilities/<string:city>', '/utilities/<string:abbreviation>')
 cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
 <string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
-'/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:city>/<string:abbreviation>')
+'/transportation/<string:city>', '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
 <string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
 '/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:city>/<string:abbreviation>')
