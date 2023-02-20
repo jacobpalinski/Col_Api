@@ -1343,16 +1343,16 @@ cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:i
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
 cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
 <string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
-'/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>')
+'/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>', '/homepurchase/<string:city>/<string:abbreviation>', '/homepurchase/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
 <string:abbreviation>','/rent/<string:city>', '/rent/<string:country>', '/rent/<string:country>/<string:city>',
-'/rent/<string:abbreviation>')
+'/rent/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>', '/rent/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
 <string:abbreviation>','/utilities/<string:country>/<string:city>', '/utilities/<string:country>',
-'/utilities/<string:city>', '/utilities/<string:abbreviation>')
+'/utilities/<string:city>', '/utilities/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
 <string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
-'/transportation/<string:city>', '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:country>/<string:abbreviation>')
+'/transportation/<string:city>', '/transportation/<string:abbreviation>' '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
 <string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
 '/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:city>/<string:abbreviation>')
