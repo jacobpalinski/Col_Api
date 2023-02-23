@@ -1121,7 +1121,7 @@ class ChildcareResource(Resource):
         validate_request(childcare_schema,childcare_dict)
         
         try:
-            location_city = childcare_dict['location']['city']
+            location_city = childcare_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -1129,7 +1129,8 @@ class ChildcareResource(Resource):
                 return response, HttpStatus.notfound_404.value
             
             childcare = Childcare(type = childcare_dict['type'], 
-            annual_price = childcare_dict['annual_price'])
+            annual_price = childcare_dict['annual_price'],
+            location = location)
             childcare.add(childcare)
             query = Childcare.query.get(childcare.id)
             dump_result = childcare_schema.dump(query)
@@ -1249,7 +1250,7 @@ class ApparelResource(Resource):
         validate_request(apparel_schema,apparel_dict)
         
         try:
-            location_city = apparel_dict['location']['city']
+            location_city = apparel_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -1257,7 +1258,8 @@ class ApparelResource(Resource):
                 return response, HttpStatus.notfound_404.value
             
             apparel = Apparel(item = apparel_dict['item'], 
-            price = apparel_dict['price'])
+            price = apparel_dict['price'],
+            location = location)
             apparel.add(apparel)
             query = Apparel.query.get(apparel.id)
             dump_result = apparel_schema.dump(query)
@@ -1377,7 +1379,7 @@ class LeisureResource(Resource):
         validate_request(leisure_schema,leisure_dict)
         
         try:
-            location_city = leisure_dict['location']['city']
+            location_city = leisure_dict['city']
             location = Location.query.filter_by(city = location_city).first()
 
             if location is None:
@@ -1385,7 +1387,8 @@ class LeisureResource(Resource):
                 return response, HttpStatus.notfound_404.value
             
             leisure = Leisure(activity = leisure_dict['activity'], 
-            price = leisure_dict['price'])
+            price = leisure_dict['price'],
+            location = location)
             leisure.add(leisure)
             query = Leisure.query.get(leisure.id)
             dump_result = leisure_schema.dump(query)
@@ -1444,14 +1447,13 @@ cost_of_living.add_resource(TransportationResource, '/transportation/', '/transp
 '/transportation/<string:city>', '/transportation/<string:abbreviation>' '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
 <string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
-'/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:abbreviation>', '/foodbeverage/<string:city>/<string:abbreviation>',
-'/foodbeverage/<string:country>/<string:abbreviation>')
+'/foodbeverage/<string:city>', '/foodbeverage/<string:abbreviation>' '/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(ChildcareResource,'/childcare/', '/childcare/<int:id>','/childcare/<string:country>/<string:city>/\
 <string:abbreviation>','/childcare/<string:country>/<string:city>', '/childcare/<string:country>', 
-'/childcare/<string:city>/<string:abbreviation>', '/childcare/<string:city>/<string:abbreviation>')
+'/childcare/<string:city>', '/childcare/<string:abbreviation>' '/childcare/<string:city>/<string:abbreviation>', '/childcare/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(ApparelResource, '/apparel/', '/apparel/<int:id>','/apparel/<string:country>/<string:city>/\
 <string:abbreviation>','/apparel/<string:country>/<string:city>', '/apparel/<string:country>', 
-'/apparel/<string:city>/<string:abbreviation>', '/apparel/<string:city>/<string:abbreviation>')
+'/apparel/<string:city>', '/apparel/<string:abbreviation>' '/apparel/<string:city>/<string:abbreviation>', '/apparel/<string:country>/<string:abbreviation>')
 cost_of_living.add_resource(LeisureResource, '/leisure/', '/leisure/<int:id>','/leisure/<string:country>/<string:city>/\
 <string:abbreviation>','/leisure/<string:country>/<string:city>', '/leisure/<string:country>', 
-'/leisure/<string:city>/<string:abbreviation>', '/leisure/<string:city>/<string:abbreviation>')
+'/leisure/<string:city>', '/leisure/<string:abbreviation>' '/leisure/<string:city>/<string:abbreviation>', '/leisure/<string:country>/<string:abbreviation>')
