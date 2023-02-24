@@ -3039,6 +3039,372 @@ def test_apparel_delete_no_id_exist(client):
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Apparel.query.count() == 0
 
+def create_leisure(client,activity,price,city):
+    response = client.post('/leisure/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'activity': activity,
+        'price': price,
+        'city': city
+        }))
+    return response
+
+def test_leisure_post_leisure_location_exist(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    post_response = create_leisure('Monthly Gym Membership', 48, 'Perth')
+    post_response_data = json.loads(post_response.get_data(as_text = True))
+    assert post_response_data['activity'] == 'Monthly Gym Membership'
+    assert post_response_data['price'] == 48
+    assert post_response_data['location']['id'] == 1
+    assert post_response_data['location']['country'] == 'Australia'
+    assert post_response_data['location']['city'] == 'Perth'
+    assert post_response.status_code == HttpStatus.created_201.value
+    assert Leisure.query.count() == 1
+
+def test_leisure_post_leisure_location_notexist(client):
+    response = create_leisure('Monthly Gym Membership', 48, 'Perth')
+    response_data = json.loads(response.get_data(as_text = True))
+    assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
+    assert response.status_code == HttpStatus.notfound_404.value
+    assert Leisure.query.count() == 0
+
+def test_leisure_get_with_id(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    get_response = client.get('/leisure/1',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == 'Monthly Gym Membership'
+    assert get_response_data['price'] == 48
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_get_notexist_id(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    get_response = client.get('/leisure/2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    assert get_response.status_code == HttpStatus.notfound_404.value
+
+def test_leisure_get_country_city_abbreviation(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_response = client.get('/leisure/Australia/Perth/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == 'Monthly Gym Membership'
+    assert get_response_data['price'] == 69.6
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_get_country_city_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_response = client.get('/leisure/Australia/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == 'Monthly Gym Membership'
+    assert get_response_data['price'] == 48
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_get_country_city_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_first_page_response = client.get('/leisure/Australia',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][0]['price'] == 48
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][1]['price'] == 50
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][2]['price'] == 61
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/leisure/Australia?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/leisure/Australia?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_leisure_get_country_abbreviation_city_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_first_page_response = client.get('/leisure/Australia/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][0]['price'] == 69.6
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][1]['price'] == 72.5
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][2]['price'] == 88.45
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/leisure/Australia/AUD?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/leisure/Australia/AUD?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_leisure_get_city_abbreviation_country_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_response = client.get('/leisure/Perth/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == 'Monthly Gym Membership'
+    assert get_response_data['price'] == 69.6
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_get_country_none_city_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_first_page_response = client.get('/leisure/Australia/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 4
+    assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][0]['price'] == 48
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][1]['price'] == 50
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][2]['price'] == 61
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][3]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][3]['price'] == 93
+    assert get_first_page_response_data['results'][3]['location']['id'] == 4
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['count'] == 4
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/leisure/?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/leisure/?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_leisure_get_city_country_none_abbreviation_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_response = client.get('/leisure/Perth',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == 'Monthly Gym Membership'
+    assert get_response_data['price'] == 48
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_get_abbreviation_country_none_city_none(client,create_user,login):
+    create_currency(client,'AUD',1.45)
+    create_currency(client,'CHF',0.92)
+    create_location('Australia','Perth','AUD')
+    create_location('Australia','Melbourne','AUD')
+    create_location('Australia','Sydney','AUD')
+    create_location('Switzerland','Zurich','CHF')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_leisure('Monthly Gym Membership', 50, 'Melbourne')
+    create_leisure('Monthly Gym Membership', 61, 'Sydney')
+    create_leisure('Monthly Gym Membership', 93, 'Zurich')
+    get_first_page_response = client.get('/leisure/AUD',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    assert len(get_first_page_response_data['results']) == 3
+    assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][0]['price'] == 69.6
+    assert get_first_page_response_data['results'][0]['location']['id'] == 1
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][1]['price'] == 72.5
+    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
+    assert get_first_page_response_data['results'][2]['price'] == 88.45
+    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['previous'] == None
+    assert get_first_page_response_data['next'] == None
+    get_second_page_response = client.get('/leisure/AUD?page=2',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['token']}"})
+    get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+    assert len(get_second_page_response['results']) == 0
+    assert get_second_page_response_data['previous'] != None
+    assert get_second_page_response_data['previous'] == '/leisure/AUD?page=1'
+    assert get_second_page_response_data['next'] == None
+
+def test_leisure_update(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    patch_response = client.patch('/leisure/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'activity': '1hr Tennis Court Rent',
+        'price': 12.64
+        }))
+    assert patch_response.status_code == HttpStatus.ok_200.value
+    get_response = client.get('/leisure/1',
+        headers = {'Content-Type': 'application/json'})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data['activity'] == '1hr Tennis Court Rent'
+    assert get_response_data['price'] == 12.64
+    assert get_response_data['location']['id'] == 1
+    assert get_response_data['location']['country'] == 'Australia'
+    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
+
+def test_leisure_update_no_id_exist(client):
+    patch_response = client.patch('/leisure/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'activity': '1hr Tennis Court Rent',
+        'price': 12.64
+        }))
+    assert patch_response.status_code == HttpStatus.notfound_404.value
+    assert Leisure.query.count() == 0
+
+def test_leisure_delete(client):
+    create_currency(client,'AUD',1.45)
+    create_location('Australia','Perth','AUD')
+    create_leisure('Monthly Gym Membership', 48, 'Perth')
+    delete_response = client.delete('/leisure/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.no_content_204.value
+    assert Leisure.query.count() == 0
+
+def test_leisure_delete_no_id_exist(client):
+    delete_response = client.delete('/leisure/1',
+        headers = {'Content-Type': 'application/json'})
+    assert delete_response.status_code == HttpStatus.notfound_404.value
+    assert Leisure.query.count() == 0
+
+
 
 
 

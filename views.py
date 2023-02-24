@@ -1405,8 +1405,8 @@ class LeisureResource(Resource):
         validate_request(leisure_schema,leisure_dict)
 
         try:
-            if 'item' in leisure_dict and leisure_dict['item'] != None:
-                leisure.item = leisure_dict['item']
+            if 'activity' in leisure_dict and leisure_dict['activity'] != None:
+                leisure.item = leisure_dict['activity']
             if 'price' in leisure_dict and \
             leisure_dict['price'] != None:
                 leisure.price = leisure_dict['price']
