@@ -47,6 +47,7 @@ def create_user(client):
         'email' : TEST_EMAIL,
         'password': 'X4nmasXII!'
         }))
+    return new_user
 
 def test_login_valid_user(client,create_user):
     response = client.post('/auth/login',
@@ -68,7 +69,7 @@ def test_login_invalid_user(client):
         'password': 'X4nmasXII!'
         }))
     response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'User does not exist.'
+    assert response_data['message'] == 'User does not exist'
     assert response.status_code == HttpStatus.notfound_404.value
 
 @pytest.fixture
@@ -83,9 +84,10 @@ def login(client, create_user):
     return login_data
 
 def test_user_get_valid_token(client,create_user,login):
+    token = login['auth_token']
     get_response = client.get('/auth/user',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {token}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['data']['user_id'] == 1
     assert get_response_data['data']['email'] == TEST_EMAIL

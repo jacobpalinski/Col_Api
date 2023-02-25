@@ -83,16 +83,16 @@ class LoginResource(Resource):
 
         try:
             user = User.query.filter_by(email = user_dict['email']).first()
-            if user.verify_password(user_dict['password']):
+            if user and user.verify_password(user_dict['password']):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
                     response = {
-                    'message': 'successfully logged in.',
+                    'message': 'successfully logged in',
                     'auth_token': auth_token.decode()}
                     return response, HttpStatus.ok_200.value
             else:
-                response = {'message': 'User does not exist.'}
-                return response, HttpStatus.notfound_404
+                response = {'message': 'User does not exist'}
+                return response, HttpStatus.notfound_404.value
         
         except Exception as e:
             print(e)
@@ -269,7 +269,11 @@ class LocationListResource(Resource):
 
 class HomePurchaseResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             home_purchase = Home_Purchase.query.get_or_404(id)
@@ -426,7 +430,11 @@ class HomePurchaseResource(Resource):
 
 class RentResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             rent = Rent.query.get_or_404(id)
@@ -576,7 +584,11 @@ class RentResource(Resource):
 
 class UtilitiesResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             utilities = Utilities.query.get_or_404(id)
@@ -618,7 +630,7 @@ class UtilitiesResource(Resource):
             .join(Currency, Location.id==Currency.id).filter(Location.city == city,
             Currency.abbreviation == abbreviation)\
             .order_by(Utilities.utility.asc(), "monthly_price").all().get_or_404()
-            dumped_utilities = food_and_beverage_schema.dump(utilities._asdict(),many = True)
+            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
             return dumped_utilities
         
         elif country != None and None in (city,abbreviation):
@@ -727,7 +739,11 @@ class UtilitiesResource(Resource):
 
 class TransportationResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             transportation = Transportation.query.get_or_404(id)
@@ -874,7 +890,11 @@ class TransportationResource(Resource):
 
 class FoodBeverageResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             food_and_beverage = Food_and_Beverage.query.get_or_404(id)
@@ -1043,7 +1063,11 @@ class FoodBeverageResource(Resource):
 
 class ChildcareResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             childcare = Childcare.query.get_or_404(id)
@@ -1172,7 +1196,11 @@ class ChildcareResource(Resource):
 
 class ApparelResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             apparel = Apparel.query.get_or_404(id)
@@ -1299,7 +1327,11 @@ class ApparelResource(Resource):
 
 class LeisureResource(Resource):
     @jwt_required
-    def get(self,id=None,country=None,city=None,abbreviation=None):
+    def get(self,id=None):
+
+        country = self.request.args.get('country')
+        city = self.request.args.get('city')
+        abbreviation = self.request.args.get('abbreviation')
 
         if id != None:
             leisure = Leisure.query.get_or_404(id)
@@ -1425,7 +1457,6 @@ class LeisureResource(Resource):
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
-        
 
 cost_of_living.add_resource(UserResource,'/auth/user')
 cost_of_living.add_resource(LoginResource,'/auth/login')
@@ -1433,27 +1464,11 @@ cost_of_living.add_resource(LogoutResource, '/auth/logout')
 cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
 cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
-cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/', '/homepurchase/<int:id>','/homepurchase/<string:country>/<string:city>/\
-<string:abbreviation>','/homepurchase/<string:country>/<string:city>', '/homepurchase/<string:country>', 
-'/homepurchase/<string:city>', '/homepurchase/<string:abbreviation>', '/homepurchase/<string:city>/<string:abbreviation>', '/homepurchase/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(RentResource, '/rent/', '/rent/<int:id>','/rent/<string:country>/<string:city>/\
-<string:abbreviation>','/rent/<string:city>', '/rent/<string:country>', '/rent/<string:country>/<string:city>',
-'/rent/<string:abbreviation>', '/rent/<string:city>/<string:abbreviation>', '/rent/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(UtilitiesResource,'/utilities/', '/utilities/<int:id>','/utilities/<string:country>/<string:city>/\
-<string:abbreviation>','/utilities/<string:country>/<string:city>', '/utilities/<string:country>',
-'/utilities/<string:city>', '/utilities/<string:abbreviation>', '/utilities/<string:city>/<string:abbreviation>', '/utilities/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>','/transportation/<string:country>/<string:city>/\
-<string:abbreviation>','/transportation/<string:country>/<string:city>', '/transportation/<string:country>', 
-'/transportation/<string:city>', '/transportation/<string:abbreviation>' '/transportation/<string:city>/<string:abbreviation>', '/transportation/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>','/foodbeverage/<string:country>/<string:city>/\
-<string:abbreviation>','/foodbeverage/<string:country>/<string:city>', '/foodbeverage/<string:country>', 
-'/foodbeverage/<string:city>', '/foodbeverage/<string:abbreviation>' '/foodbeverage/<string:city>/<string:abbreviation>', '/foodbeverage/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(ChildcareResource,'/childcare/', '/childcare/<int:id>','/childcare/<string:country>/<string:city>/\
-<string:abbreviation>','/childcare/<string:country>/<string:city>', '/childcare/<string:country>', 
-'/childcare/<string:city>', '/childcare/<string:abbreviation>' '/childcare/<string:city>/<string:abbreviation>', '/childcare/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(ApparelResource, '/apparel/', '/apparel/<int:id>','/apparel/<string:country>/<string:city>/\
-<string:abbreviation>','/apparel/<string:country>/<string:city>', '/apparel/<string:country>', 
-'/apparel/<string:city>', '/apparel/<string:abbreviation>' '/apparel/<string:city>/<string:abbreviation>', '/apparel/<string:country>/<string:abbreviation>')
-cost_of_living.add_resource(LeisureResource, '/leisure/', '/leisure/<int:id>','/leisure/<string:country>/<string:city>/\
-<string:abbreviation>','/leisure/<string:country>/<string:city>', '/leisure/<string:country>', 
-'/leisure/<string:city>', '/leisure/<string:abbreviation>' '/leisure/<string:city>/<string:abbreviation>', '/leisure/<string:country>/<string:abbreviation>')
+cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/','/homepurchase/<int:id>')
+cost_of_living.add_resource(RentResource, '/rent/','/rent/<int:id>')
+cost_of_living.add_resource(UtilitiesResource, '/utilities/','/utilities/<int:id>')
+cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>')
+cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>')
+cost_of_living.add_resource(ChildcareResource,'/childcare/', '/childcare/<int:id>')
+cost_of_living.add_resource(ApparelResource, '/apparel/', '/apparel/<int:id>')
+cost_of_living.add_resource(LeisureResource, '/leisure/', '/leisure/<int:id>')

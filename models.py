@@ -33,7 +33,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
         if len(password) < 8:
             return 'The password is too short. Please, specify a password with at least 8 characters'
         if len(password) > 32:
-            return 'The password is too long. Please, specify a password with no more than 32 characters.'
+            return 'The password is too long. Please, specify a password with no more than 32 characters'
         if re.search(r'[A-Z]', password) == None:
             return 'The password must include at least one uppercase letter'
         if re.search(r'[a-z]', password) == None:
@@ -47,7 +47,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
     def verify_password(self,password):
         return password_context.verify(password, self.password_hash)
 
-    def __init__(self,email,admin):
+    def __init__(self,email,admin=None):
         self.email = email
         if admin == 'Code only I know': # Delete this piece of code once I create myself as admin
             self.admin = True
@@ -79,9 +79,9 @@ class User(orm.Model,ResourceAddUpdateDelete):
             else:
                 return payload['sub']
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
+            return 'Signature expired. Please log in again'
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+            return 'Invalid token. Please log in again'
         
 class BlacklistToken(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -105,7 +105,7 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     abbreviation = orm.Column(orm.String(3),unique = True,nullable = False)
     usd_to_local_exchange_rate = orm.Column(orm.Float,nullable = False) # USD is the default currency
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
-    location = orm.relationship('Location',backref = orm.backref('currency_abbreviation',lazy = 'dynamic'))
+    location = orm.relationship('Location',backref = orm.backref('currency_abbreviation'))
 
     def __init__(self,abbreviation,usd_to_local_exchange_rate):
         self.abbreviation = abbreviation
@@ -116,14 +116,14 @@ class Location(orm.Model,ResourceAddUpdateDelete):
     country = orm.Column(orm.String(50),nullable = False)
     city = orm.Column(orm.String(50),unique = True,nullable = False)
     currency_id = orm.Column(orm.Integer,orm.ForeignKey('currency.id'),nullable = False)
-    home_purchase = orm.relationship('Home_Purchase',backref = orm.backref('location',lazy = 'dynamic'))
-    rent = orm.relationship('Rent',backref = orm.backref('location',lazy = 'dynamic'))
-    utlities = orm.relationship('Utilities',backref = orm.backref('location',lazy = 'dynamic'))
-    transportation = orm.relationship('Transportation',backref = orm.backref('location',lazy = 'dynamic'))
-    food_and_beverage = orm.relationship('Food_and_Beverage',backref = orm.backref('location',lazy ='dynamic'))
-    childcare = orm.relationship('Childcare',backref = orm.backref('location',lazy = 'dynamic'))
-    apparel = orm.relationship('Apparel',backref = orm.backref('location',lazy = 'dynamic'))
-    leisure = orm.relationship('Leisure',backref = orm.backref('location',lazy ='dynamic'))
+    home_purchase = orm.relationship('Home_Purchase',backref = orm.backref('location'))
+    rent = orm.relationship('Rent',backref = orm.backref('location'))
+    utlities = orm.relationship('Utilities',backref = orm.backref('location'))
+    transportation = orm.relationship('Transportation',backref = orm.backref('location'))
+    food_and_beverage = orm.relationship('Food_and_Beverage',backref = orm.backref('location'))
+    childcare = orm.relationship('Childcare',backref = orm.backref('location'))
+    apparel = orm.relationship('Apparel',backref = orm.backref('location'))
+    leisure = orm.relationship('Leisure',backref = orm.backref('location'))
 
     def __init__(self,country,city):
         self.country = country
