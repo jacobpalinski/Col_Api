@@ -24,7 +24,6 @@ leisure_schema = LeisureSchema()
 cost_of_living = Api(cost_of_living_blueprint)
 
 class UserResource(Resource):
-    @jwt_required
     def get(self):
         auth_header = request.headers['Authorization']
         if auth_header:
@@ -43,9 +42,10 @@ class UserResource(Resource):
                 response = {'data': {
                     'user_id': user.id,
                     'email' : user.email,
-                    'creation_date': user.creation_date
+                    'creation_date': str(user.creation_date)
                     }
                 }
+                print(response)
                 return response, HttpStatus.ok_200.value
             response = {'message': resp}
             return response, HttpStatus.unauthorized_401.value
@@ -100,7 +100,6 @@ class LoginResource(Resource):
             return response, HttpStatus.internal_server_error.value
 
 class LogoutResource(Resource):
-    @jwt_required
     def post(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
@@ -127,7 +126,7 @@ class LogoutResource(Resource):
                 return response, HttpStatus.unauthorized_401.value
             
         else:
-            response = {'message' : 'Provide a valid auth token.'}
+            response = {'message' : 'Provide a valid auth token'}
             return response, HttpStatus.forbidden_403.value
 
 class ResetPasswordResource(Resource):
@@ -139,7 +138,7 @@ class ResetPasswordResource(Resource):
         try:
             user = User.query.filter_by(email = reset_password_dict['email']).first()
             if user:
-                user.check_password_strength_and_hash_if_ok(reset_password_dict['password_hash'])
+                user.check_password_strength_and_hash_if_ok(reset_password_dict['password'])
                 response = {'message': 'Password reset successful'}
                 return response, HttpStatus.ok_200.value
             else:
@@ -152,29 +151,34 @@ class ResetPasswordResource(Resource):
             return response, HttpStatus.internal_server_error.value
             
 class CurrencyResource(Resource):
-    @jwt_required
     def get(self,id=None):
 
-        if id != None:
-            currency = Currency.query.get_or_404(id)
-            dumped_currency = currency_schema.dump(currency)
-            return dumped_currency
+        if authenticate_jwt() == True:
+
+            if id != None:
+                currency = Currency.query.get_or_404(id)
+                dumped_currency = currency_schema.dump(currency)
+                return dumped_currency
         
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Currency.query.all(),
-                resource_for_url = 'cost_of_living.currencyresource',
-                key_name = 'results',
-                schema = currency_schema
-            )
-            paginated_currencies = pagination_helper.paginate_query()
-            return paginated_currencies
+            else:
+                pagination_helper = PaginationHelper(
+                    request,
+                    query = Currency.query,
+                    resource_for_url = 'cost_of_living.currencyresource',
+                    key_name = 'results',
+                    schema = currency_schema
+                )
+                paginated_currencies = pagination_helper.paginate_query()
+                return paginated_currencies
     
     def post(self):
         currency_dict = request.get_json()
         request_not_empty(currency_dict)
         validate_request(currency_schema,currency_dict)
+
+        if not Currency.is_abbreviation_unique(id=0,abbreviation = currency_dict['abbreviation']):
+            response = {'message': f"Error currency abbreviation {currency_dict['abbreviation']} already exists"}
+            return response, HttpStatus.bad_request_400.value
 
         try:
             currency = Currency(abbreviation = currency_dict['abbreviation'],
@@ -211,7 +215,9 @@ class CurrencyResource(Resource):
         currency = Currency.query.get_or_404(id)
         
         try:
-            delete_object(currency)
+            currency.delete(currency)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
@@ -249,7 +255,7 @@ class LocationListResource(Resource):
                 response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
                 return response, HttpStatus.notfound_404.value
             
-            location = Location(country = location_dict['country'], city = location_dict['city'], currency = currency)
+            location = Location(country = location_dict['country'], city = location_dict['city'], currency_abbreviation = currency)
             location.add(location)
             query = Location.query.get(location.id)
             dump_result = location_schema.dump(query)

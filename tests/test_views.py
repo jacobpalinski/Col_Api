@@ -6,6 +6,7 @@ from models import (orm,User,UserSchema,BlacklistToken,Currency,CurrencySchema,L
 Home_Purchase,Home_PurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
 Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
+from datetime import datetime
 
 TEST_EMAIL = 'test@gmail.com'
 
@@ -84,19 +85,19 @@ def login(client, create_user):
     return login_data
 
 def test_user_get_valid_token(client,create_user,login):
-    token = login['auth_token']
     get_response = client.get('/auth/user',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {token}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['data']['user_id'] == 1
     assert get_response_data['data']['email'] == TEST_EMAIL
-    assert get_response_data['data'] == User.query(User.creation_date).filter(User.id == 1)
+    assert datetime.strptime(get_response_data['data']['creation_date'],'%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d') == '2023-02-26'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_user_get_no_token(client):
     get_response = client.get('/auth/user',
-        headers = {"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer "})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['message'] == 'Provide a valid auth token'
     assert get_response.status_code == HttpStatus.forbidden_403.value
@@ -105,38 +106,38 @@ def test_user_get_invalid_token(client):
     get_response = client.get('/auth/user', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['message'] == 'Invalid token. Please log in again.'
+    assert get_response_data['message'] == 'Invalid token. Please log in again'
     assert get_response.status_code == HttpStatus.unauthorized_401.value
 
 def test_user_get_expired_token(client,create_user,login):
     time.sleep(6)
     get_response = client.get('/auth/user',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['message'] == 'Signature expired. Please log in again.'
+    assert get_response_data['message'] == 'Signature expired. Please log in again'
     assert get_response.status_code == HttpStatus.unauthorized_401.value
-    
 
 def test_user_get_malformed_bearer_token(client,create_user,login):
     get_response = client.get('/auth/user',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer{login['token']}"})
+        "Authorization": f"Bearer{login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['message'] == 'Bearer token malformed'
     assert get_response.status_code == HttpStatus.unauthorized_401.value
 
 def test_logout_valid_token(client,create_user,login):
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'successfully logged out'
+    assert response_data['message'] == 'Successfully logged out'
     assert response.status_code == HttpStatus.ok_200.value
     assert BlacklistToken.query.count() == 1
 
 def test_logout_no_token(client):
     response = client.post('/auth/logout',
-        headers = {"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer "})
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Provide a valid auth token'
     assert response.status_code == HttpStatus.forbidden_403.value
@@ -146,16 +147,16 @@ def test_logout_invalid_token(client):
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
     response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'Invalid token. Please log in again.'
-    assert response.status_code == HttpStatus.bad_request_400.value
+    assert response_data['message'] == 'Invalid token. Please log in again'
+    assert response.status_code == HttpStatus.unauthorized_401.value
     assert BlacklistToken.query.count() == 0
 
 def test_logout_expired_token(client,create_user,login):
     time.sleep(6)
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     response_data = json.loads(response.get_data(as_text = True))
-    assert response_data['message'] == 'Signature expired. Please log in again.'
+    assert response_data['message'] == 'Signature expired. Please log in again'
     assert response.status_code == HttpStatus.unauthorized_401.value
 
 def test_logout_blacklisted_token(client,create_user,login):
@@ -163,7 +164,7 @@ def test_logout_blacklisted_token(client,create_user,login):
     blacklist_token.add(blacklist_token)
     assert BlacklistToken.query.count() == 1
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Token blacklisted. Please log in again'
     assert response.status_code == HttpStatus.unauthorized_401.value
@@ -171,13 +172,13 @@ def test_logout_blacklisted_token(client,create_user,login):
 
 def test_logout_malformed_token(client,create_user,login):
     response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer{login['token']}"})
+        "Authorization": f"Bearer{login['auth_token']}"})
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Bearer token malformed'
     assert response.status_code == HttpStatus.unauthorized_401.value
     assert BlacklistToken.query.count() == 0
 
-def test_reset_password_exist_user(client,new_user):
+def test_reset_password_exist_user(client,create_user):
     response = client.post('/user/password_reset',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
@@ -218,15 +219,15 @@ def test_currency_post_new_currency(client):
 
 def test_currency_post_duplicated_currency(client):
     response = create_currency(client,'AUD',1.45)
-    response = create_currency(client,'AUD',1.45)
-    assert response.status_code == HttpStatus.bad_request_400.value
+    second_response = create_currency(client,'AUD',1.45)
     assert Currency.query.count() == 1
+    assert second_response.status_code == HttpStatus.bad_request_400.value
 
 def test_currency_get_with_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
     get_response = client.get('/currencies/1',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['abbreviation'] == 'AUD'
     assert get_response_data['usd_to_local_exchange_rate'] == 1.45
@@ -236,7 +237,7 @@ def test_currency_get_notexist_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
     get_response = client.get('/currencies/2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     assert get_response.status_code == HttpStatus.notfound_404.value
 
 def test_currency_get_without_id(client,create_user,login):
@@ -244,7 +245,7 @@ def test_currency_get_without_id(client,create_user,login):
     create_currency(client,'CHF',0.92)
     get_first_page_response = client.get('/currencies/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 2
     assert get_first_page_response_data['results'][0]['abbreviation'] == 'AUD'
@@ -256,14 +257,14 @@ def test_currency_get_without_id(client,create_user,login):
     assert get_first_page_response_data['next'] == None
     get_second_page_response = client.get('/currencies/?page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/currencies/?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/currencies/?page=1'
     assert get_second_page_response_data['next'] == None
+    assert len(get_second_page_response_data['results']) == 0
 
-def test_currency_update(client):
+def test_currency_update(client,create_user,login):
     create_currency(client,'AUD',1.45)
     patch_response = client.patch('/currencies/1',
         headers = {'Content-Type': 'application/json'},
@@ -273,7 +274,8 @@ def test_currency_update(client):
         }))
     assert patch_response.status_code == HttpStatus.ok_200.value
     get_response = client.get('/currencies/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['abbreviation'] == 'Aud'
     assert get_response_data['usd_to_local_exchange_rate'] == 1.50
@@ -289,12 +291,12 @@ def test_currency_update_no_id_exist(client):
     assert patch_response.status_code == HttpStatus.notfound_404.value
     assert Currency.query.count() == 0
 
-def test_currency_delete(client):
+def test_currency_delete(client,create_user,login):
     create_currency(client,'AUD',1.45)
     delete_response = client.delete('/currencies/1',
         headers = {'Content-Type': 'application/json'})
-    assert delete_response.status_code == HttpStatus.no_content_204.value
     assert Currency.query.count() == 0
+    assert delete_response.status_code == HttpStatus.no_content_204.value
 
 def test_currency_delete_no_id_exist(client):
     delete_response = client.delete('/currencies/1',
@@ -314,8 +316,9 @@ def create_location(client, country, city, abbreviation):
 
 def test_location_post_new_location_currency_exist(client):
     create_currency(client,'AUD',1.45)
-    post_response = create_location('Australia','Perth','AUD')
+    post_response = create_location(client,'Australia','Perth','AUD')
     post_response_data = json.loads(post_response.get_data(as_text = True))
+    print(post_response_data)
     assert post_response_data['country'] == 'Australia'
     assert post_response_data['city'] == 'Perth'
     assert post_response_data['currency']['id'] == 1

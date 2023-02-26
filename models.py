@@ -1,7 +1,7 @@
 import jwt
 import datetime
 import re
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, INCLUDE
 from marshmallow import validate
 from passlib.apps import custom_app_context as password_context
 from flask_sqlalchemy import SQLAlchemy
@@ -107,6 +107,17 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
     location = orm.relationship('Location',backref = orm.backref('currency_abbreviation'))
 
+    @classmethod
+    def is_abbreviation_unique(cls, id, abbreviation):
+        existing_abbreviation = cls.query.filter_by(abbreviation=abbreviation).first()
+        if existing_abbreviation is None:
+            return True
+        else:
+            if existing_abbreviation.id == id:
+                return True
+            else:
+                return False
+
     def __init__(self,abbreviation,usd_to_local_exchange_rate):
         self.abbreviation = abbreviation
         self.usd_to_local_exchange_rate = usd_to_local_exchange_rate
@@ -125,9 +136,10 @@ class Location(orm.Model,ResourceAddUpdateDelete):
     apparel = orm.relationship('Apparel',backref = orm.backref('location'))
     leisure = orm.relationship('Leisure',backref = orm.backref('location'))
 
-    def __init__(self,country,city):
+    def __init__(self,country,city,currency_abbreviation):
         self.country = country
         self.city = city
+        self.currency_abbreviation = currency_abbreviation
     
 class Home_Purchase(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)

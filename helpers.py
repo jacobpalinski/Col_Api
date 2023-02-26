@@ -1,6 +1,6 @@
 from httpstatus import *
-from models import orm
-from flask import make_response
+from models import orm, User
+from flask import make_response, request
 from flask import url_for
 from flask import current_app
 
@@ -19,10 +19,26 @@ def sql_alchemy_error_response(error):
     response = {'error': str(error)}
     return response, HttpStatus.bad_request_400.value
 
-def delete_object(object):
-    object.delete(object)
-    response = make_response()
-    return response, HttpStatus.no_content_204.value
+def authenticate_jwt():
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        try:
+            auth_token = auth_header.split(" ")[1]
+        except IndexError:
+            response = {'message': 'Bearer token malformed'}
+            return response, HttpStatus.unauthorized_401.value
+    else:
+        auth_token = ''
+    if auth_token:
+        resp = User.decode_auth_token(auth_token)
+        if not isinstance(resp,str):
+            return True
+        else:
+            response = {'message' : resp}
+            return response, HttpStatus.unauthorized_401.value
+    else:
+        response = {'message' : 'Provide a valid auth token'}
+        return response, HttpStatus.forbidden_403.value
 
 class PaginationHelper():
     def __init__(self,request, query, resource_for_url, key_name, schema):
@@ -38,7 +54,7 @@ class PaginationHelper():
         # No page number, assume request requires page #1
         page_number = self.request.args.get(self.page_argument_name, 1, type=int)
         paginated_objects = self.query.paginate(
-            page_number,
+            page = page_number,
             per_page = self.page_size,
             error_out = False
         )
