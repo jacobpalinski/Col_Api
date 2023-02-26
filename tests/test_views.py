@@ -314,11 +314,10 @@ def create_location(client, country, city, abbreviation):
         }))
     return response
 
-def test_location_post_new_location_currency_exist(client):
+def test_location_post_new_location_currency_exist(client,create_user,login):
     create_currency(client,'AUD',1.45)
     post_response = create_location(client,'Australia','Perth','AUD')
     post_response_data = json.loads(post_response.get_data(as_text = True))
-    print(post_response_data)
     assert post_response_data['country'] == 'Australia'
     assert post_response_data['city'] == 'Perth'
     assert post_response_data['currency']['id'] == 1
@@ -327,7 +326,7 @@ def test_location_post_new_location_currency_exist(client):
     assert Location.query.count() == 1
 
 def test_location_post_new_location_currency_none(client):
-    response = create_location('Australia','Perth','AUD')
+    response = create_location(client,'Australia','Perth','AUD')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified currency doesnt exist in /currencies/ API endpoint'
     assert response.status_code == HttpStatus.notfound_404.value
@@ -335,10 +334,10 @@ def test_location_post_new_location_currency_none(client):
 
 def test_location_get_with_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
+    create_location(client,'Australia','Perth','AUD')
     get_response = client.get('/locations/1',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['country'] == 'Australia'
     assert get_response_data['city'] == 'Perth'
@@ -348,19 +347,19 @@ def test_location_get_with_id(client,create_user,login):
 
 def test_location_get_notexist_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
+    create_location(client,'Australia','Perth','AUD')
     get_response = client.get('/locations/2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     assert get_response.status_code == HttpStatus.notfound_404.value
 
 def test_location_get_without_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
     get_first_page_response = client.get('/locations/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 2
     assert get_first_page_response_data['results'][0]['country'] == 'Australia'
@@ -378,7 +377,7 @@ def test_location_get_without_id(client,create_user,login):
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
     assert get_second_page_response_data['previous'] == '/locations/?page=1'
     assert get_second_page_response_data['next'] == None

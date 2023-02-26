@@ -223,24 +223,25 @@ class CurrencyResource(Resource):
             sql_alchemy_error_response(e)
 
 class LocationListResource(Resource):
-    @jwt_required
-    def get(self,id):
+    def get(self,id=None):
 
-        if id != None:
-            location = Location.query.get_or_404(id)
-            dumped_location = location_schema.dump(location)
-            return dumped_location
+        if authenticate_jwt() == True:
 
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Location.query.all(),
-                resource_for_url = 'cost_of_living.locationlistesource',
-                key_name = 'results',
-                schema = location_schema
-            )
-            paginated_locations = pagination_helper.paginate_query()
-            return paginated_locations
+            if id != None:
+                location = Location.query.get_or_404(id)
+                dumped_location = location_schema.dump(location)
+                return dumped_location
+
+            else:
+                pagination_helper = PaginationHelper(
+                    request,
+                    query = Location.query.all(),
+                    resource_for_url = 'cost_of_living.locationlistesource',
+                    key_name = 'results',
+                    schema = location_schema
+                )
+                paginated_locations = pagination_helper.paginate_query()
+                return paginated_locations
     
     def post(self):
         location_dict = request.get_json()
@@ -255,7 +256,7 @@ class LocationListResource(Resource):
                 response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
                 return response, HttpStatus.notfound_404.value
             
-            location = Location(country = location_dict['country'], city = location_dict['city'], currency_abbreviation = currency)
+            location = Location(country = location_dict['country'], city = location_dict['city'], currency = currency)
             location.add(location)
             query = Location.query.get(location.id)
             dump_result = location_schema.dump(query)

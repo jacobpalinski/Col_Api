@@ -105,7 +105,7 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     abbreviation = orm.Column(orm.String(3),unique = True,nullable = False)
     usd_to_local_exchange_rate = orm.Column(orm.Float,nullable = False) # USD is the default currency
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
-    location = orm.relationship('Location',backref = orm.backref('currency_abbreviation'))
+    location = orm.relationship('Location',backref = orm.backref('currency'))
 
     @classmethod
     def is_abbreviation_unique(cls, id, abbreviation):
@@ -136,10 +136,10 @@ class Location(orm.Model,ResourceAddUpdateDelete):
     apparel = orm.relationship('Apparel',backref = orm.backref('location'))
     leisure = orm.relationship('Leisure',backref = orm.backref('location'))
 
-    def __init__(self,country,city,currency_abbreviation):
+    def __init__(self,country,city,currency):
         self.country = country
         self.city = city
-        self.currency_abbreviation = currency_abbreviation
+        self.currency = currency
     
 class Home_Purchase(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -253,7 +253,7 @@ class LocationSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
     country = fields.String(required = True)
     city = fields.String(required = True)
-    currency = fields.Nested(CurrencySchema,only = ['id','abbreviation'])
+    currency = fields.Nested('CurrencySchema',only = ['id','abbreviation'])
 
 class Home_PurchaseSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
