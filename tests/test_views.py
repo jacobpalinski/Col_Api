@@ -375,16 +375,16 @@ def test_location_get_without_id(client,create_user,login):
     assert get_first_page_response_data['next'] == None
     get_second_page_response = client.get('/locations/?page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
     assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/locations/?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/locations/?page=1'
     assert get_second_page_response_data['next'] == None
 
 def test_location_delete(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
+    create_location(client,'Australia','Perth','AUD')
     delete_response = client.delete('/locations/1',
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.no_content_204.value
@@ -409,11 +409,11 @@ def create_home_purchase(client,property_location,price_per_sqm,mortgage_interes
 
 def test_home_purchase_post_home_purchase_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_home_purchase('City Centre', 6339, 5.09, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
     assert post_response_data['property_location'] == 'City Centre'
-    assert post_response_data['price_per_sqm'] == 6339.73
+    assert post_response_data['price_per_sqm'] == 6339
     assert post_response_data['mortgage_interest'] == 5.09
     assert post_response_data['location']['id'] == 1
     assert post_response_data['location']['country'] == 'Australia'
@@ -422,7 +422,7 @@ def test_home_purchase_post_home_purchase_location_exist(client):
     assert Home_Purchase.query.count() == 1
 
 def test_home_purchase_post_home_purchase_location_notexist(client):
-    response = create_home_purchase('City Centre', 6339, 5.09, 'Perth')
+    response = create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
     assert response.status_code == HttpStatus.notfound_404.value
@@ -430,11 +430,11 @@ def test_home_purchase_post_home_purchase_location_notexist(client):
 
 def test_home_purchase_get_with_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
     get_response = client.get('/homepurchase/1',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['property_location'] == 'City Centre'
     assert get_response_data['price_per_sqm'] == 6339
@@ -446,27 +446,27 @@ def test_home_purchase_get_with_id(client,create_user,login):
 
 def test_home_purchase_get_notexist_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
     get_response = client.get('/homepurchase/2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     assert get_response.status_code == HttpStatus.notfound_404.value
 
 def test_home_purchase_get_country_city_abbreviation(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_response = client.get('/homepurchase/Australia/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_response = client.get('/homepurchase/?country=Australia&city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response = json.loads(get_response.get_data(as_text = True))
     assert get_response['property_location'] == 'City Centre'
     assert get_response['price_per_sqm'] == 9191.55

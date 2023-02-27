@@ -149,10 +149,11 @@ class Home_Purchase(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,property_location,price_per_sqm,mortgage_interest):
+    def __init__(self,property_location,price_per_sqm,mortgage_interest,location):
         self.property_location = property_location
         self.price_per_sqm = price_per_sqm
         self.mortgage_interest = mortgage_interest
+        self.location = location
 
 class Rent(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
