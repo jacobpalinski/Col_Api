@@ -809,7 +809,7 @@ def test_home_purchase_delete_no_id_exist(client):
     assert Home_Purchase.query.count() == 0
 
 def create_rent(client,property_location,bedrooms,monthly_price,city):
-    response = client.post('/locations/',
+    response = client.post('/rent/',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -821,8 +821,8 @@ def create_rent(client,property_location,bedrooms,monthly_price,city):
 
 def test_rent_post_new_rent_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_rent('City Centre', 1, 1642 , 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_rent(client,'City Centre', 1, 1642 , 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
     assert post_response_data['property_location'] == 'City Centre'
     assert post_response_data['bedrooms'] == 1
@@ -834,7 +834,7 @@ def test_rent_post_new_rent_location_exist(client):
     assert Rent.query.count() == 1
 
 def test_rent_post_location_notexist(client):
-    response = create_rent('City Centre', 1, 1642, 'Perth')
+    response = create_rent(client,'City Centre', 1, 1642, 'Perth')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
     assert response.status_code == HttpStatus.notfound_404.value

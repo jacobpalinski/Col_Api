@@ -163,10 +163,11 @@ class Rent(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,property_location,bedrooms,monthly_price):
+    def __init__(self,property_location,bedrooms,monthly_price,location):
         self.property_location = property_location
         self.bedrooms = bedrooms
         self.monthly_price = monthly_price
+        self.location = location
 
 class Utilities(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -175,9 +176,10 @@ class Utilities(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,utility,monthly_price):
+    def __init__(self,utility,monthly_price,location):
         self.utility = utility
         self.monthly_price = monthly_price
+        self.location = location
 
 class Transportation(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -186,9 +188,10 @@ class Transportation(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,type,price):
+    def __init__(self,type,price,location):
         self.type = type
         self.price = price
+        self.location = location
 
 class Food_and_Beverage(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -199,11 +202,12 @@ class Food_and_Beverage(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,item_category,purchase_point,item,price):
+    def __init__(self,item_category,purchase_point,item,price,location):
         self.item_category = item_category
         self.purchase_point = purchase_point
         self.item = item
         self.price = price
+        self.location = location
 
 class Childcare(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -212,9 +216,10 @@ class Childcare(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,type,annual_price):
+    def __init__(self,type,annual_price,location):
         self.type = type
         self.annual_price = annual_price
+        self.location = location
 
 class Apparel(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -223,9 +228,10 @@ class Apparel(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,item,price):
+    def __init__(self,item,price,location):
         self.item = item
         self.price = price
+        self.location = location
 
 class Leisure(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
@@ -234,9 +240,10 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
-    def __init__(self,activity,price):
+    def __init__(self,activity,price,location):
         self.activity = activity
         self.price = price
+        self.location = location
 
 class UserSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
