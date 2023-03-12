@@ -280,7 +280,6 @@ class LocationListResource(Resource):
 
 class HomePurchaseResource(Resource):
     def get(self,id=None):
-
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
@@ -293,7 +292,7 @@ class HomePurchaseResource(Resource):
                 return dumped_home_purchase
         
             qry = orm.session.query(Home_Purchase).join(Location, Home_Purchase.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc())
         
             if abbreviation:
 
@@ -304,13 +303,13 @@ class HomePurchaseResource(Resource):
                 if city:
                     qry= qry.filter(Location.city==city)
                 
-                if city and not country:
+                if (city and not country) or (city and country):
                     qry_res = qry.all()
                     dumped_home_purchase = home_purchase_schema.dump(qry_res,many=True)
                     for result in dumped_home_purchase:
-                        result['price_per_sqm'] = result['price_per_sqm'] * conversion
+                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
                     return dumped_home_purchase
-            
+                
                 else:
                     pagination_helper = PaginationHelper(
                     request,
@@ -321,7 +320,7 @@ class HomePurchaseResource(Resource):
                     )
                     dumped_home_purchase = pagination_helper.paginate_query()
                     for result in dumped_home_purchase['results']:
-                        result['price_per_sqm'] = result['price_per_sqm'] * conversion
+                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
                     return dumped_home_purchase
             
             else:
@@ -334,7 +333,6 @@ class HomePurchaseResource(Resource):
                     return dumped_home_purchase
                 
                 qry_res=qry.all()
-                print(home_purchase_schema.dumps(qry_res, many = True))
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -405,102 +403,69 @@ class HomePurchaseResource(Resource):
             sql_alchemy_error_response(e)
 
 class RentResource(Resource):
-    @jwt_required
     def get(self,id=None):
+        country = request.args.get('country')
+        city = request.args.get('city')
+        abbreviation = request.args.get('abbreviation')
 
-        country = self.request.args.get('country')
-        city = self.request.args.get('city')
-        abbreviation = self.request.args.get('abbreviation')
+        if authenticate_jwt() == True:
 
-        if id != None:
-            rent = Rent.query.get_or_404(id)
-            dumped_rent = rent_schema.dump(rent)
-            return dumped_rent
+            if id != None:
+                rent = Rent.query.get_or_404(id)
+                dumped_rent = rent_schema.dump(rent)
+                return dumped_rent
+        
+            qry = orm.session.query(Rent).join(Location, Rent.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(Rent.property_location.asc(),Rent.bedrooms.asc(),Rent.monthly_price.asc())
+        
+            if abbreviation:
 
-        elif None not in (country,city,abbreviation):
-            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
-            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Rent.location_id).join(Location, Rent.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Location.city == city, Currency.abbreviation == abbreviation)\
-            .order_by(Rent.bedrooms.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
-            return dumped_rent
-        
-        elif  None not in (country,city) and abbreviation == None:
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id).filter(Location.country == country,
-            Location.city == city).order_by(Rent.bedrooms.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent,many = True)
-            return dumped_rent
-        
-        elif None not in (country,abbreviation) and city == None:
-            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
-            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Rent.location_id).join(Location, Rent.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Rent.bedrooms.asc(), "monthly_price").all().get_or_404()
-            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
-            return dumped_rent
-        
-        elif None not in (city,abbreviation) and country == None:
-            rent = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
-            (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Rent.location_id).join(Location, Rent.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.city == city,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Rent.bedrooms.asc(), "monthly_price").all().get_or_404()
-            dumped_rent = rent_schema.dump(rent._asdict(),many = True)
-            return dumped_rent
-        
-        elif country != None and None in (city,abbreviation):
-            pagination_helper = PaginationHelper(
+                conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
+            
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                
+                if (city and not country) or (city and country):
+                    qry_res = qry.all()
+                    dumped_rent = rent_schema.dump(qry_res,many=True)
+                    for result in dumped_rent:
+                        result['monthly_price'] = round(result['monthly_price'] * conversion,2)
+                    return dumped_rent
+            
+                else:
+                    pagination_helper = PaginationHelper(
+                    request,
+                    query = qry,
+                    resource_for_url = 'cost_of_living.rentresource',
+                    key_name = 'results',   
+                    schema = rent_schema
+                    )
+                    dumped_rent = pagination_helper.paginate_query()
+                    for result in dumped_rent['results']:
+                        result['monthly_price'] = round(result['monthly_price'] * conversion,2)
+                    return dumped_rent
+            
+            else:
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                    qry_res = qry.all()
+                    dumped_rent = rent_schema.dump(qry_res,many=True)
+                    return dumped_rent
+                
+                qry_res=qry.all()
+                pagination_helper = PaginationHelper(
                 request,
-                query = Rent.query.join(Location, 
-                Rent.location_id == Location.id).filter(Location.country == country)\
-                .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404(),
+                query = qry,
                 resource_for_url = 'cost_of_living.rentresource',
-                key_name = 'results',
+                key_name = 'results',   
                 schema = rent_schema
-            )
-            paginated_rent = pagination_helper.paginate_query()
-            return paginated_rent
-        
-        elif None in (country,city,abbreviation):
-            pagination_helper = PaginationHelper(
-                request,
-                query = Rent.query.join(Location, 
-                Rent.location_id == Location.id)\
-                .order_by(Rent.bedrooms.asc(), Rent.monthly_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.rentresource',
-                key_name = 'results',
-                schema = rent_schema
-            )
-            paginated_rent = pagination_helper.paginate_query()
-            return paginated_rent
-        
-        elif city != None and None in (country,abbreviation):
-            rent = Rent.query.join(Location, 
-            Rent.location_id == Location.id).filter(Location.city == city)\
-            .order_by(Rent.bedrooms.asc()).all().get_or_404()
-            dumped_rent = rent_schema.dump(rent,many = True)
-            return dumped_rent
-        
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Rent.query(Rent.id, Rent.property_location,Rent.bedrooms,
-                (Rent.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-                Rent.location_id).join(Location, Rent.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-                .order_by(Rent.bedrooms.asc(),Rent.monthly_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.rentresource',
-                key_name = 'results',
-                schema = rent_schema
-            )
-            paginated_rent = pagination_helper.paginate_query()
-            return paginated_rent
+                )
+                dumped_rent = pagination_helper.paginate_query()
+                return dumped_rent
 
     def post(self):
         rent_dict = request.get_json()
@@ -553,7 +518,9 @@ class RentResource(Resource):
         rent = Rent.query.get_or_404(id)
         
         try:
-            delete_object(rent)
+            rent.delete(rent)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
