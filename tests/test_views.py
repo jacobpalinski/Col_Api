@@ -1600,8 +1600,8 @@ def create_transportation(client,type,price,city):
 
 def test_transportation_post_transportation_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
     assert post_response_data['type'] == 'Monthly Public Transportation Pass'
     assert post_response_data['price'] == 103
@@ -1612,7 +1612,7 @@ def test_transportation_post_transportation_location_exist(client):
     assert Transportation.query.count() == 1
 
 def test_transportation_post_transportation_location_notexist(client):
-    response = create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    response = create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
     assert response.status_code == HttpStatus.notfound_404.value
@@ -1620,11 +1620,11 @@ def test_transportation_post_transportation_location_notexist(client):
 
 def test_transportation_get_with_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     get_response = client.get('/transportation/1',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['type'] == 'Monthly Public Transportation Pass'
     assert get_response_data['price'] == 103
@@ -1635,71 +1635,71 @@ def test_transportation_get_with_id(client,create_user,login):
 
 def test_transportation_get_notexist_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     get_response = client.get('/transportation/2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     assert get_response.status_code == HttpStatus.notfound_404.value
 
 def test_transportation_get_country_city_abbreviation(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_response = client.get('/transportation/Australia/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_response = client.get('/transportation/?country=Australia&city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Monthly Public Transportation Pass'
-    assert get_response_data['price'] == 149.35
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
+    assert get_response_data[0]['price'] == 149.35
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_country_city_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_response = client.get('/transportation/Australia/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_response = client.get('/transportation/?country=Australia&city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Monthly Public Transportation Pass'
-    assert get_response_data['price'] == 103
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
+    assert get_response_data[0]['price'] == 103
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_country_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_first_page_response = client.get('/transportation/Australia',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_first_page_response = client.get('/transportation/?country=Australia',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
@@ -1720,197 +1720,210 @@ def test_transportation_get_country_city_none_abbreviation_none(client,create_us
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/transportation/Australia?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/transportation/?country=Australia&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/transportation/Australia?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?country=Australia&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_country_abbreviation_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_first_page_response = client.get('/transportation/Australia/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_first_page_response = client.get('/transportation/?country=Australia&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][0]['price'] == 149.61
+    assert get_first_page_response_data['results'][0]['price'] == 149.35
     assert get_first_page_response_data['results'][0]['location']['id'] == 1
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][1]['price'] == 163.70
+    assert get_first_page_response_data['results'][1]['price'] == 162.4
     assert get_first_page_response_data['results'][1]['location']['id'] == 2
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
     assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][2]['price'] == 217.65
+    assert get_first_page_response_data['results'][2]['price'] == 217.5
     assert get_first_page_response_data['results'][2]['location']['id'] == 3
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/transportation/Australia/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/transportation/?country=Australia&abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/transportation/Australia/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?country=Australia&abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_city_abbreviation_country_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_response = client.get('/transportation/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_response = client.get('/transportation/?city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Monthly Public Transportation Pass'
-    assert get_response_data['price'] == 149.61
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
+    assert get_response_data[0]['price'] == 149.35
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_country_none_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_first_page_response = client.get('/transportation/Australia/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_first_page_response = client.get('/transportation/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][0]['price'] == 103
-    assert get_first_page_response_data['results'][0]['location']['id'] == 1
-    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][0]['price'] == 102
+    assert get_first_page_response_data['results'][0]['location']['id'] == 4
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Zurich'
     assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][1]['price'] == 112
-    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['price'] == 103
+    assert get_first_page_response_data['results'][1]['location']['id'] == 1
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][2]['price'] == 150
-    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['price'] == 112
+    assert get_first_page_response_data['results'][2]['location']['id'] == 2
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
     assert get_first_page_response_data['results'][3]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][3]['price'] == 102
-    assert get_first_page_response_data['results'][3]['location']['id'] == 4
-    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['results'][3]['price'] == 150
+    assert get_first_page_response_data['results'][3]['location']['id'] == 3
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
     get_second_page_response = client.get('/transportation/?page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/transportation/?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_city_country_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_response = client.get('/transportation/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_response = client.get('/transportation/?city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Monthly Public Transportation Pass'
-    assert get_response_data['price'] == 103
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
+    assert get_response_data[0]['price'] == 103
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_transportation_get_abbreviation_country_none_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
-    create_transportation('Monthly Public Transportation Pass', 112, 'Melbourne')
-    create_transportation('Monthly Public Transportation Pass', 150, 'Sydney')
-    create_transportation('Monthly Public Transportation Pass', 102, 'Zurich')
-    get_first_page_response = client.get('/transportation/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
+    create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
+    create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    get_first_page_response = client.get('/transportation/?abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-    assert len(get_first_page_response_data['results']) == 3
+    assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][0]['price'] == 149
-    assert get_first_page_response_data['results'][0]['location']['id'] == 1
-    assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
+    assert get_first_page_response_data['results'][0]['price'] == 147.9
+    assert get_first_page_response_data['results'][0]['location']['id'] == 4
+    assert get_first_page_response_data['results'][0]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][0]['location']['city'] == 'Zurich'
     assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][1]['price'] == 163
-    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['price'] == 149.35
+    assert get_first_page_response_data['results'][1]['location']['id'] == 1
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-    assert get_first_page_response_data['results'][2]['price'] == 217
-    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['price'] == 162.4
+    assert get_first_page_response_data['results'][2]['location']['id'] == 2
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][3]['type'] == 'Monthly Public Transportation Pass'
+    assert get_first_page_response_data['results'][3]['price'] == 217.5
+    assert get_first_page_response_data['results'][3]['location']['id'] == 3
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Australia'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/transportation/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/transportation/?abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/transportation/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def test_transportation_update(client):
+def test_transportation_update(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     patch_response = client.patch('/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
@@ -1919,7 +1932,8 @@ def test_transportation_update(client):
         }))
     assert patch_response.status_code == HttpStatus.ok_200.value
     get_response = client.get('/transportation/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['type'] == 'One-Way Ticket'
     assert get_response_data['price'] == 2.76
@@ -1940,8 +1954,8 @@ def test_transportation_update_no_id_exist(client):
 
 def test_transportation_delete(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_transportation('Monthly Public Transportation Pass', 103, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
     delete_response = client.delete('/transportation/1',
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.no_content_204.value

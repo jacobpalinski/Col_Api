@@ -647,102 +647,69 @@ class UtilitiesResource(Resource):
 
 
 class TransportationResource(Resource):
-    @jwt_required
     def get(self,id=None):
+        country = request.args.get('country')
+        city = request.args.get('city')
+        abbreviation = request.args.get('abbreviation')
 
-        country = self.request.args.get('country')
-        city = self.request.args.get('city')
-        abbreviation = self.request.args.get('abbreviation')
+        if authenticate_jwt() == True:
 
-        if id != None:
-            transportation = Transportation.query.get_or_404(id)
-            dumped_transportation = transportation_schema.dump(transportation)
-            return dumped_transportation
-
-        elif None not in (country,city,abbreviation):
-            transportation = Transportation.query(Transportation.id,Transportation.type,
-            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Location.city == city, Currency.abbreviation == abbreviation)\
-            .order_by(Transportation.type.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
-            return dumped_transportation
+            if id != None:
+                transportation = Transportation.query.get_or_404(id)
+                dumped_transportation = transportation_schema.dump(transportation)
+                return dumped_transportation
         
-        elif None not in (country,city) and abbreviation == None:
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id).filter(Location.country == country,
-            Location.city == city).order_by(Transportation.type.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
-            return dumped_transportation
+            qry = orm.session.query(Transportation).join(Location, Transportation.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(Transportation.type.asc(),Transportation.price.asc())
+        
+            if abbreviation:
 
-        elif None not in (country,abbreviation) and city == None:
-            transportation = Transportation.query(Transportation.id,Transportation.type,
-            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Transportation.type.asc(), "price").all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
-            return dumped_transportation
-        
-        elif None not in (city,abbreviation) and country == None:
-            transportation = Transportation.query(Transportation.id,Transportation.type,
-            (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
-            Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.city == city,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Transportation.type.asc(), "price").all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation._asdict(),many = True)
-            return dumped_transportation
-        
-        elif country != None and None in (city,abbreviation):
-            pagination_helper = PaginationHelper(
+                conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
+            
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                
+                if (city and not country) or (city and country):
+                    qry_res = qry.all()
+                    dumped_transportation = transportation_schema.dump(qry_res,many=True)
+                    for result in dumped_transportation:
+                        result['price'] = round(result['price'] * conversion,2)
+                    return dumped_transportation
+            
+                else:
+                    pagination_helper = PaginationHelper(
+                    request,
+                    query = qry,
+                    resource_for_url = 'cost_of_living.transportationresource',
+                    key_name = 'results',   
+                    schema = transportation_schema
+                    )
+                    dumped_transportation = pagination_helper.paginate_query()
+                    for result in dumped_transportation['results']:
+                        result['price'] = round(result['price'] * conversion,2)
+                    return dumped_transportation
+            
+            else:
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                    qry_res = qry.all()
+                    dumped_transportation = transportation_schema.dump(qry_res,many=True)
+                    return dumped_transportation
+                
+                qry_res=qry.all()
+                pagination_helper = PaginationHelper(
                 request,
-                query = Transportation.query.join(Location, 
-                Transportation.location_id == Location.id).filter(Location.country == country)\
-                .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404(),
+                query = qry,
                 resource_for_url = 'cost_of_living.transportationresource',
-                key_name = 'results',
+                key_name = 'results',   
                 schema = transportation_schema
-            )
-            paginated_transportation = pagination_helper.paginate_query()
-            return paginated_transportation
-        
-        elif None in (country,city,abbreviation):
-            pagination_helper = PaginationHelper(
-                request,
-                query = Transportation.query.join(Location, 
-                Transportation.location_id == Location.id)\
-                .order_by(Transportation.type.asc(), Transportation.price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.transportationresource',
-                key_name = 'results',
-                schema = transportation_schema
-            )
-            paginated_transportation = pagination_helper.paginate_query()
-            return paginated_transportation
-        
-        elif city != None and None in (country,abbreviation):
-            transportation = Transportation.query.join(Location, 
-            Transportation.location_id == Location.id).filter(Location.city == city)\
-            .order_by(Transportation.type.asc()).all().get_or_404()
-            dumped_transportation = transportation_schema.dump(transportation,many = True)
-            return dumped_transportation
-        
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Transportation.query(Transportation.id,Transportation.type,
-                (Transportation.price * Currency.usd_to_local_exchange_rate).label("price"),
-                Transportation.location_id).join(Location, Transportation.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-                .order_by(Transportation.type.asc(),Transportation.price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.transportationresource',
-                key_name = 'results',
-                schema = transportation_schema
-            )
-            paginated_transportation = pagination_helper.paginate_query()
-            return paginated_transportation
+                )
+                dumped_transportation = pagination_helper.paginate_query()
+                return dumped_transportation
     
     def post(self):
         transportation_dict = request.get_json()
@@ -792,7 +759,9 @@ class TransportationResource(Resource):
         transportation = Transportation.query.get_or_404(id)
         
         try:
-            delete_object(transportation)
+            transportation.delete(transportation)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
