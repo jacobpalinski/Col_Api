@@ -526,105 +526,69 @@ class RentResource(Resource):
             sql_alchemy_error_response(e)
 
 class UtilitiesResource(Resource):
-    @jwt_required
     def get(self,id=None):
+        country = request.args.get('country')
+        city = request.args.get('city')
+        abbreviation = request.args.get('abbreviation')
 
-        country = self.request.args.get('country')
-        city = self.request.args.get('city')
-        abbreviation = self.request.args.get('abbreviation')
+        if authenticate_jwt() == True:
 
-        if id != None:
-            utilities = Utilities.query.get_or_404(id)
-            dumped_utilities = utilities_schema.dump(utilities)
-            return dumped_utilities
+            if id != None:
+                utilities = Utilities.query.get_or_404(id)
+                dumped_utilities = utilities_schema.dump(utilities)
+                return dumped_utilities
+        
+            qry = orm.session.query(Utilities).join(Location, Utilities.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(Utilities.utility.asc(),Utilities.monthly_price.asc())
+        
+            if abbreviation:
 
-        elif None not in (country,city,abbreviation):
-            utilities = Utilities.query(Utilities.id,Utilities.utility,
-            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Utilities.location_id).join(Location, 
-            Utilities.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Location.city == city, Currency.abbreviation == abbreviation)\
-            .order_by(Utilities.utility.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
-            return dumped_utilities
-        
-        elif  None not in (country,city) and abbreviation == None:
-            utilities = Utilities.query.join(Location, 
-            Utilities.location_id == Location.id).filter(Location.country == country,
-            Location.city == city).order_by(Utilities.utility.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
-            return dumped_utilities
-        
-        elif None not in (country,abbreviation) and city == None:
-            utilities = Utilities.query(Utilities.id,Utilities.utility,
-            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Utilities.location_id).join(Location, Utilities.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Utilities.utility.asc(), "monthly_price").all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
-            return dumped_utilities
-        
-        elif None not in (city,abbreviation) and country == None:
-            utilities = Utilities.query(Utilities.id,Utilities.utility,
-            (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-            Utilities.location_id).join(Location, Utilities.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.city == city,
-            Currency.abbreviation == abbreviation)\
-            .order_by(Utilities.utility.asc(), "monthly_price").all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities._asdict(),many = True)
-            return dumped_utilities
-        
-        elif country != None and None in (city,abbreviation):
-            pagination_helper = PaginationHelper(
+                conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
+            
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                
+                if (city and not country) or (city and country):
+                    qry_res = qry.all()
+                    dumped_utilities = utilities_schema.dump(qry_res,many=True)
+                    for result in dumped_utilities:
+                        result['monthly_price'] = round(result['monthly_price'] * conversion,2)
+                    return dumped_utilities
+            
+                else:
+                    pagination_helper = PaginationHelper(
+                    request,
+                    query = qry,
+                    resource_for_url = 'cost_of_living.utilitiesresource',
+                    key_name = 'results',   
+                    schema = utilities_schema
+                    )
+                    dumped_utilities = pagination_helper.paginate_query()
+                    for result in dumped_utilities['results']:
+                        result['monthly_price'] = round(result['monthly_price'] * conversion,2)
+                    return dumped_utilities
+            
+            else:
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                    qry_res = qry.all()
+                    dumped_utilities = utilities_schema.dump(qry_res,many=True)
+                    return dumped_utilities
+                
+                qry_res=qry.all()
+                pagination_helper = PaginationHelper(
                 request,
-                query = Utilities.query.join(Location, 
-                Utilities.location_id == Location.id).filter(Location.country == country)\
-                .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404(),
+                query = qry,
                 resource_for_url = 'cost_of_living.utilitiesresource',
-                key_name = 'results',
+                key_name = 'results',   
                 schema = utilities_schema
-            )
-            paginated_utilities = pagination_helper.paginate_query()
-            return paginated_utilities
-        
-        elif None in (country,city,abbreviation):
-            pagination_helper = PaginationHelper(
-                request,
-                query = Utilities.query.join(Location, 
-                Utilities.location_id == Location.id)\
-                .order_by(Utilities.utility.asc(), Utilities.monthly_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.utilitiesresource',
-                key_name = 'results',
-                schema = utilities_schema
-            )
-            paginated_utilities = pagination_helper.paginate_query()
-            return paginated_utilities
-        
-        elif city != None and None in (country,abbreviation):
-            utilities = Utilities.query.join(Location, 
-            Utilities.location_id == Location.id).filter(Location.city == city)\
-            .order_by(Utilities.utility.asc()).all().get_or_404()
-            dumped_utilities = utilities_schema.dump(utilities,many = True)
-            return dumped_utilities
-        
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Utilities.query(Utilities.id,Utilities.utility,
-                (Utilities.monthly_price * Currency.usd_to_local_exchange_rate).label("monthly_price"),
-                Utilities.location_id).join(Location, 
-                Utilities.location_id == Location.id).join(Location, 
-                Utilities.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-                .order_by(Utilities.utility.asc(),Utilities.monthly_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.utilitiesresource',
-                key_name = 'results',
-                schema = utilities_schema
-            )
-            paginated_utilities = pagination_helper.paginate_query()
-            return paginated_utilities
+                )
+                dumped_utilities = pagination_helper.paginate_query()
+                return dumped_utilities
     
     def post(self):
         utilities_dict = request.get_json()
@@ -674,7 +638,9 @@ class UtilitiesResource(Resource):
         utilities = Utilities.query.get_or_404(id)
         
         try:
-            delete_object(utilities)
+            utilities.delete(utilities)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
