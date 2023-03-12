@@ -255,7 +255,7 @@ class CurrencySchema(ma.Schema):
     abbreviation = fields.String(validate = validate.Length(3))
     usd_to_local_exchange_rate = fields.Float()
     last_updated = fields.DateTime()
-    location = fields.Nested('LocationSchema',only = ['country'],many = True)
+    location = fields.Nested('LocationSchema',only = ['city'],many = True)
 
 class LocationSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
