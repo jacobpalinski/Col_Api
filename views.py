@@ -8,6 +8,8 @@ Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
 from helpers import *
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, Float
+import json
 
 cost_of_living_blueprint = Blueprint('cost_of_living', __name__)
 user_schema = UserSchema()
@@ -283,106 +285,65 @@ class HomePurchaseResource(Resource):
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
-        home_purchase = Home_Purchase.query.all()
-        print(home_purchase_schema.dump(home_purchase))
-        
         if authenticate_jwt() == True:
 
             if id != None:
                 home_purchase = Home_Purchase.query.get_or_404(id)
                 dumped_home_purchase = home_purchase_schema.dump(home_purchase)
                 return dumped_home_purchase
+        
+            qry = orm.session.query(Home_Purchase).join(Location, Home_Purchase.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc())
+        
+            if abbreviation:
 
-            elif None not in (country,city,abbreviation):
-                home_purchase = Home_Purchase.query(Home_Purchase.id,
-                Home_Purchase.property_location, 
-                (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
-                Home_Purchase.mortgage_interest,
-                Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-                Location.city == city, Currency.abbreviation == abbreviation)\
-                .order_by(Home_Purchase.property_location.asc()).all().get_or_404()
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase,many=True)
-                return dumped_home_purchase    
-        
-            elif  None not in (country,city) and abbreviation == None:
-                home_purchase = Home_Purchase.query.join(Location, 
-                Home_Purchase.location_id == Location.id).filter(Location.country == country,
-                Location.city == city).order_by(Home_Purchase.property_location.asc()).all().get_or_404()
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase,many=True)
-                return dumped_home_purchase
-
-            elif None not in (country,abbreviation) and city == None:
-                home_purchase = Home_Purchase.query(Home_Purchase.id,
-                Home_Purchase.property_location, 
-                (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
-                Home_Purchase.mortgage_interest,
-                Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-                Currency.abbreviation == abbreviation)\
-                .order_by(Home_Purchase.bedrooms.asc(), "price_per_sqm").all().get_or_404()
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
-                return dumped_home_purchase
-        
-            elif None not in (city,abbreviation) and country == None:
-                home_purchase = Home_Purchase.query(Home_Purchase.id,
-                Home_Purchase.property_location, 
-                (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
-                Home_Purchase.mortgage_interest,
-                Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Location.city == city,
-                Currency.abbreviation == abbreviation)\
-                .order_by(Home_Purchase.bedrooms.asc(), "price_per_sqm").all().get_or_404()
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase._asdict(),many = True)
-                return dumped_home_purchase
-        
-            elif country != None and None in (city,abbreviation):
-                pagination_helper = PaginationHelper(
+                conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
+            
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                
+                if city and not country:
+                    qry_res = qry.all()
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res,many=True)
+                    for result in dumped_home_purchase:
+                        result['price_per_sqm'] = result['price_per_sqm'] * conversion
+                    return dumped_home_purchase
+            
+                else:
+                    pagination_helper = PaginationHelper(
                     request,
-                    query = Home_Purchase.query.join(Location, 
-                    Home_Purchase.location_id == Location.id).filter(Location.country == country)\
-                    .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
+                    query = qry,
                     resource_for_url = 'cost_of_living.homepurchaseresource',
-                    key_name = 'results',
+                    key_name = 'results',   
                     schema = home_purchase_schema
-            )
-                paginated_home_purchase = pagination_helper.paginate_query()
-                return paginated_home_purchase
-        
-            elif None in (country,city,abbreviation):
-                pagination_helper = PaginationHelper(
-                    request,
-                    query = Home_Purchase.query.join(Location, 
-                    Home_Purchase.location_id == Location.id)\
-                    .order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
-                    resource_for_url = 'cost_of_living.homepurchaseresource',
-                    key_name = 'results',
-                    schema = home_purchase_schema
-                )
-                paginated_home_purchase = pagination_helper.paginate_query()
-                return paginated_home_purchase
-        
-            elif city != None and None in (country,abbreviation):
-                home_purchase = Home_Purchase.query.join(Location, 
-                Home_Purchase.location_id == Location.id).filter(Location.city == city)\
-                .order_by(Home_Purchase.property_location.asc()).all().get_or_404()
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase,many = True)
-                return dumped_home_purchase
-        
+                    )
+                    dumped_home_purchase = pagination_helper.paginate_query()
+                    for result in dumped_home_purchase['results']:
+                        result['price_per_sqm'] = result['price_per_sqm'] * conversion
+                    return dumped_home_purchase
+            
             else:
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                    qry_res = qry.all()
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res,many=True)
+                    return dumped_home_purchase
+                
+                qry_res=qry.all()
+                print(home_purchase_schema.dumps(qry_res, many = True))
                 pagination_helper = PaginationHelper(
-                    request,
-                    query = Home_Purchase.query(Home_Purchase.id,
-                    Home_Purchase.property_location, 
-                    (Home_Purchase.price_per_sqm * Currency.usd_to_local_exchange_rate).label("price_per_sqm"),
-                    Home_Purchase.mortgage_interest,
-                    Home_Purchase.location_id).join(Location, Home_Purchase.location_id == Location.id)\
-                    .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-                    .order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc()).all().get_or_404(),
-                    resource_for_url = 'cost_of_living.homepurchaseresource',
-                    key_name = 'results',
-                    schema = home_purchase_schema
-            )
+                request,
+                query = qry,
+                resource_for_url = 'cost_of_living.homepurchaseresource',
+                key_name = 'results',   
+                schema = home_purchase_schema
+                )
+                dumped_home_purchase = pagination_helper.paginate_query()
+                return dumped_home_purchase
  
     def post(self):
         home_purchase_dict = request.get_json()
@@ -436,7 +397,9 @@ class HomePurchaseResource(Resource):
         home_purchase = Home_Purchase.query.get_or_404(id)
         
         try:
-            delete_object(home_purchase)
+            home_purchase.delete(home_purchase)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)

@@ -315,11 +315,3 @@ class LeisureSchema(ma.Schema):
     activity = fields.String()
     price = fields.Float()
     last_updated = fields.DateTime()
-
-
-
-
-
-
-
-

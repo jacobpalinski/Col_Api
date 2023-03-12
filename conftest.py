@@ -4,6 +4,7 @@ from models import orm
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from views import cost_of_living_blueprint
+from sqlalchemy import create_engine
 
 @pytest.fixture
 def application():

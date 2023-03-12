@@ -49,7 +49,7 @@ class PaginationHelper():
         self.schema = schema
         self.page_size = current_app.config['PAGINATION_PAGE_SIZE']
         self.page_argument_name = current_app.config['PAGINATION_PAGE_ARGUMENT_NAME']
-
+        
     def paginate_query(self):
         # No page number, assume request requires page #1
         page_number = self.request.args.get(self.page_argument_name, 1, type=int)
@@ -60,11 +60,26 @@ class PaginationHelper():
         )
         objects = paginated_objects.items
         if paginated_objects.has_prev:
-            previous_page_url = url_for(self.resource_for_url,page = page_number - 1, _external = True)
+            if self.request.args.get('country') and not self.request.args.get('abbreviation'):
+                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number - 1, _external = True)
+            elif self.request.args.get('abbreviation') and not self.request.args.get('country'):
+                previous_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'),page = page_number - 1, _external = True)
+            elif self.request.args.get('abbreviation') and self.request.args.get('country'):
+                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),abbreviation=self.request.args.get('abbreviation'),page = page_number - 1, _external = True)
+            else:
+                previous_page_url = url_for(self.resource_for_url, page = page_number - 1, _external = True)
         else:
             previous_page_url = None
+
         if paginated_objects.has_next:
-            next_page_url = url_for(self.resource_for_url, page = page_number + 1, _external = True)
+            if self.request.args.get('country') and not self.request.args.get('abbreviation'):
+                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number + 1, _external = True)
+            elif self.request.args.get('abbreviation') and not self.request.args.get('country'):
+                next_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'),page = page_number + 1, _external = True)
+            elif self.request.args.get('abbreviation') and self.request.args.get('country'):
+                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),abbreviation=self.request.args.get('abbreviation'),page = page_number + 1, _external = True)
+            else:
+                next_page_url = url_for(self.resource_for_url, page = page_number + 1, _external = True)
         else:
             next_page_url = None
         

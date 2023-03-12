@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, current_app
 from flask_migrate import Migrate
-from views import cost_of_living_blueprint
 from models import orm
 from flask_jwt_extended import JWTManager
+from sqlalchemy import create_engine
+from views import cost_of_living_blueprint
 
 def create_app(config_filename):
     app = Flask(__name__)

@@ -255,6 +255,7 @@ def test_currency_get_without_id(client,create_user,login):
     assert get_first_page_response_data['count'] == 2
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
     get_second_page_response = client.get('/currencies/?page=2',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
@@ -263,6 +264,7 @@ def test_currency_get_without_id(client,create_user,login):
     assert get_second_page_response_data['previous'] == 'http://127.0.0.1/currencies/?page=1'
     assert get_second_page_response_data['next'] == None
     assert len(get_second_page_response_data['results']) == 0
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_currency_update(client,create_user,login):
     create_currency(client,'AUD',1.45)
@@ -373,6 +375,7 @@ def test_location_get_without_id(client,create_user,login):
     assert get_first_page_response_data['count'] == 2
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
     get_second_page_response = client.get('/locations/?page=2',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
@@ -381,6 +384,7 @@ def test_location_get_without_id(client,create_user,login):
     assert get_second_page_response_data['previous'] != None
     assert get_second_page_response_data['previous'] == 'http://127.0.0.1/locations/?page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_location_delete(client):
     create_currency(client,'AUD',1.45)
@@ -467,50 +471,57 @@ def test_home_purchase_get_country_city_abbreviation(client,create_user,login):
     get_response = client.get('/homepurchase/?country=Australia&city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
-    get_response = json.loads(get_response.get_data(as_text = True))
-    assert get_response['property_location'] == 'City Centre'
-    assert get_response['price_per_sqm'] == 9191.55
-    assert get_response['mortgage_interest'] == 5.09
-    assert get_response['location']['id'] == 1
-    assert get_response['location']['country'] == 'Australia'
-    assert get_response['location']['city'] == 'Perth'
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data[0]['property_location'] == 'City Centre'
+    assert get_response_data[0]['price_per_sqm'] == 9191.55
+    assert get_response_data[0]['mortgage_interest'] == 5.09
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_country_city_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_response = client.get('/homepurchase/Australia/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_response = client.get('/homepurchase/?country=Australia&city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
-    get_response = json.loads(get_response.get_data(as_text = True))
-    assert get_response['property_location'] == 'City Centre'
-    assert get_response['price_per_sqm'] == 6339
-    assert get_response['mortgage_interest'] == 5.09
-    assert get_response['location']['id'] == 1
-    assert get_response['location']['country'] == 'Australia'
-    assert get_response['location']['city'] == 'Perth'
+        "Authorization": f"Bearer {login['auth_token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data[0]['property_location'] == 'City Centre'
+    assert get_response_data[0]['price_per_sqm'] == 6339
+    assert get_response_data[0]['mortgage_interest'] == 5.09
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_country_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_first_page_response = client.get('/homepurchase/Australia',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_first_page_response = client.get('/currencies/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
+    get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    print(get_first_page_response_data)
+    get_first_page_response = client.get('/homepurchase/?country=Australia',
+        headers = {"Content-Type": "application/json",
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
@@ -534,29 +545,31 @@ def test_home_purchase_get_country_city_none_abbreviation_none(client,create_use
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/homepurchase/Australia?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/homepurchase/?country=Australia&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/homepurchase/Australia?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?country=Australia&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_country_abbreviation_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_first_page_response = client.get('/homepurchase/Australia/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_first_page_response = client.get('/homepurchase/?country=Australia&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
@@ -580,53 +593,55 @@ def test_home_purchase_get_country_abbreviation_city_none(client,create_user,log
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/homepurchase/Australia/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/homepurchase/?country=Australia&abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/homepurchase/Australia/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?country=Australia&abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_city_abbreviation_country_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_response = client.get('/homepurchase/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_response = client.get('/homepurchase/?city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response['property_location'] == 'City Centre'
-    assert get_response['price_per_sqm'] == 9191.5
-    assert get_response['mortgage_interest'] == 5.09
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['property_location'] == 'City Centre'
+    assert get_response_data[0]['price_per_sqm'] == 9191.55
+    assert get_response_data[0]['mortgage_interest'] == 5.09
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 
 def test_home_purchase_get_country_none_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
     get_first_page_response = client.get('/homepurchase/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
@@ -656,53 +671,56 @@ def test_home_purchase_get_country_none_city_none_abbreviation_none(client,creat
     assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
     get_second_page_response = client.get('/homepurchase/?page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/homepurchase/?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_city_country_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_response = client.get('/homepurchase/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_response = client.get('/homepurchase/?city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
-    get_response = json.loads(get_response.get_data(as_text = True))
-    assert get_response['property_location'] == 'City Centre'
-    assert get_response['price_per_sqm'] == 6339
-    assert get_response['mortgage_interest'] == 5.09
-    assert get_response['location']['id'] == 1
-    assert get_response['location']['country'] == 'Australia'
-    assert get_response['location']['city'] == 'Perth'
+        "Authorization": f"Bearer {login['auth_token']}"})
+    get_response_data = json.loads(get_response.get_data(as_text = True))
+    assert get_response_data[0]['property_location'] == 'City Centre'
+    assert get_response_data[0]['price_per_sqm'] == 6339
+    assert get_response_data[0]['mortgage_interest'] == 5.09
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
+    assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_home_purchase_get_abbreviation_country_none_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
-    create_home_purchase('City Centre', 7252, 4.26, 'Melbourne')
-    create_home_purchase('City Centre', 14619, 4.25, 'Sydney')
-    create_home_purchase('City Centre', 20775, 1.92, 'Zurich')
-    get_first_page_response = client.get('/homepurchase/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
+    create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
+    create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    get_first_page_response = client.get('/homepurchase/?abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-    assert len(get_first_page_response_data['results']) == 3
+    assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
     assert get_first_page_response_data['results'][0]['price_per_sqm'] == 9191.55
     assert get_first_page_response_data['results'][0]['mortgage_interest'] == 5.09
@@ -710,7 +728,7 @@ def test_home_purchase_get_abbreviation_country_none_city_none(client,create_use
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-    assert get_first_page_response_data['results'][1]['price_per_sqm'] == 10,515.4
+    assert get_first_page_response_data['results'][1]['price_per_sqm'] == 10515.4
     assert get_first_page_response_data['results'][1]['mortgage_interest'] == 4.26
     assert get_first_page_response_data['results'][1]['location']['id'] == 2
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
@@ -721,22 +739,29 @@ def test_home_purchase_get_abbreviation_country_none_city_none(client,create_use
     assert get_first_page_response_data['results'][2]['location']['id'] == 3
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['results'][3]['price_per_sqm'] == 30123.75
+    assert get_first_page_response_data['results'][3]['mortgage_interest'] == 1.92
+    assert get_first_page_response_data['results'][3]['location']['id'] == 4
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/homepurchase/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/homepurchase/?abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/homepurchase/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def test_home_purchase_update(client):
+def test_home_purchase_update(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_home_purchase('City Centre', 6339.73, 5.09, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
     patch_response = client.patch('/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
@@ -746,7 +771,8 @@ def test_home_purchase_update(client):
         }))
     assert patch_response.status_code == HttpStatus.ok_200.value
     get_response = client.get('/homepurchase/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['property_location'] == 'Outside City Centre'
     assert get_response_data['price_per_sqm'] == 7000
@@ -769,8 +795,8 @@ def test_home_purchase_update_no_id_exist(client):
 
 def test_home_purchase_delete(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_home_purchase('City Centre', 6339, 5.09, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
     delete_response = client.delete('/homepurchase/1',
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.no_content_204.value
@@ -3407,55 +3433,3 @@ def test_leisure_delete_no_id_exist(client):
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.notfound_404.value
     assert Leisure.query.count() == 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
