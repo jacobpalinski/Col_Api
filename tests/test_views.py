@@ -2399,18 +2399,19 @@ def create_childcare(client,type,annual_price,city):
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': type,
-        'annual price': annual_price,
+        'annual_price': annual_price,
         'city': city
         }))
     return response
 
 def test_childcare_post_childcare_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_childcare('Preschool', 19632, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_childcare(client,'Preschool', 19632, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
+    print(post_response_data)
     assert post_response_data['type'] == 'Preschool'
-    assert post_response_data['annual price'] == 19632
+    assert post_response_data['annual_price'] == 19632
     assert post_response_data['location']['id'] == 1
     assert post_response_data['location']['country'] == 'Australia'
     assert post_response_data['location']['city'] == 'Perth'
@@ -2418,7 +2419,7 @@ def test_childcare_post_childcare_location_exist(client):
     assert Childcare.query.count() == 1
 
 def test_childcare_post_childcare_location_notexist(client):
-    response = create_childcare('Preschool', 19632, 'Perth')
+    response = create_childcare(client,'Preschool', 19632, 'Perth')
     response_data = json.loads(response.get_data(as_text = True))
     assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
     assert response.status_code == HttpStatus.notfound_404.value
@@ -2426,14 +2427,14 @@ def test_childcare_post_childcare_location_notexist(client):
 
 def test_childcare_get_with_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_childcare('Preschool', 19632, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_childcare(client,'Preschool', 19632, 'Perth')
     get_response = client.get('/childcare/1',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['type'] == 'Preschool'
-    assert get_response_data['annual price'] == 19632
+    assert get_response_data['annual_price'] == 19632
     assert get_response_data['location']['id'] == 1
     assert get_response_data['location']['country'] == 'Australia'
     assert get_response_data['location']['city'] == 'Perth'
@@ -2441,294 +2442,308 @@ def test_childcare_get_with_id(client,create_user,login):
 
 def test_childcare_get_notexist_id(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_childcare('Preschool', 19632, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_childcare(client,'Preschool', 19632, 'Perth')
     get_response = client.get('/childcare/2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     assert get_response.status_code == HttpStatus.notfound_404.value
 
 def test_childcare_get_country_city_abbreviation(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_response = client.get('/childcare/Australia/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_response = client.get('/childcare/?country=Australia&city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Preschool'
-    assert get_response_data['annual price'] == 28466.4
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Preschool'
+    assert get_response_data[0]['annual_price'] == 28466.4
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_country_city_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_response = client.get('/childcare/Australia/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_response = client.get('/childcare/?country=Australia&city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Preschool'
-    assert get_response_data['annual price'] == 19632
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Preschool'
+    assert get_response_data[0]['annual_price'] == 19632
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_country_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_first_page_response = client.get('/childcare/Australia',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_first_page_response = client.get('/childcare/?country=Australia',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][0]['annual price'] == 19632
+    assert get_first_page_response_data['results'][0]['annual_price'] == 19632
     assert get_first_page_response_data['results'][0]['location']['id'] == 1
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][1]['annual price'] == 21012
-    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['annual_price'] == 20376
+    assert get_first_page_response_data['results'][1]['location']['id'] == 3
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][2]['annual price'] == 20376
-    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['annual_price'] == 21012
+    assert get_first_page_response_data['results'][2]['location']['id'] == 2
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/childcare/Australia?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/childcare/?country=Australia&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/childcare/Australia?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?country=Australia&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_country_abbreviation_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_first_page_response = client.get('/childcare/Australia/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_first_page_response = client.get('/childcare/?country=Australia&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 3
     assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][0]['annual price'] == 28466.4
+    assert get_first_page_response_data['results'][0]['annual_price'] == 28466.4
     assert get_first_page_response_data['results'][0]['location']['id'] == 1
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][1]['annual price'] == 30467.4
-    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['annual_price'] == 29545.2
+    assert get_first_page_response_data['results'][1]['location']['id'] == 3
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][2]['annual price'] == 29545.2
-    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['annual_price'] == 30467.4
+    assert get_first_page_response_data['results'][2]['location']['id'] == 2
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
     assert get_first_page_response_data['count'] == 3
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/childcare/Australia/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/childcare/?country=Australia&abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/childcare/Australia/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?country=Australia&abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_city_abbreviation_country_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_response = client.get('/childcare/Perth/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_response = client.get('/childcare/?city=Perth&abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Preschool'
-    assert get_response_data['annual price'] == 28466.4
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Preschool'
+    assert get_response_data[0]['annual_price'] == 28466.4
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_country_none_city_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_first_page_response = client.get('/childcare/Australia/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_first_page_response = client.get('/childcare/',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
     assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][0]['annual price'] == 19632
+    assert get_first_page_response_data['results'][0]['annual_price'] == 19632
     assert get_first_page_response_data['results'][0]['location']['id'] == 1
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][1]['annual price'] == 21012
+    assert get_first_page_response_data['results'][1]['annual_price'] == 21012
     assert get_first_page_response_data['results'][1]['location']['id'] == 2
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
     assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][2]['annual price'] == 20376
+    assert get_first_page_response_data['results'][2]['annual_price'] == 20376
     assert get_first_page_response_data['results'][2]['location']['id'] == 3
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['results'][3]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][3]['annual price'] == 35616
+    assert get_first_page_response_data['results'][3]['annual_price'] == 35616
     assert get_first_page_response_data['results'][3]['location']['id'] == 4
     assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
     assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
     assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
     get_second_page_response = client.get('/childcare/?page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/childcare/?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_city_country_none_abbreviation_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_response = client.get('/childcare/Perth',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_response = client.get('/childcare/?city=Perth',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
-    assert get_response_data['type'] == 'Preschool'
-    assert get_response_data['annual price'] == 19632
-    assert get_response_data['location']['id'] == 1
-    assert get_response_data['location']['country'] == 'Australia'
-    assert get_response_data['location']['city'] == 'Perth'
+    assert get_response_data[0]['type'] == 'Preschool'
+    assert get_response_data[0]['annual_price'] == 19632
+    assert get_response_data[0]['location']['id'] == 1
+    assert get_response_data[0]['location']['country'] == 'Australia'
+    assert get_response_data[0]['location']['city'] == 'Perth'
     assert get_response.status_code == HttpStatus.ok_200.value
 
 def test_childcare_get_abbreviation_country_none_city_none(client,create_user,login):
     create_currency(client,'AUD',1.45)
     create_currency(client,'CHF',0.92)
-    create_location('Australia','Perth','AUD')
-    create_location('Australia','Melbourne','AUD')
-    create_location('Australia','Sydney','AUD')
-    create_location('Switzerland','Zurich','CHF')
-    create_childcare('Preschool', 19632, 'Perth')
-    create_childcare('Preschool', 21012, 'Melbourne')
-    create_childcare('Preschool', 20376, 'Sydney')
-    create_childcare('Preschool', 35616, 'Zurich')
-    get_first_page_response = client.get('/childcare/AUD',
+    create_location(client,'Australia','Perth','AUD')
+    create_location(client,'Australia','Melbourne','AUD')
+    create_location(client,'Australia','Sydney','AUD')
+    create_location(client,'Switzerland','Zurich','CHF')
+    create_childcare(client,'Preschool', 19632, 'Perth')
+    create_childcare(client,'Preschool', 21012, 'Melbourne')
+    create_childcare(client,'Preschool', 20376, 'Sydney')
+    create_childcare(client,'Preschool', 35616, 'Zurich')
+    get_first_page_response = client.get('/childcare/?abbreviation=AUD',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-    assert len(get_first_page_response_data['results']) == 3
+    assert len(get_first_page_response_data['results']) == 4
     assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][0]['annual price'] == 28466.4
+    assert get_first_page_response_data['results'][0]['annual_price'] == 28466.4
     assert get_first_page_response_data['results'][0]['location']['id'] == 1
     assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
     assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
     assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][1]['annual price'] == 30467.4
-    assert get_first_page_response_data['results'][1]['location']['id'] == 2
+    assert get_first_page_response_data['results'][1]['annual_price'] == 29545.2
+    assert get_first_page_response_data['results'][1]['location']['id'] == 3
     assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
     assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-    assert get_first_page_response_data['results'][2]['annual price'] == 29545.2
-    assert get_first_page_response_data['results'][2]['location']['id'] == 3
+    assert get_first_page_response_data['results'][2]['annual_price'] == 30467.4
+    assert get_first_page_response_data['results'][2]['location']['id'] == 2
     assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-    assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-    assert get_first_page_response_data['count'] == 3
+    assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+    assert get_first_page_response_data['results'][3]['type'] == 'Preschool'
+    assert get_first_page_response_data['results'][3]['annual_price'] == 51643.2
+    assert get_first_page_response_data['results'][3]['location']['id'] == 4
+    assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
+    assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+    assert get_first_page_response_data['count'] == 4
     assert get_first_page_response_data['previous'] == None
     assert get_first_page_response_data['next'] == None
-    get_second_page_response = client.get('/childcare/AUD?page=2',
+    assert get_first_page_response.status_code == HttpStatus.ok_200.value
+    get_second_page_response = client.get('/childcare/?abbreviation=AUD&page=2',
         headers = {"Content-Type": "application/json",
-        "Authorization": f"Bearer {login['token']}"})
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
-    assert len(get_second_page_response['results']) == 0
+    assert len(get_second_page_response_data['results']) == 0
     assert get_second_page_response_data['previous'] != None
-    assert get_second_page_response_data['previous'] == '/childcare/AUD?page=1'
+    assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent/?abbreviation=AUD&page=1'
     assert get_second_page_response_data['next'] == None
+    assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def test_childcare_update(client):
+def test_childcare_update(client,create_user,login):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_childcare('Preschool', 19632, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_childcare(client,'Preschool', 19632, 'Perth')
     patch_response = client.patch('/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'International Primary School',
-        'annual price': 15547.56
+        'annual_price': 15547.56
         }))
     assert patch_response.status_code == HttpStatus.ok_200.value
     get_response = client.get('/childcare/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
     get_response_data = json.loads(get_response.get_data(as_text = True))
     assert get_response_data['type'] == 'International Primary School'
-    assert get_response_data['annual price'] == 15547.56
+    assert get_response_data['annual_price'] == 15547.56
     assert get_response_data['location']['id'] == 1
     assert get_response_data['location']['country'] == 'Australia'
     assert get_response_data['location']['city'] == 'Perth'
@@ -2739,15 +2754,15 @@ def test_childcare_update_no_id_exist(client):
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'International Primary School',
-        'annual price': 15547.56
+        'annual_price': 15547.56
         }))
     assert patch_response.status_code == HttpStatus.notfound_404.value
     assert Childcare.query.count() == 0
 
 def test_childcare_delete(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    create_childcare('Preschool', 19632, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    create_childcare(client,'Preschool', 19632, 'Perth')
     delete_response = client.delete('/childcare/1',
         headers = {'Content-Type': 'application/json'})
     assert delete_response.status_code == HttpStatus.no_content_204.value
@@ -2771,8 +2786,8 @@ def create_apparel(client,item,price,city):
 
 def test_apparel_post_apparel_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_apparel('Levis Pair of Jeans', 77, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
     assert post_response_data['item'] == 'Levis Pair of Jeans'
     assert post_response_data['price'] == 77
@@ -3136,8 +3151,8 @@ def create_leisure(client,activity,price,city):
 
 def test_leisure_post_leisure_location_exist(client):
     create_currency(client,'AUD',1.45)
-    create_location('Australia','Perth','AUD')
-    post_response = create_leisure('Monthly Gym Membership', 48, 'Perth')
+    create_location(client,'Australia','Perth','AUD')
+    post_response = create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
     post_response_data = json.loads(post_response.get_data(as_text = True))
     assert post_response_data['activity'] == 'Monthly Gym Membership'
     assert post_response_data['price'] == 48

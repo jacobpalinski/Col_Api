@@ -775,8 +775,8 @@ class FoodBeverageResource(Resource):
         if authenticate_jwt() == True:
 
             if id != None:
-                rent = Food_and_Beverage.query.get_or_404(id)
-                dumped_food_and_beverage = food_and_beverage_schema.dump(rent)
+                food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+                dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
                 return dumped_food_and_beverage
         
             qry = orm.session.query(Food_and_Beverage).join(Location, Food_and_Beverage.location_id == Location.id)\
@@ -896,87 +896,76 @@ class FoodBeverageResource(Resource):
             sql_alchemy_error_response(e)
 
 class ChildcareResource(Resource):
-    @jwt_required
     def get(self,id=None):
+        country = request.args.get('country')
+        city = request.args.get('city')
+        abbreviation = request.args.get('abbreviation')
 
-        country = self.request.args.get('country')
-        city = self.request.args.get('city')
-        abbreviation = self.request.args.get('abbreviation')
+        if authenticate_jwt() == True:
 
-        if id != None:
-            childcare = Childcare.query.get_or_404(id)
-            dumped_childcare = childcare_schema.dump(childcare)
-            return dumped_childcare
+            if id != None:
+                childcare = Childcare.query.get_or_404(id)
+                dumped_childcare = childcare_schema.dump(childcare)
+                return dumped_childcare
+        
+            qry = orm.session.query(Childcare).join(Location, Childcare.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(Childcare.type.asc(),Childcare.annual_price.asc())
+        
+            if abbreviation:
 
-        elif None not in (country,city,abbreviation):
-            childcare = Childcare.query(Childcare.id, Childcare.type,
-            (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
-            Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
-            .join(Currency, Location.id==Currency.id).filter(Location.country == country,
-            Location.city == city, Currency.abbreviation == abbreviation)\
-            .order_by(Childcare.type.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare._asdict(),many = True)
-            return dumped_childcare
-        
-        elif  None not in (country,city) and abbreviation == None:
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id).filter(Location.country == country,
-            Location.city == city).order_by(Childcare.type.asc()).all().get_or_404()
-            dumped_childcare = childcare_schema.dump(childcare,many = True)
-            return dumped_childcare
-        
-        elif country != None and None in (city,abbreviation):
-            pagination_helper = PaginationHelper(
+                conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
+            
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                
+                if (city and not country) or (city and country):
+                    qry_res = qry.all()
+                    dumped_childcare = childcare_schema.dump(qry_res,many=True)
+                    for result in dumped_childcare:
+                        result['annual_price'] = round(result['annual_price'] * conversion,2)
+                    return dumped_childcare
+            
+                else:
+                    pagination_helper = PaginationHelper(
+                    request,
+                    query = qry,
+                    resource_for_url = 'cost_of_living.childcareresource',
+                    key_name = 'results',   
+                    schema = childcare_schema
+                    )
+                    dumped_childcare = pagination_helper.paginate_query()
+                    for result in dumped_childcare['results']:
+                        result['annual_price'] = round(result['annual_price'] * conversion,2)
+                    return dumped_childcare
+            
+            else:
+                if country:
+                    qry = qry.filter(Location.country==country)
+                if city:
+                    qry= qry.filter(Location.city==city)
+                    qry_res = qry.all()
+                    dumped_childcare = childcare_schema.dump(qry_res,many=True)
+                    return dumped_childcare
+                
+                qry_res=qry.all()
+                pagination_helper = PaginationHelper(
                 request,
-                query = Childcare.query.join(Location, 
-                Childcare.location_id == Location.id).filter(Location.country == country)\
-                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
+                query = qry,
                 resource_for_url = 'cost_of_living.childcareresource',
-                key_name = 'results',
+                key_name = 'results',   
                 schema = childcare_schema
-            )
-            paginated_childcare = pagination_helper.paginate_query()
-            return paginated_childcare
-        
-        elif None in (country,city,abbreviation):
-            pagination_helper = PaginationHelper(
-                request,
-                query = Childcare.query.join(Location, 
-                Childcare.location_id == Location.id)\
-                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.childcareresource',
-                key_name = 'results',
-                schema = childcare_schema
-            )
-            paginated_childcare = pagination_helper.paginate_query()
-            return paginated_childcare
-        
-        elif city != None and None in (country,abbreviation):
-            childcare = Childcare.query.join(Location, 
-            Childcare.location_id == Location.id).filter(Location.city == city)\
-            .order_by(Childcare.type.asc()).all().get_or_404()
-            dumped_childcare = utilities_schema.dump(childcare,many = True)
-            return dumped_childcare
-        
-        else:
-            pagination_helper = PaginationHelper(
-                request,
-                query = Childcare.query(Childcare.id, Childcare.type,
-                (Childcare.annual_price * Currency.usd_to_local_exchange_rate).label("annual_price"),
-                Childcare.location_id).join(Location, Childcare.location_id == Location.id)\
-                .join(Currency, Location.id==Currency.id).filter(Currency.abbreviation == abbreviation)\
-                .order_by(Childcare.type.asc(), Childcare.annual_price.asc()).all().get_or_404(),
-                resource_for_url = 'cost_of_living.childcareresource',
-                key_name = 'results',
-                schema = childcare_schema
-            )
-            paginated_childcare = pagination_helper.paginate_query()
-            return paginated_childcare
+                )
+                dumped_childcare = pagination_helper.paginate_query()
+                return dumped_childcare
     
     def post(self):
         childcare_dict = request.get_json()
         request_not_empty(childcare_dict)
-        validate_request(childcare_schema,childcare_dict)
+
+        if 'price' in childcare_dict:
+            print(childcare_dict['price'])
         
         try:
             location_city = childcare_dict['city']
@@ -986,7 +975,7 @@ class ChildcareResource(Resource):
                 response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                 return response, HttpStatus.notfound_404.value
             
-            childcare = Childcare(type = childcare_dict['type'], 
+            childcare = Childcare(type = childcare_dict['type'],
             annual_price = childcare_dict['annual_price'],
             location = location)
             childcare.add(childcare)
@@ -1023,7 +1012,9 @@ class ChildcareResource(Resource):
         childcare = Childcare.query.get_or_404(id)
         
         try:
-            delete_object(childcare)
+            childcare.delete(childcare)
+            response = {'message': 'Successfully deleted'}
+            return response, HttpStatus.no_content_204.value
         
         except SQLAlchemyError as e:
             sql_alchemy_error_response(e)
