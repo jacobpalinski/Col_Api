@@ -1235,7 +1235,7 @@ class LeisureResource(Resource):
 
         try:
             if 'activity' in leisure_dict and leisure_dict['activity'] != None:
-                leisure.item = leisure_dict['activity']
+                leisure.activity = leisure_dict['activity']
             if 'price' in leisure_dict and \
             leisure_dict['price'] != None:
                 leisure.price = leisure_dict['price']
