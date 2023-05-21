@@ -1,12 +1,17 @@
 import pytest
 import time
+import os
 from flask import json
 from httpstatus import HttpStatus
 from models import (orm,User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
 Home_Purchase,Home_PurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
 Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
-from datetime import datetime
+from datetime import datetime, date
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 TEST_EMAIL = 'test@gmail.com'
 TEST_PASSWORD = 'X4nmasXII!'
@@ -17,7 +22,8 @@ def create_user(client):
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
         'email' : TEST_EMAIL,
-        'password': TEST_PASSWORD
+        'password': TEST_PASSWORD,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return new_user
 
@@ -33,7 +39,7 @@ def login(client, create_user):
     return login_data
 
 class TestUserResource:
-    def test_user_post_no_user(self,client):
+    def test_user_post_no_user_no_admin(self,client):
         response = client.post('/auth/user',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
@@ -44,6 +50,21 @@ class TestUserResource:
         assert response_data['message'] == 'successfully registered'
         assert response.status_code == HttpStatus.created_201.value
         assert User.query.count() == 1
+        assert User.query.first().admin == False
+    
+    def test_user_post_no_user_with_admin(self,client):
+        response = client.post('/auth/user',
+            headers = {'Content-Type' : 'application/json'},
+            data = json.dumps({
+            'email' : TEST_EMAIL,
+            'password': 'X4nmasXII!',
+            'admin': os.environ.get('ADMIN_KEY')
+            }))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response_data['message'] == 'successfully registered with admin privileges'
+        assert response.status_code == HttpStatus.created_201.value
+        assert User.query.count() == 1
+        assert User.query.first().admin == True
 
     def test_user_post_exist_user(self,client):
         post_response = client.post('/auth/user',
@@ -91,9 +112,10 @@ class TestUserResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        print(get_response_data)
         assert get_response_data['data']['user_id'] == 1
         assert get_response_data['data']['email'] == TEST_EMAIL
-        assert datetime.strptime(get_response_data['data']['creation_date'],'%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d') == '2023-03-16'
+        assert datetime.strptime(get_response_data['data']['creation_date'],'%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d') == date.today().strftime('%Y-%m-%d')
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_user_get_no_token(self,client):
@@ -207,7 +229,8 @@ def create_currency(client, abbreviation, usd_to_local_exchange_rate):
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'abbreviation': abbreviation,
-            'usd_to_local_exchange_rate': usd_to_local_exchange_rate
+            'usd_to_local_exchange_rate': usd_to_local_exchange_rate,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         return response
 
@@ -219,6 +242,17 @@ class TestCurrencyResource:
         assert response_data['usd_to_local_exchange_rate'] == 1.45
         assert response.status_code == HttpStatus.created_201.value
         assert Currency.query.count() == 1
+    
+    def test_currency_post_new_currency_no_admin(self,client):
+        response = client.post('/currencies/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'abbreviation': 'AUD',
+        'usd_to_local_exchange_rate': 1.45
+        }))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
 
     def test_currency_post_duplicated_currency(self,client):
         response = create_currency(client,'AUD',1.45)
@@ -275,7 +309,8 @@ class TestCurrencyResource:
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'abbreviation': 'Aud',
-        'usd_to_local_exchange_rate' : 1.50
+        'usd_to_local_exchange_rate' : 1.50,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/currencies/1',
@@ -291,23 +326,47 @@ class TestCurrencyResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'abbreviation': 'Aud',
-            'usd_to_local_exchange_rate' : 1.50
+            'usd_to_local_exchange_rate' : 1.50,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Currency.query.count() == 0
+    
+    def test_currency_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        patch_response = client.patch('/currencies/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'abbreviation': 'Aud',
+        'usd_to_local_exchange_rate' : 1.50
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_currency_delete(self,client,create_user,login):
+    def test_currency_delete(self,client):
         create_currency(client,'AUD',1.45)
         delete_response = client.delete('/currencies/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert Currency.query.count() == 0
         assert delete_response.status_code == HttpStatus.no_content_204.value
 
     def test_currency_delete_no_id_exist(self,client):
         delete_response = client.delete('/currencies/1',
-        headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Currency.query.count() == 0
+    
+    def test_currency_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        delete_response = client.delete('/currencies/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_location(client, country, city, abbreviation):
     response = client.post('/locations/',
@@ -315,7 +374,8 @@ def create_location(client, country, city, abbreviation):
         data = json.dumps({
         'country': country,
         'city': city,
-        'abbreviation': abbreviation
+        'abbreviation': abbreviation,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -330,6 +390,19 @@ class TestLocationResource:
         assert post_response_data['currency']['abbreviation'] == 'AUD'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Location.query.count() == 1
+    
+    def test_location_post_new_location_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        post_response = client.post('/locations/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'country': 'Australia',
+        'city': 'Perth',
+        'abbreviation': 'AUD',
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_location_post_new_location_currency_none(self,client):
         response = create_location(client,'Australia','Perth','AUD')
@@ -394,15 +467,27 @@ class TestLocationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         delete_response = client.delete('/locations/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Location.query.count() == 0
 
     def test_location_delete_no_id_exist(self,client):
         delete_response = client.delete('/locations/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Location.query.count() == 0
+    
+    def test_location_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        delete_response = client.delete('/locations/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
     response = client.post('/homepurchase/',
@@ -411,7 +496,8 @@ def create_home_purchase(client,property_location,price_per_sqm,mortgage_interes
         'property_location': property_location,
         'price_per_sqm': price_per_sqm,
         'mortgage_interest': mortgage_interest,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -429,6 +515,21 @@ class TestHomePurchaseResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Home_Purchase.query.count() == 1
+    
+    def test_home_purchase_post_home_purchase_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/homepurchase/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'City Centre',
+        'price_per_sqm': 6339,
+        'mortgage_interest': 5.09,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_home_purchase_post_home_purchase_location_notexist(self,client):
         response = create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
@@ -770,7 +871,8 @@ class TestHomePurchaseResource:
             data = json.dumps({
             'property_location': 'Outside City Centre',
             'price_per_sqm': 7000,
-            'mortgage_interest': 6.01
+            'mortgage_interest': 6.01,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/homepurchase/1',
@@ -791,25 +893,54 @@ class TestHomePurchaseResource:
             data = json.dumps({
             'property_location': 'Outside City Centre',
             'price_per_sqm': 7000,
-            'mortgage_interest': 6.01
+            'mortgage_interest': 6.01,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Home_Purchase.query.count() == 0
+    
+    def test_home_purchase_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
+        patch_response = client.patch('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'price_per_sqm': 7000,
+        'mortgage_interest': 6.01
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_home_purchase_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
         delete_response = client.delete('/homepurchase/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Home_Purchase.query.count() == 0
 
     def test_home_purchase_delete_no_id_exist(self,client):
         delete_response = client.delete('/homepurchase/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Home_Purchase.query.count() == 0
+    
+    def test_home_purchase_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+        delete_response = client.delete('/homepurchase/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_rent(client,property_location,bedrooms,monthly_price,city):
     response = client.post('/rent/',
@@ -818,7 +949,8 @@ def create_rent(client,property_location,bedrooms,monthly_price,city):
         'property_location': property_location,
         'bedrooms': bedrooms,
         'monthly_price': monthly_price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -836,8 +968,23 @@ class TestRentResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Rent.query.count() == 1
+    
+    def test_rent_post_new_rent_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/rent/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'City Centre',
+        'bedrooms': 1,
+        'monthly_price': 1642,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
-    def test_rent_post_location_notexist(self,client):
+    def test_rent_post_new_rent_location_notexist(self,client):
         response = create_rent(client,'City Centre', 1, 1642, 'Perth')
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
@@ -1174,7 +1321,8 @@ class TestRentResource:
             data = json.dumps({
             'property_location': 'Outside City Centre',
             'bedrooms': 3,
-            'monthly_price': 2526
+            'monthly_price': 2526,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/rent/1',
@@ -1195,25 +1343,54 @@ class TestRentResource:
             data = json.dumps({
             'property_location': 'Outside City Centre',
             'bedrooms': 3,
-            'monthly_price': 2526.62
+            'monthly_price': 2526.62,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Rent.query.count() == 0
+    
+    def test_rent_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_rent(client,'City Centre', 1, 1642, 'Perth')
+        patch_response = client.patch('/rent/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'price_per_sqm': 7000,
+        'mortgage_interest': 6.01
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_rent_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642.43, 'Perth')
         delete_response = client.delete('/rent/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Rent.query.count() == 0
 
     def test_rent_delete_no_id_exist(self,client):
         delete_response = client.delete('/rent/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Rent.query.count() == 0
+    
+    def test_rent_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_rent(client,'City Centre', 1, 1642.43, 'Perth')
+        delete_response = client.delete('/rent/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_utilities(client,utility,monthly_price,city):
     response = client.post('/utilities/',
@@ -1221,7 +1398,8 @@ def create_utilities(client,utility,monthly_price,city):
         data = json.dumps({
         'utility': utility,
         'monthly_price': monthly_price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -1238,6 +1416,20 @@ class TestUtilitiesResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Utilities.query.count() == 1
+    
+    def test_utilities_post_utilities_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/utilities/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'utility': 'Electricity, Heating, Cooling, Water and Garbage',
+        'monthly_price': 210,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_utilities_post_utilities_location_notexist(self,client):
         response = create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
@@ -1556,7 +1748,8 @@ class TestUtilitiesResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'utility': 'Internet',
-            'monthly_price': 55
+            'monthly_price': 55,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/utilities/1',
@@ -1575,25 +1768,54 @@ class TestUtilitiesResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'utility': 'Internet',
-            'monthly_price': 55
+            'monthly_price': 55,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Utilities.query.count() == 0
+    
+    def test_utilities_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+        patch_response = client.patch('/utilities/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': 'Outside City Centre',
+        'price_per_sqm': 7000,
+        'mortgage_interest': 6.01
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_utilities_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
         delete_response = client.delete('/utilities/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Utilities.query.count() == 0
 
     def test_utilities_delete_no_id_exist(self,client):
         delete_response = client.delete('/utilities/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Utilities.query.count() == 0
+    
+    def test_utilities_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+        delete_response = client.delete('/utilities/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_transportation(client,type,price,city):
     response = client.post('/transportation/',
@@ -1601,7 +1823,8 @@ def create_transportation(client,type,price,city):
         data = json.dumps({
         'type': type,
         'price': price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -1618,6 +1841,20 @@ class TestTransportationResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Transportation.query.count() == 1
+    
+    def test_transportation_post_transportation_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/transportation/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': 'Monthly Public Transportation Pass',
+        'price': 103,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_transportation_post_transportation_location_notexist(self,client):
         response = create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
@@ -1936,7 +2173,8 @@ class TestTransportationResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'One-Way Ticket',
-            'price': 2.76
+            'price': 2.76,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/transportation/1',
@@ -1955,25 +2193,53 @@ class TestTransportationResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'One-Way Ticket',
-            'price': 2.76
+            'price': 2.76,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Transportation.query.count() == 0
+
+    def test_transportation_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+        patch_response = client.patch('/transportation/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': 'One-Way Ticket',
+        'price': 2.76,
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_transportation_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
         delete_response = client.delete('/transportation/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Transportation.query.count() == 0
 
     def test_transportation_delete_no_id_exist(self,client):
         delete_response = client.delete('/transportation/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Transportation.query.count() == 0
+    
+    def test_transportation_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+        delete_response = client.delete('/transportation/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_foodbeverage(client,item_category,purchase_point,item,price,city):
     response = client.post('/foodbeverage/',
@@ -1983,7 +2249,8 @@ def create_foodbeverage(client,item_category,purchase_point,item,price,city):
         'purchase_point': purchase_point,
         'item': item,
         'price': price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -2002,6 +2269,22 @@ class TestFoodBeverageResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Food_and_Beverage.query.count() == 1
+    
+    def test_foodbeverage_post_foodbeverage_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/foodbeverage/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item_category': 'Beverage',
+        'purchase_point': 'Supermarket',
+        'item': 'Milk 1L',
+        'price': 1.77,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_foodbeverage_post_foodbeverage_location_notexist(self,client):
         response = create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
@@ -2360,7 +2643,8 @@ class TestFoodBeverageResource:
             'item_category': 'Food',
             'purchase_point': 'Restaurant',
             'item': 'McMeal',
-            'price': 10.24
+            'price': 10.24,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/foodbeverage/1',
@@ -2383,25 +2667,55 @@ class TestFoodBeverageResource:
             'item_category': 'Food',
             'purchase_point': 'Restaurant',
             'item': 'McMeal',
-            'price': 10.24
+            'price': 10.24,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Food_and_Beverage.query.count() == 0
+    
+    def test_foodbeverage_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+        patch_response = client.patch('/foodbeverage/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item_category': 'Food',
+        'purchase_point': 'Restaurant',
+        'item': 'McMeal',
+        'price': 10.24
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_foodbeverage_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
         delete_response = client.delete('/foodbeverage/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Food_and_Beverage.query.count() == 0
 
     def test_foodbeverage_delete_no_id_exist(self,client):
         delete_response = client.delete('/foodbeverage/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Food_and_Beverage.query.count() == 0
+    
+    def test_foodbeverage_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+        delete_response = client.delete('/foodbeverage/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_childcare(client,type,annual_price,city):
     response = client.post('/childcare/',
@@ -2409,7 +2723,8 @@ def create_childcare(client,type,annual_price,city):
         data = json.dumps({
         'type': type,
         'annual_price': annual_price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -2419,7 +2734,6 @@ class TestChildcareResource:
         create_location(client,'Australia','Perth','AUD')
         post_response = create_childcare(client,'Preschool', 19632, 'Perth')
         post_response_data = json.loads(post_response.get_data(as_text = True))
-        print(post_response_data)
         assert post_response_data['type'] == 'Preschool'
         assert post_response_data['annual_price'] == 19632
         assert post_response_data['location']['id'] == 1
@@ -2427,6 +2741,20 @@ class TestChildcareResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Childcare.query.count() == 1
+    
+    def test_childcare_post_childcare_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/childcare/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': 'Preschool',
+        'annual_price': 19632,
+        'city': 'Perth',
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_childcare_post_childcare_location_notexist(self,client):
         response = create_childcare(client,'Preschool', 19632, 'Perth')
@@ -2745,7 +3073,8 @@ class TestChildcareResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'International Primary School',
-            'annual_price': 15547.56
+            'annual_price': 15547.56,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/childcare/1',
@@ -2764,25 +3093,55 @@ class TestChildcareResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'International Primary School',
-            'annual_price': 15547.56
+            'annual_price': 15547.56,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Childcare.query.count() == 0
+    
+    def test_childcare_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_childcare(client,'Preschool', 19632, 'Perth')
+        patch_response = client.patch('/childcare/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item_category': 'Food',
+        'purchase_point': 'Restaurant',
+        'item': 'McMeal',
+        'price': 10.24
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_childcare_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
         delete_response = client.delete('/childcare/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Childcare.query.count() == 0
 
     def test_childcare_delete_no_id_exist(self,client):
         delete_response = client.delete('/childcare/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Childcare.query.count() == 0
+    
+    def test_childcare_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_childcare(client,'Preschool', 19632, 'Perth')
+        delete_response = client.delete('/childcare/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_apparel(client,item,price,city):
     response = client.post('/apparel/',
@@ -2790,7 +3149,8 @@ def create_apparel(client,item,price,city):
         data = json.dumps({
         'item': item,
         'price': price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -2807,6 +3167,20 @@ class TestApparelResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Apparel.query.count() == 1
+    
+    def test_apparel_post_apparel_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/apparel/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item': 'Levis Pair of Jeans',
+        'price': 77,
+        'city': 'Perth',
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_apparel_post_apparel_location_notexist(self,client):
         response = create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
@@ -3125,7 +3499,8 @@ class TestApparelResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item': 'Mens Leather Business Shoes',
-            'price': 194
+            'price': 194,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/apparel/1',
@@ -3144,25 +3519,53 @@ class TestApparelResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item': 'Mens Leather Business Shoes',
-            'price': 194
+            'price': 194,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Apparel.query.count() == 0
+    
+    def test_apparel_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+        patch_response = client.patch('/apparel/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item': 'Mens Leather Business Shoes',
+        'price': 194
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_apparel_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
         delete_response = client.delete('/apparel/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Apparel.query.count() == 0
 
     def test_apparel_delete_no_id_exist(self,client):
         delete_response = client.delete('/apparel/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Apparel.query.count() == 0
+    
+    def test_apparel_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+        delete_response = client.delete('/apparel/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_leisure(client,activity,price,city):
     response = client.post('/leisure/',
@@ -3170,7 +3573,8 @@ def create_leisure(client,activity,price,city):
         data = json.dumps({
         'activity': activity,
         'price': price,
-        'city': city
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
 
@@ -3187,6 +3591,20 @@ class TestLeisureResource:
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
         assert Leisure.query.count() == 1
+    
+    def test_leisure_post_leisure_location_exist_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        post_response = client.post('/leisure/',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'activity': 'Monthly Gym Membership',
+        'price': 48,
+        'city': 'Perth'
+        }))
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
 
     def test_leisure_post_leisure_location_notexist(self,client):
         response = create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
@@ -3504,7 +3922,8 @@ class TestLeisureResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'activity': '1hr Tennis Court Rent',
-            'price': 12.64
+            'price': 12.64,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
         get_response = client.get('/leisure/1',
@@ -3523,22 +3942,50 @@ class TestLeisureResource:
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'activity': '1hr Tennis Court Rent',
-            'price': 12.64
+            'price': 12.64,
+            'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
         assert Leisure.query.count() == 0
+    
+    def test_leisure_update_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+        patch_response = client.patch('/leisure/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item': 'Mens Leather Business Shoes',
+        'price': 194
+        }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
     def test_leisure_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
         delete_response = client.delete('/leisure/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Leisure.query.count() == 0
 
     def test_leisure_delete_no_id_exist(self,client):
         delete_response = client.delete('/leisure/1',
-            headers = {'Content-Type': 'application/json'})
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Leisure.query.count() == 0
+    
+    def test_leisure_delete_no_admin(self,client):
+        create_currency(client,'AUD',1.45)
+        create_location(client,'Australia','Perth','AUD')
+        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+        delete_response = client.delete('/leisure/1',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        assert delete_response.status_code == HttpStatus.forbidden_403.value
+        assert delete_response_data['message'] == 'Admin privileges needed'

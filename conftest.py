@@ -18,6 +18,7 @@ def application():
         orm.session.remove()
         orm.drop_all()
 
+# Application client fixture to be used for tests in test_views.py
 @pytest.fixture
 def client(application):
     return application.test_client()

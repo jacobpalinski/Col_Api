@@ -1,11 +1,16 @@
 import jwt
 import datetime
 import re
+import os
 from marshmallow import Schema, fields, INCLUDE
 from marshmallow import validate
 from passlib.apps import custom_app_context as password_context
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 orm = SQLAlchemy()
 ma = Marshmallow()
@@ -49,8 +54,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
 
     def __init__(self,email,admin=None):
         self.email = email
-        if admin == 'Code only I know': # Delete this piece of code once I create myself as admin
-            self.admin = True
+        self.admin = admin
 
     def encode_auth_token(self,user_id):
         # Generate Auth Token
@@ -60,9 +64,9 @@ class User(orm.Model,ResourceAddUpdateDelete):
                 'iat':datetime.datetime.utcnow(),
                 'sub': user_id
             }
-            return jwt.encode (
+            return jwt.encode(
                 payload,
-                "secret_key",
+                os.environ.get('SECRET_KEY'),
                 algorithm = 'HS256'
             )
         except Exception as e:
@@ -72,7 +76,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
     def decode_auth_token(auth_token):
         # Decode Auth Token
         try:
-            payload = jwt.decode(auth_token, "secret_key")
+            payload = jwt.decode(auth_token, os.environ.get('SECRET_KEY'))
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again'

@@ -3,6 +3,7 @@ from models import orm, User
 from flask import make_response, request
 from flask import url_for
 from flask import current_app
+from marshmallow import ValidationError
 
 def request_not_empty(dict):
     if dict == False:
@@ -10,9 +11,10 @@ def request_not_empty(dict):
         return response, HttpStatus.bad_request_400.value
 
 def validate_request(schema,dict):
-    errors = schema.validate(dict)
-    if errors:
-        return errors, HttpStatus.bad_request_400.value
+    try:
+        validated_data = schema.validate(dict)
+    except ValidationError as error:
+        return error.messages, HttpStatus.bad_request_400.value
 
 def sql_alchemy_error_response(error):
     orm.session.rollback()
