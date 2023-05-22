@@ -5,22 +5,26 @@ from flask import url_for
 from flask import current_app
 from marshmallow import ValidationError
 
+# Checks post or patch request is not made with an empty body
 def request_not_empty(dict):
     if dict == False:
         response = {'message': 'No input data provided'}
         return response, HttpStatus.bad_request_400.value
 
+# Validates request body is inline with schema specified using marshmallow
 def validate_request(schema,dict):
     try:
         validated_data = schema.validate(dict)
     except ValidationError as error:
         return error.messages, HttpStatus.bad_request_400.value
 
+# Generates error statement for SQLAlchemy error
 def sql_alchemy_error_response(error):
     orm.session.rollback()
     response = {'error': str(error)}
     return response, HttpStatus.bad_request_400.value
 
+# Authenticates jwt token for get requests
 def authenticate_jwt():
     auth_header = request.headers.get('Authorization')
     if auth_header:
@@ -42,6 +46,7 @@ def authenticate_jwt():
         response = {'message' : 'Provide a valid auth token'}
         return response, HttpStatus.forbidden_403.value
 
+# Paginates output for get requests that generate a large number of results
 class PaginationHelper():
     def __init__(self,request, query, resource_for_url, key_name, schema):
         self.request = request
@@ -53,7 +58,7 @@ class PaginationHelper():
         self.page_argument_name = current_app.config['PAGINATION_PAGE_ARGUMENT_NAME']
         
     def paginate_query(self):
-        # No page number, assume request requires page #1
+        # No page number, assume request requires page 1
         page_number = self.request.args.get(self.page_argument_name, 1, type=int)
         paginated_objects = self.query.paginate(
             page = page_number,
@@ -62,6 +67,7 @@ class PaginationHelper():
         )
         objects = paginated_objects.items
         if paginated_objects.has_prev:
+            # Formatting of previous page url based on arguments provided
             if self.request.args.get('country') and not self.request.args.get('abbreviation'):
                 previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number - 1, _external = True)
             elif self.request.args.get('abbreviation') and not self.request.args.get('country'):
@@ -74,6 +80,7 @@ class PaginationHelper():
             previous_page_url = None
 
         if paginated_objects.has_next:
+            # Formatting of next page url based on arguments provided
             if self.request.args.get('country') and not self.request.args.get('abbreviation'):
                 next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number + 1, _external = True)
             elif self.request.args.get('abbreviation') and not self.request.args.get('country'):

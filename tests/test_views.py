@@ -225,7 +225,7 @@ class TestUserResource:
         assert response.status_code == HttpStatus.unauthorized_401.value
 
 def create_currency(client, abbreviation, usd_to_local_exchange_rate):
-        response = client.post('/currencies/',
+        response = client.post('/currencies',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'abbreviation': abbreviation,
@@ -244,7 +244,7 @@ class TestCurrencyResource:
         assert Currency.query.count() == 1
     
     def test_currency_post_new_currency_no_admin(self,client):
-        response = client.post('/currencies/',
+        response = client.post('/currencies',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'abbreviation': 'AUD',
@@ -280,7 +280,7 @@ class TestCurrencyResource:
     def test_currency_get_without_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
         create_currency(client,'CHF',0.92)
-        get_first_page_response = client.get('/currencies/',
+        get_first_page_response = client.get('/currencies',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -293,12 +293,12 @@ class TestCurrencyResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/currencies/?page=2',
+        get_second_page_response = client.get('/currencies?page=2',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/currencies/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/currencies?page=1'
         assert get_second_page_response_data['next'] == None
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
@@ -369,7 +369,7 @@ class TestCurrencyResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_location(client, country, city, abbreviation):
-    response = client.post('/locations/',
+    response = client.post('/locations',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'country': country,
@@ -393,7 +393,7 @@ class TestLocationResource:
     
     def test_location_post_new_location_no_admin(self,client):
         create_currency(client,'AUD',1.45)
-        post_response = client.post('/locations/',
+        post_response = client.post('/locations',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'country': 'Australia',
@@ -436,7 +436,7 @@ class TestLocationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_location(client,'Australia','Melbourne','AUD')
-        get_first_page_response = client.get('/locations/',
+        get_first_page_response = client.get('/locations',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -453,13 +453,13 @@ class TestLocationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/locations/?page=2',
+        get_second_page_response = client.get('/locations?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/locations/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/locations?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -490,7 +490,7 @@ class TestLocationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
-    response = client.post('/homepurchase/',
+    response = client.post('/homepurchase',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -519,7 +519,7 @@ class TestHomePurchaseResource:
     def test_home_purchase_post_home_purchase_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/homepurchase/',
+        post_response = client.post('/homepurchase',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'City Centre',
@@ -574,7 +574,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/homepurchase?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -597,7 +597,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase/?country=Australia&city=Perth',
+        get_response = client.get('/homepurchase?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -620,11 +620,11 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/currencies/',
+        get_first_page_response = client.get('/currencies',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        get_first_page_response = client.get('/homepurchase/?country=Australia',
+        get_first_page_response = client.get('/homepurchase?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -651,13 +651,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase/?country=Australia&page=2',
+        get_second_page_response = client.get('/homepurchase?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -672,7 +672,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/homepurchase?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -699,13 +699,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/homepurchase?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -720,7 +720,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/homepurchase?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -743,7 +743,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase/',
+        get_first_page_response = client.get('/homepurchase',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -776,13 +776,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase/?page=2',
+        get_second_page_response = client.get('/homepurchase?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -797,7 +797,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase/?city=Perth',
+        get_response = client.get('/homepurchase?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -820,7 +820,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase/?abbreviation=AUD',
+        get_first_page_response = client.get('/homepurchase?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -852,13 +852,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/homepurchase?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -943,7 +943,7 @@ class TestHomePurchaseResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_rent(client,property_location,bedrooms,monthly_price,city):
-    response = client.post('/rent/',
+    response = client.post('/rent',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -972,7 +972,7 @@ class TestRentResource:
     def test_rent_post_new_rent_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/rent/',
+        post_response = client.post('/rent',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'City Centre',
@@ -1027,7 +1027,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/rent?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1050,7 +1050,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent/?country=Australia&city=Perth',
+        get_response = client.get('/rent?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1073,7 +1073,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent/?country=Australia',
+        get_first_page_response = client.get('/rent?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1100,13 +1100,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent/?country=Australia&page=2',
+        get_second_page_response = client.get('/rent?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1121,7 +1121,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/rent?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1148,13 +1148,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/rent?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1169,7 +1169,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/rent?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1192,7 +1192,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent/',
+        get_first_page_response = client.get('/rent',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1225,13 +1225,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent/?page=2',
+        get_second_page_response = client.get('/rent?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1246,7 +1246,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent/?city=Perth',
+        get_response = client.get('/rent?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1269,7 +1269,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent/?abbreviation=AUD',
+        get_first_page_response = client.get('/rent?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1302,13 +1302,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/rent?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1393,7 +1393,7 @@ class TestRentResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_utilities(client,utility,monthly_price,city):
-    response = client.post('/utilities/',
+    response = client.post('/utilities',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'utility': utility,
@@ -1420,7 +1420,7 @@ class TestUtilitiesResource:
     def test_utilities_post_utilities_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/utilities/',
+        post_response = client.post('/utilities',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'utility': 'Electricity, Heating, Cooling, Water and Garbage',
@@ -1473,7 +1473,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/utilities?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1495,7 +1495,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities/?country=Australia&city=Perth',
+        get_response = client.get('/utilities?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1517,7 +1517,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities/?country=Australia',
+        get_first_page_response = client.get('/utilities?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1541,13 +1541,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities/?country=Australia&page=2',
+        get_second_page_response = client.get('/utilities?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1562,7 +1562,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/utilities?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1586,13 +1586,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/utilities?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1607,7 +1607,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/utilities?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1629,7 +1629,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities/',
+        get_first_page_response = client.get('/utilities',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1658,13 +1658,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities/?page=2',
+        get_second_page_response = client.get('/utilities?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1679,7 +1679,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities/?city=Perth',
+        get_response = client.get('/utilities?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1701,7 +1701,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities/?abbreviation=AUD',
+        get_first_page_response = client.get('/utilities?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1730,13 +1730,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/utilities?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1818,7 +1818,7 @@ class TestUtilitiesResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_transportation(client,type,price,city):
-    response = client.post('/transportation/',
+    response = client.post('/transportation',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': type,
@@ -1845,7 +1845,7 @@ class TestTransportationResource:
     def test_transportation_post_transportation_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/transportation/',
+        post_response = client.post('/transportation',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'Monthly Public Transportation Pass',
@@ -1898,7 +1898,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/transportation?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1920,7 +1920,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation/?country=Australia&city=Perth',
+        get_response = client.get('/transportation?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1942,7 +1942,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation/?country=Australia',
+        get_first_page_response = client.get('/transportation?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1966,13 +1966,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation/?country=Australia&page=2',
+        get_second_page_response = client.get('/transportation?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1987,7 +1987,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/transportation?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2011,13 +2011,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/transportation?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2032,7 +2032,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/transportation?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2054,7 +2054,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation/',
+        get_first_page_response = client.get('/transportation',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2083,13 +2083,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation/?page=2',
+        get_second_page_response = client.get('/transportation?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2104,7 +2104,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation/?city=Perth',
+        get_response = client.get('/transportation?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2126,7 +2126,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation/?abbreviation=AUD',
+        get_first_page_response = client.get('/transportation?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2155,13 +2155,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/transportation?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2242,7 +2242,7 @@ class TestTransportationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_foodbeverage(client,item_category,purchase_point,item,price,city):
-    response = client.post('/foodbeverage/',
+    response = client.post('/foodbeverage',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': item_category,
@@ -2273,7 +2273,7 @@ class TestFoodBeverageResource:
     def test_foodbeverage_post_foodbeverage_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/foodbeverage/',
+        post_response = client.post('/foodbeverage',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': 'Beverage',
@@ -2330,7 +2330,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/foodbeverage?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2354,7 +2354,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage/?country=Australia&city=Perth',
+        get_response = client.get('/foodbeverage?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2378,7 +2378,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage/?country=Australia',
+        get_first_page_response = client.get('/foodbeverage?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2408,13 +2408,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage/?country=Australia&page=2',
+        get_second_page_response = client.get('/foodbeverage?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2429,7 +2429,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/foodbeverage?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2459,13 +2459,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/foodbeverage?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2480,7 +2480,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/foodbeverage?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2504,7 +2504,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage/',
+        get_first_page_response = client.get('/foodbeverage',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2541,13 +2541,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage/?page=2',
+        get_second_page_response = client.get('/foodbeverage?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2562,7 +2562,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage/?city=Perth',
+        get_response = client.get('/foodbeverage?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2586,7 +2586,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage/?abbreviation=AUD',
+        get_first_page_response = client.get('/foodbeverage?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2623,13 +2623,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/foodbeverage?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2718,7 +2718,7 @@ class TestFoodBeverageResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_childcare(client,type,annual_price,city):
-    response = client.post('/childcare/',
+    response = client.post('/childcare',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': type,
@@ -2745,7 +2745,7 @@ class TestChildcareResource:
     def test_childcare_post_childcare_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/childcare/',
+        post_response = client.post('/childcare',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'Preschool',
@@ -2798,7 +2798,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/childcare?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2820,7 +2820,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare/?country=Australia&city=Perth',
+        get_response = client.get('/childcare?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2842,7 +2842,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare/?country=Australia',
+        get_first_page_response = client.get('/childcare?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2866,13 +2866,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare/?country=Australia&page=2',
+        get_second_page_response = client.get('/childcare?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2887,7 +2887,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/childcare?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2911,13 +2911,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/childcare?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2932,7 +2932,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/childcare?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2954,7 +2954,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare/',
+        get_first_page_response = client.get('/childcare',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2983,13 +2983,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare/?page=2',
+        get_second_page_response = client.get('/childcare?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3004,7 +3004,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare/?city=Perth',
+        get_response = client.get('/childcare?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3026,7 +3026,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare/?abbreviation=AUD',
+        get_first_page_response = client.get('/childcare?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3055,13 +3055,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/childcare?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3144,7 +3144,7 @@ class TestChildcareResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_apparel(client,item,price,city):
-    response = client.post('/apparel/',
+    response = client.post('/apparel',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': item,
@@ -3171,7 +3171,7 @@ class TestApparelResource:
     def test_apparel_post_apparel_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/apparel/',
+        post_response = client.post('/apparel',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': 'Levis Pair of Jeans',
@@ -3224,7 +3224,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/apparel?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3246,7 +3246,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel/?country=Australia&city=Perth',
+        get_response = client.get('/apparel?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3268,7 +3268,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel/?country=Australia',
+        get_first_page_response = client.get('/apparel?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3292,13 +3292,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel/?country=Australia&page=2',
+        get_second_page_response = client.get('/apparel?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3313,7 +3313,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/apparel?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3337,13 +3337,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/apparel?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3358,7 +3358,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/apparel?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3380,7 +3380,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel/',
+        get_first_page_response = client.get('/apparel',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3409,13 +3409,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel/?page=2',
+        get_second_page_response = client.get('/apparel?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3430,7 +3430,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel/?city=Perth',
+        get_response = client.get('/apparel?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3452,7 +3452,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel/?abbreviation=AUD',
+        get_first_page_response = client.get('/apparel?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3481,13 +3481,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/apparel?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3568,7 +3568,7 @@ class TestApparelResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_leisure(client,activity,price,city):
-    response = client.post('/leisure/',
+    response = client.post('/leisure',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'activity': activity,
@@ -3595,7 +3595,7 @@ class TestLeisureResource:
     def test_leisure_post_leisure_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/leisure/',
+        post_response = client.post('/leisure',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'activity': 'Monthly Gym Membership',
@@ -3648,7 +3648,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure/?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/leisure?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3670,7 +3670,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure/?country=Australia&city=Perth',
+        get_response = client.get('/leisure?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3692,7 +3692,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure/?country=Australia',
+        get_first_page_response = client.get('/leisure?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3716,13 +3716,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure/?country=Australia&page=2',
+        get_second_page_response = client.get('/leisure?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure/?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3737,7 +3737,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure/?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/leisure?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3761,13 +3761,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure/?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/leisure?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure/?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3782,7 +3782,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure/?city=Perth&abbreviation=AUD',
+        get_response = client.get('/leisure?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3804,7 +3804,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure/',
+        get_first_page_response = client.get('/leisure',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3833,13 +3833,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure/?page=2',
+        get_second_page_response = client.get('/leisure?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure/?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3854,7 +3854,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure/?city=Perth',
+        get_response = client.get('/leisure?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3876,7 +3876,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure/?abbreviation=AUD',
+        get_first_page_response = client.get('/leisure?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3904,13 +3904,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure/?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/leisure?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure/?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 

@@ -124,7 +124,7 @@ class LoginResource(Resource):
             return response, HttpStatus.internal_server_error.value
 
 class LogoutResource(Resource):
-    # User logout
+    # User logout using provided auth token
     def post(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
@@ -177,7 +177,7 @@ class ResetPasswordResource(Resource):
             return response, HttpStatus.internal_server_error.value
             
 class CurrencyResource(Resource):
-    # Retrieves USD/local currency exchange rate for one or all currencies
+    # Retrieves USD/local currency exchange rate for specific id or all currencies
     def get(self,id=None):
 
         if authenticate_jwt() == True:
@@ -225,7 +225,7 @@ class CurrencyResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates abbreviation and exchange rate
+    # Updates abbreviation and exchange rate for specific currency id
     def patch(self,id):
         currency = Currency.query.get_or_404(id)
         
@@ -273,6 +273,7 @@ class CurrencyResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class LocationListResource(Resource):
+    # Retrieve information regarding specific location id or information regarding all locations
     def get(self,id=None):
 
         if authenticate_jwt() == True:
@@ -292,7 +293,7 @@ class LocationListResource(Resource):
                 )
                 paginated_locations = pagination_helper.paginate_query()
                 return paginated_locations
-    
+    # Creates a new location
     def post(self):
         location_dict = request.get_json()
         request_not_empty(location_dict)
@@ -320,7 +321,8 @@ class LocationListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-        
+    
+    # Deletes location
     def delete(self,id):
         admin_dict = request.get_json()
         location = Location.query.get_or_404(id)
@@ -340,6 +342,7 @@ class LocationListResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class HomePurchaseResource(Resource):
+    # Retrieves home purchase price characteristics from a specified id, country, city, abbreviation or combination of the prior three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -403,7 +406,8 @@ class HomePurchaseResource(Resource):
                 )
                 dumped_home_purchase = pagination_helper.paginate_query()
                 return dumped_home_purchase
- 
+    
+    # Creates an record for relevant purchasing costs of buying a property in a particular location
     def post(self):
         home_purchase_dict = request.get_json()
         request_not_empty(home_purchase_dict)
@@ -435,6 +439,7 @@ class HomePurchaseResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates property location, price per sqm and mortgage interest rate for specified record
     def patch(self,id):
         home_purchase = Home_Purchase.query.get_or_404(id)
         
@@ -463,7 +468,8 @@ class HomePurchaseResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-
+    
+    # Deletes Home_Purchase record
     def delete(self,id):
         admin_dict = request.get_json()
         home_purchase = Home_Purchase.query.get_or_404(id)
@@ -483,6 +489,7 @@ class HomePurchaseResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class RentResource(Resource):
+    # Retrieves rental costs from a specified id, country, city, abbreviation or combination of the prior three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -547,6 +554,7 @@ class RentResource(Resource):
                 dumped_rent = pagination_helper.paginate_query()
                 return dumped_rent
 
+    # Creates a record of rental costs for a particular location
     def post(self):
         rent_dict = request.get_json()
         request_not_empty(rent_dict)
@@ -577,6 +585,7 @@ class RentResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates property location, number of bedrooms and monthly price for a particular rental record
     def patch(self,id):
         rent = Rent.query.get_or_404(id)
         
@@ -606,6 +615,7 @@ class RentResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Rent record
     def delete(self,id):
         admin_dict = request.get_json()
         rent = Rent.query.get_or_404(id)
@@ -625,6 +635,7 @@ class RentResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class UtilitiesResource(Resource):
+    # Retrieves information regarding a utility from a given id, country, city, abbreviation or combination of the three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -689,6 +700,7 @@ class UtilitiesResource(Resource):
                 dumped_utilities = pagination_helper.paginate_query()
                 return dumped_utilities
     
+    # Creates a new utility record
     def post(self):
         utilities_dict = request.get_json()
         request_not_empty(utilities_dict)
@@ -719,6 +731,7 @@ class UtilitiesResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value   
     
+    # Updates utility name, monthly price for a given utility
     def patch(self,id):
         utilities = Utilities.query.get_or_404(id)
         
@@ -745,6 +758,7 @@ class UtilitiesResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Utilities record
     def delete(self,id):
         admin_dict = request.get_json()
         utilities = Utilities.query.get_or_404(id)
@@ -764,6 +778,7 @@ class UtilitiesResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class TransportationResource(Resource):
+    # Retrieves information for a particular mode of transport from a particular id, country, city, abbreviation or combination of the last three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -828,6 +843,7 @@ class TransportationResource(Resource):
                 dumped_transportation = pagination_helper.paginate_query()
                 return dumped_transportation
     
+    # Creates a new record for a mode of transport
     def post(self):
         transportation_dict = request.get_json()
         request_not_empty(transportation_dict)
@@ -858,6 +874,7 @@ class TransportationResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates type and price for a particular record
     def patch(self,id):
         transportation = Transportation.query.get_or_404(id)
         
@@ -884,6 +901,7 @@ class TransportationResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Transportation record
     def delete(self,id):
         admin_dict = request.get_json()
         transportation = Transportation.query.get_or_404(id)
@@ -903,6 +921,7 @@ class TransportationResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class FoodBeverageResource(Resource):
+    # Retrieves information regarding a food and beverage item from a particular id, country, city, abbreviation or combination of the three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -968,6 +987,7 @@ class FoodBeverageResource(Resource):
                 dumped_food_and_beverage = pagination_helper.paginate_query()
                 return dumped_food_and_beverage
     
+    # Creates a new record for food and beverage item
     def post(self):
         food_and_beverage_dict = request.get_json()
         request_not_empty(food_and_beverage_dict)
@@ -1000,6 +1020,7 @@ class FoodBeverageResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates item category, purchase point, item and price for a given item
     def patch(self,id):
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
         
@@ -1032,6 +1053,7 @@ class FoodBeverageResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Food_and_Beverage record
     def delete(self,id):
         admin_dict = request.get_json()
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
@@ -1051,6 +1073,7 @@ class FoodBeverageResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class ChildcareResource(Resource):
+    # Retrives information regarding childcare service from a given, id, country, city, abbreviation or combination of the last three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -1115,6 +1138,7 @@ class ChildcareResource(Resource):
                 dumped_childcare = pagination_helper.paginate_query()
                 return dumped_childcare
     
+    # Creates a new childcare record
     def post(self):
         childcare_dict = request.get_json()
         request_not_empty(childcare_dict)
@@ -1144,6 +1168,7 @@ class ChildcareResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates type and annual price information for a given childcare service
     def patch(self,id):
         childcare = Childcare.query.get_or_404(id)
         
@@ -1172,6 +1197,7 @@ class ChildcareResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Childcare record
     def delete(self,id):
         admin_dict = request.get_json()
         childcare = Childcare.query.get_or_404(id)
@@ -1191,6 +1217,7 @@ class ChildcareResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class ApparelResource(Resource):
+    # Retrieves information for a given apparel item from a particular, id, country, city, abbreviation or combination of the three. 
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -1254,6 +1281,7 @@ class ApparelResource(Resource):
                 dumped_apparel = pagination_helper.paginate_query()
                 return dumped_apparel
     
+    # Creates a new apparel item
     def post(self):
         apparel_dict = request.get_json()
         request_not_empty(apparel_dict)
@@ -1283,7 +1311,8 @@ class ApparelResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-  
+    
+    # Updates item name and price for a given piece of apparel
     def patch(self,id):
         apparel = Apparel.query.get_or_404(id)
         
@@ -1310,6 +1339,7 @@ class ApparelResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
 
+    # Deletes Apparel record
     def delete(self,id):
         admin_dict = request.get_json()
         apparel = Apparel.query.get_or_404(id)
@@ -1329,6 +1359,7 @@ class ApparelResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class LeisureResource(Resource):
+    # Retrieves information for a given leisure acitivty from a given id, country, city, abbreviation or combination of the three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -1392,6 +1423,7 @@ class LeisureResource(Resource):
                 dumped_leisure = pagination_helper.paginate_query()
                 return dumped_leisure
     
+    # Creates a new leisure activity
     def post(self):
         leisure_dict = request.get_json()
         request_not_empty(leisure_dict)
@@ -1422,6 +1454,7 @@ class LeisureResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Updates activity name and price information for a given leisure activity
     def patch(self,id):
         leisure = Leisure.query.get_or_404(id)
         
@@ -1448,6 +1481,7 @@ class LeisureResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
+    # Deletes Leisure record
     def delete(self,id):
         admin_dict = request.get_json()
         leisure = Leisure.query.get_or_404(id)
@@ -1470,13 +1504,13 @@ cost_of_living.add_resource(UserResource,'/auth/user')
 cost_of_living.add_resource(LoginResource,'/auth/login')
 cost_of_living.add_resource(LogoutResource, '/auth/logout')
 cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
-cost_of_living.add_resource(CurrencyResource, '/currencies/','/currencies/<int:id>')
-cost_of_living.add_resource(LocationListResource, '/locations/','/locations/<int:id>')
-cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/','/homepurchase/<int:id>')
-cost_of_living.add_resource(RentResource, '/rent/','/rent/<int:id>')
-cost_of_living.add_resource(UtilitiesResource, '/utilities/','/utilities/<int:id>')
-cost_of_living.add_resource(TransportationResource, '/transportation/', '/transportation/<int:id>')
-cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage/', '/foodbeverage/<int:id>')
-cost_of_living.add_resource(ChildcareResource,'/childcare/', '/childcare/<int:id>')
-cost_of_living.add_resource(ApparelResource, '/apparel/', '/apparel/<int:id>')
-cost_of_living.add_resource(LeisureResource, '/leisure/', '/leisure/<int:id>')
+cost_of_living.add_resource(CurrencyResource, '/currencies','/currencies/<int:id>')
+cost_of_living.add_resource(LocationListResource, '/locations','/locations/<int:id>')
+cost_of_living.add_resource(HomePurchaseResource, '/homepurchase','/homepurchase/<int:id>')
+cost_of_living.add_resource(RentResource, '/rent','/rent/<int:id>')
+cost_of_living.add_resource(UtilitiesResource, '/utilities','/utilities/<int:id>')
+cost_of_living.add_resource(TransportationResource, '/transportation', '/transportation/<int:id>')
+cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage', '/foodbeverage/<int:id>')
+cost_of_living.add_resource(ChildcareResource,'/childcare', '/childcare/<int:id>')
+cost_of_living.add_resource(ApparelResource, '/apparel', '/apparel/<int:id>')
+cost_of_living.add_resource(LeisureResource, '/leisure', '/leisure/<int:id>')

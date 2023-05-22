@@ -1,5 +1,6 @@
 from enum import Enum
 
+# HTTP status codes to be returned depending upon outcome of request
 class HttpStatus(Enum):
     ok_200 = 200
     created_201 = 201
