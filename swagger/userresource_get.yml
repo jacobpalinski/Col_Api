@@ -1,0 +1,76 @@
+Retrieve account information
+---
+tags:
+ - User
+description: |
+ Allows users to retrieve information about their account using a JSON Web Token (JWT) for authentication
+ 
+ It requires a valid JWT provided in the 'Authorisation' header as a Bearer token
+
+parameters:
+ - name: Authorization
+   in: header
+   description: JSON Web Token (JWT) for authentication
+   required: true
+   type: string
+   format: Bearer {JWT}
+
+responses:
+ 200:
+  description: User account information retrieved successfully
+  schema:
+   $ref: "#/definitions/UserGetResponse"
+
+ 401:
+  description: Unauthorized
+  schema:
+   $ref: "#/definitions/UnauthorizedResponse"
+
+ 403:
+  description: Forbidden
+  schema: 
+   $ref: "#definitions/ForbiddenResponse"
+
+definitions:
+ UserGetResponse:
+  type: object
+  properties:
+   data:
+    type: object
+    properties:
+     user_id:
+      type: integer
+      description: user id
+     email:
+      type: string
+      description: user's email address
+     creation_date:
+      type: string
+      format: date-time
+      description: user creation date
+ UnauthorizedResponse:
+  type: object
+  properties: 
+   message: 
+    type: string
+    description: unauthorized error message
+ ForbiddenResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: forbidden error message
+    example: Provide a valid auth token
+
+security:
+ - BearerAuth: []
+
+securityDefinitions:
+ BearerAuth:
+  type: apiKey
+  name: Authorization
+  in: header
+  description: |
+   Use a JSON Web Token (JWT) provided in the 'Authorization' header as Bearer token.
+   Example: Bearer &lt;jwt_token&gt
+

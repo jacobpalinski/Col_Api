@@ -60,7 +60,7 @@ class User(orm.Model,ResourceAddUpdateDelete):
         # Generate Auth Token
         try:
             payload = {
-                'exp':datetime.datetime.utcnow() + datetime.timedelta(days = 1),
+                'exp':datetime.datetime.utcnow() + datetime.timedelta(seconds = 5),
                 'iat':datetime.datetime.utcnow(),
                 'sub': user_id
             }

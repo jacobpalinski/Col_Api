@@ -12,6 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, Float
 from dotenv import load_dotenv
 from datetime import datetime
+from flasgger import swag_from
 
 '''Only admin can perform post, patch and delete operations on all resources except User'''
 
@@ -35,6 +36,7 @@ cost_of_living = Api(cost_of_living_blueprint)
 
 class UserResource(Resource):
     # Allows users to retrieve information about their account using authorisation token
+    @swag_from('swagger/userresource_get.yml')
     def get(self):
         auth_header = request.headers['Authorization']
         if auth_header:
@@ -63,7 +65,8 @@ class UserResource(Resource):
             response = {'message' : 'Provide a valid auth token'}
             return response, HttpStatus.forbidden_403.value
 
-    # User registration  
+    # User registration
+    @swag_from('swagger/userresource_post.yml')
     def post(self):
         user_register_dict = request.get_json()
         request_not_empty(user_register_dict)
@@ -100,6 +103,7 @@ class UserResource(Resource):
 
 class LoginResource(Resource):
     # User login
+    @swag_from('swagger/loginresource_post.yml')
     def post(self):
         user_dict = request.get_json()
         request_not_empty(user_dict)
@@ -125,6 +129,7 @@ class LoginResource(Resource):
 
 class LogoutResource(Resource):
     # User logout using provided auth token
+    @swag_from('swagger/logoutresource_post.yml')
     def post(self):
         auth_header = request.headers.get('Authorization')
         if auth_header:
@@ -156,6 +161,7 @@ class LogoutResource(Resource):
 
 class ResetPasswordResource(Resource):
     # Resets user password
+    @swag_from('swagger/resetpasswordresource_post.yml')
     def post(self):
         reset_password_dict = request.get_json()
         request_not_empty(reset_password_dict)
@@ -1217,7 +1223,7 @@ class ChildcareResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class ApparelResource(Resource):
-    # Retrieves information for a given apparel item from a particular, id, country, city, abbreviation or combination of the three. 
+    # Retrieves information for a given apparel item from a particular, id, country, city, abbreviation or combination of the three.
     def get(self,id=None):
         country = request.args.get('country')
         city = request.args.get('city')

@@ -18,7 +18,7 @@ TEST_PASSWORD = 'X4nmasXII!'
 
 @pytest.fixture
 def create_user(client):
-    new_user = client.post('/auth/user',
+    new_user = client.post('/v1/cost-of-living/auth/user',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
         'email' : TEST_EMAIL,
@@ -29,7 +29,7 @@ def create_user(client):
 
 @pytest.fixture
 def login(client, create_user):
-    login = client.post('/auth/login',
+    login = client.post('/v1/cost-of-living/auth/login',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
         'email' : TEST_EMAIL,
@@ -40,7 +40,7 @@ def login(client, create_user):
 
 class TestUserResource:
     def test_user_post_no_user_no_admin(self,client):
-        response = client.post('/auth/user',
+        response = client.post('/v1/cost-of-living/auth/user',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
@@ -53,7 +53,7 @@ class TestUserResource:
         assert User.query.first().admin == False
     
     def test_user_post_no_user_with_admin(self,client):
-        response = client.post('/auth/user',
+        response = client.post('/v1/cost-of-living/auth/user',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
@@ -67,13 +67,13 @@ class TestUserResource:
         assert User.query.first().admin == True
 
     def test_user_post_exist_user(self,client):
-        post_response = client.post('/auth/user',
+        post_response = client.post('/v1/cost-of-living/auth/user',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email': TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
-        second_post_response = client.post('/auth/user',
+        second_post_response = client.post('/v1/cost-of-living/auth/user',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email': TEST_EMAIL,
@@ -85,7 +85,7 @@ class TestUserResource:
         assert User.query.count() == 1
 
     def test_login_valid_user(self,client,create_user):
-        response = client.post('/auth/login',
+        response = client.post('/v1/cost-of-living/auth/login',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
@@ -97,7 +97,7 @@ class TestUserResource:
         assert response.status_code == HttpStatus.ok_200.value
 
     def test_login_invalid_user(self,client):
-        response = client.post('/auth/login',
+        response = client.post('/v1/cost-of-living/auth/login',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
@@ -108,7 +108,7 @@ class TestUserResource:
         assert response.status_code == HttpStatus.notfound_404.value
 
     def test_user_get_valid_token(self,client,create_user,login):
-        get_response = client.get('/auth/user',
+        get_response = client.get('/v1/cost-of-living/auth/user',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -119,7 +119,7 @@ class TestUserResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_user_get_no_token(self,client):
-        get_response = client.get('/auth/user',
+        get_response = client.get('/v1/cost-of-living/auth/user',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer "})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -127,7 +127,7 @@ class TestUserResource:
         assert get_response.status_code == HttpStatus.forbidden_403.value
 
     def test_user_get_invalid_token(self,client):
-        get_response = client.get('/auth/user', headers = {"Content-Type": "application/json",
+        get_response = client.get('/v1/cost-of-living/auth/user', headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer invalid token"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data['message'] == 'Invalid token. Please log in again'
@@ -135,7 +135,7 @@ class TestUserResource:
 
     def test_user_get_expired_token(self,client,create_user,login):
         time.sleep(6)
-        get_response = client.get('/auth/user',
+        get_response = client.get('/v1/cost-of-living/auth/user',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -143,7 +143,7 @@ class TestUserResource:
         assert get_response.status_code == HttpStatus.unauthorized_401.value
 
     def test_user_get_malformed_bearer_token(self,client,create_user,login):
-        get_response = client.get('/auth/user',
+        get_response = client.get('/v1/cost-of-living/auth/user',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer{login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -151,7 +151,7 @@ class TestUserResource:
         assert get_response.status_code == HttpStatus.unauthorized_401.value
 
     def test_logout_valid_token(self,client,create_user,login):
-        response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/cost-of-living/auth/logout', headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Successfully logged out'
@@ -159,7 +159,7 @@ class TestUserResource:
         assert BlacklistToken.query.count() == 1
 
     def test_logout_no_token(self,client):
-        response = client.post('/auth/logout',
+        response = client.post('/v1/cost-of-living/auth/logout',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer "})
         response_data = json.loads(response.get_data(as_text = True))
@@ -168,7 +168,7 @@ class TestUserResource:
         assert BlacklistToken.query.count() == 0
 
     def test_logout_invalid_token(self,client):
-        response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/cost-of-living/auth/logout', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Invalid token. Please log in again'
@@ -177,7 +177,7 @@ class TestUserResource:
 
     def test_logout_expired_token(self,client,create_user,login):
         time.sleep(6)
-        response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/cost-of-living/auth/logout', headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Signature expired. Please log in again'
@@ -187,7 +187,7 @@ class TestUserResource:
         blacklist_token = BlacklistToken(token = login['auth_token'])
         blacklist_token.add(blacklist_token)
         assert BlacklistToken.query.count() == 1
-        response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/cost-of-living/auth/logout', headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Token blacklisted. Please log in again'
@@ -195,7 +195,7 @@ class TestUserResource:
         assert BlacklistToken.query.count() == 1
 
     def test_logout_malformed_token(self,client,create_user,login):
-        response = client.post('/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/cost-of-living/auth/logout', headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer{login['auth_token']}"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Bearer token malformed'
@@ -203,7 +203,7 @@ class TestUserResource:
         assert BlacklistToken.query.count() == 0
 
     def test_reset_password_exist_user(self,client,create_user):
-        response = client.post('/user/password_reset',
+        response = client.post('/v1/cost-of-living/user/password_reset',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
         'email' : TEST_EMAIL,
@@ -214,7 +214,7 @@ class TestUserResource:
         assert response.status_code == HttpStatus.ok_200.value
 
     def test_reset_password_no_user(self,client):
-        response = client.post('/user/password_reset',
+        response = client.post('/v1/cost-of-living/user/password_reset',
         headers = {'Content-Type' : 'application/json'},
         data = json.dumps({
         'email' : TEST_EMAIL,
@@ -225,7 +225,7 @@ class TestUserResource:
         assert response.status_code == HttpStatus.unauthorized_401.value
 
 def create_currency(client, abbreviation, usd_to_local_exchange_rate):
-        response = client.post('/currencies',
+        response = client.post('/v1/cost-of-living/currencies',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'abbreviation': abbreviation,
@@ -244,7 +244,7 @@ class TestCurrencyResource:
         assert Currency.query.count() == 1
     
     def test_currency_post_new_currency_no_admin(self,client):
-        response = client.post('/currencies',
+        response = client.post('/v1/cost-of-living/currencies',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'abbreviation': 'AUD',
@@ -262,7 +262,7 @@ class TestCurrencyResource:
 
     def test_currency_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
-        get_response = client.get('/currencies/1',
+        get_response = client.get('/v1/cost-of-living/currencies/1',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -272,7 +272,7 @@ class TestCurrencyResource:
 
     def test_currency_get_notexist_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
-        get_response = client.get('/currencies/2',
+        get_response = client.get('/v1/cost-of-living/currencies/2',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -280,7 +280,7 @@ class TestCurrencyResource:
     def test_currency_get_without_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
         create_currency(client,'CHF',0.92)
-        get_first_page_response = client.get('/currencies',
+        get_first_page_response = client.get('/v1/cost-of-living/currencies',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -293,19 +293,19 @@ class TestCurrencyResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/currencies?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/currencies?page=2',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/currencies?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/currencies?page=1'
         assert get_second_page_response_data['next'] == None
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
     def test_currency_update(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
-        patch_response = client.patch('/currencies/1',
+        patch_response = client.patch('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'abbreviation': 'Aud',
@@ -313,7 +313,7 @@ class TestCurrencyResource:
         'admin': os.environ.get('ADMIN_KEY')
         }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/currencies/1',
+        get_response = client.get('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json',
         "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -322,7 +322,7 @@ class TestCurrencyResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_currency_update_no_id_exist(self,client):
-        patch_response = client.patch('/currencies/1',
+        patch_response = client.patch('/v1/cost-of-living/currencies/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'abbreviation': 'Aud',
@@ -334,7 +334,7 @@ class TestCurrencyResource:
     
     def test_currency_update_no_admin(self,client):
         create_currency(client,'AUD',1.45)
-        patch_response = client.patch('/currencies/1',
+        patch_response = client.patch('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'abbreviation': 'Aud',
@@ -346,14 +346,14 @@ class TestCurrencyResource:
 
     def test_currency_delete(self,client):
         create_currency(client,'AUD',1.45)
-        delete_response = client.delete('/currencies/1',
+        delete_response = client.delete('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert Currency.query.count() == 0
         assert delete_response.status_code == HttpStatus.no_content_204.value
 
     def test_currency_delete_no_id_exist(self,client):
-        delete_response = client.delete('/currencies/1',
+        delete_response = client.delete('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -361,7 +361,7 @@ class TestCurrencyResource:
     
     def test_currency_delete_no_admin(self,client):
         create_currency(client,'AUD',1.45)
-        delete_response = client.delete('/currencies/1',
+        delete_response = client.delete('/v1/cost-of-living/currencies/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -369,7 +369,7 @@ class TestCurrencyResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_location(client, country, city, abbreviation):
-    response = client.post('/locations',
+    response = client.post('/v1/cost-of-living/locations',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'country': country,
@@ -393,7 +393,7 @@ class TestLocationResource:
     
     def test_location_post_new_location_no_admin(self,client):
         create_currency(client,'AUD',1.45)
-        post_response = client.post('/locations',
+        post_response = client.post('/v1/cost-of-living/locations',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'country': 'Australia',
@@ -414,7 +414,7 @@ class TestLocationResource:
     def test_location_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        get_response = client.get('/locations/1',
+        get_response = client.get('/v1/cost-of-living/locations/1',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -427,7 +427,7 @@ class TestLocationResource:
     def test_location_get_notexist_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        get_response = client.get('/locations/2',
+        get_response = client.get('/v1/cost-of-living/locations/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -436,7 +436,7 @@ class TestLocationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_location(client,'Australia','Melbourne','AUD')
-        get_first_page_response = client.get('/locations',
+        get_first_page_response = client.get('/v1/cost-of-living/locations',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -453,27 +453,27 @@ class TestLocationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/locations?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/locations?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/locations?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/locations?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
     def test_location_delete(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        delete_response = client.delete('/locations/1',
+        delete_response = client.delete('/v1/cost-of-living/locations/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Location.query.count() == 0
 
     def test_location_delete_no_id_exist(self,client):
-        delete_response = client.delete('/locations/1',
+        delete_response = client.delete('/v1/cost-of-living/locations/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -482,7 +482,7 @@ class TestLocationResource:
     def test_location_delete_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        delete_response = client.delete('/locations/1',
+        delete_response = client.delete('/v1/cost-of-living/locations/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -490,7 +490,7 @@ class TestLocationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
-    response = client.post('/homepurchase',
+    response = client.post('/v1/cost-of-living/homepurchase',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -519,7 +519,7 @@ class TestHomePurchaseResource:
     def test_home_purchase_post_home_purchase_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/homepurchase',
+        post_response = client.post('/v1/cost-of-living/homepurchase',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'City Centre',
@@ -542,7 +542,7 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        get_response = client.get('/homepurchase/1',
+        get_response = client.get('/v1/cost-of-living/homepurchase/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -558,7 +558,7 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        get_response = client.get('/homepurchase/2',
+        get_response = client.get('/v1/cost-of-living/homepurchase/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -574,7 +574,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/homepurchase?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -597,7 +597,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/homepurchase?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -620,11 +620,11 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/currencies',
+        get_first_page_response = client.get('/v1/cost-of-living/currencies',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        get_first_page_response = client.get('/homepurchase?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/homepurchase?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -651,13 +651,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/homepurchase?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/homepurchase?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -672,7 +672,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/homepurchase?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -699,13 +699,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/homepurchase?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/homepurchase?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -720,7 +720,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/homepurchase?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -743,7 +743,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase',
+        get_first_page_response = client.get('/v1/cost-of-living/homepurchase',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -776,13 +776,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/homepurchase?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/homepurchase?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -797,7 +797,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_response = client.get('/homepurchase?city=Perth',
+        get_response = client.get('/v1/cost-of-living/homepurchase?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -820,7 +820,7 @@ class TestHomePurchaseResource:
         create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
         create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
         create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/homepurchase?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/homepurchase?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -852,13 +852,13 @@ class TestHomePurchaseResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/homepurchase?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/homepurchase?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/homepurchase?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/homepurchase?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -866,7 +866,7 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
-        patch_response = client.patch('/homepurchase/1',
+        patch_response = client.patch('/v1/cost-of-living/homepurchase/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'property_location': 'Outside City Centre',
@@ -875,7 +875,7 @@ class TestHomePurchaseResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/homepurchase/1',
+        get_response = client.get('/v1/cost-of-living/homepurchase/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -888,7 +888,7 @@ class TestHomePurchaseResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_home_purchase_update_no_id_exist(self,client):
-        patch_response = client.patch('/homepurchase/1',
+        patch_response = client.patch('/v1/cost-of-living/homepurchase/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'property_location': 'Outside City Centre',
@@ -903,7 +903,7 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
-        patch_response = client.patch('/homepurchase/1',
+        patch_response = client.patch('/v1/cost-of-living/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'Outside City Centre',
@@ -918,14 +918,14 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        delete_response = client.delete('/homepurchase/1',
+        delete_response = client.delete('/v1/cost-of-living/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Home_Purchase.query.count() == 0
 
     def test_home_purchase_delete_no_id_exist(self,client):
-        delete_response = client.delete('/homepurchase/1',
+        delete_response = client.delete('/v1/cost-of-living/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -935,7 +935,7 @@ class TestHomePurchaseResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        delete_response = client.delete('/homepurchase/1',
+        delete_response = client.delete('/v1/cost-of-living/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -943,7 +943,7 @@ class TestHomePurchaseResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_rent(client,property_location,bedrooms,monthly_price,city):
-    response = client.post('/rent',
+    response = client.post('/v1/cost-of-living/rent',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': property_location,
@@ -972,7 +972,7 @@ class TestRentResource:
     def test_rent_post_new_rent_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/rent',
+        post_response = client.post('/v1/cost-of-living/rent',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'City Centre',
@@ -995,7 +995,7 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642, 'Perth')
-        get_response = client.get('/rent/1',
+        get_response = client.get('/v1/cost-of-living/rent/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1011,7 +1011,7 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642, 'Perth')
-        get_response = client.get('/rent/2',
+        get_response = client.get('/v1/cost-of-living/rent/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -1027,7 +1027,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/rent?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1050,7 +1050,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/rent?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1073,7 +1073,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/rent?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1100,13 +1100,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/rent?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/rent?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1121,7 +1121,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/rent?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1148,13 +1148,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/rent?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/rent?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1169,7 +1169,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/rent?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1192,7 +1192,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent',
+        get_first_page_response = client.get('/v1/cost-of-living/rent',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1225,13 +1225,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/rent?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/rent?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1246,7 +1246,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_response = client.get('/rent?city=Perth',
+        get_response = client.get('/v1/cost-of-living/rent?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1269,7 +1269,7 @@ class TestRentResource:
         create_rent(client,'City Centre', 1, 1408, 'Melbourne')
         create_rent(client,'City Centre', 1, 1999, 'Sydney')
         create_rent(client,'City Centre', 1, 2263, 'Zurich')
-        get_first_page_response = client.get('/rent?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/rent?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1302,13 +1302,13 @@ class TestRentResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/rent?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/rent?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/rent?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1316,7 +1316,7 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642, 'Perth')
-        patch_response = client.patch('/rent/1',
+        patch_response = client.patch('/v1/cost-of-living/rent/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'property_location': 'Outside City Centre',
@@ -1325,7 +1325,7 @@ class TestRentResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/rent/1',
+        get_response = client.get('/v1/cost-of-living/rent/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1338,7 +1338,7 @@ class TestRentResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_rent_update_no_id_exist(self,client):
-        patch_response = client.patch('/rent/1',
+        patch_response = client.patch('/v1/cost-of-living/rent/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'property_location': 'Outside City Centre',
@@ -1353,7 +1353,7 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642, 'Perth')
-        patch_response = client.patch('/rent/1',
+        patch_response = client.patch('/v1/cost-of-living/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'Outside City Centre',
@@ -1368,14 +1368,14 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642.43, 'Perth')
-        delete_response = client.delete('/rent/1',
+        delete_response = client.delete('/v1/cost-of-living/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Rent.query.count() == 0
 
     def test_rent_delete_no_id_exist(self,client):
-        delete_response = client.delete('/rent/1',
+        delete_response = client.delete('/v1/cost-of-living/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -1385,7 +1385,7 @@ class TestRentResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_rent(client,'City Centre', 1, 1642.43, 'Perth')
-        delete_response = client.delete('/rent/1',
+        delete_response = client.delete('/v1/cost-of-living/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -1393,7 +1393,7 @@ class TestRentResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_utilities(client,utility,monthly_price,city):
-    response = client.post('/utilities',
+    response = client.post('/v1/cost-of-living/utilities',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'utility': utility,
@@ -1420,7 +1420,7 @@ class TestUtilitiesResource:
     def test_utilities_post_utilities_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/utilities',
+        post_response = client.post('/v1/cost-of-living/utilities',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'utility': 'Electricity, Heating, Cooling, Water and Garbage',
@@ -1442,7 +1442,7 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        get_response = client.get('/utilities/1',
+        get_response = client.get('/v1/cost-of-living/utilities/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1457,7 +1457,7 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        get_response = client.get('/utilities/2',
+        get_response = client.get('/v1/cost-of-living/utilities/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -1473,7 +1473,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/utilities?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1495,7 +1495,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/utilities?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1517,7 +1517,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/utilities?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1541,13 +1541,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/utilities?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/utilities?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1562,7 +1562,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/utilities?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1586,13 +1586,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/utilities?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/utilities?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1607,7 +1607,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/utilities?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1629,7 +1629,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities',
+        get_first_page_response = client.get('/v1/cost-of-living/utilities',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1658,13 +1658,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/utilities?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/utilities?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1679,7 +1679,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_response = client.get('/utilities?city=Perth',
+        get_response = client.get('/v1/cost-of-living/utilities?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1701,7 +1701,7 @@ class TestUtilitiesResource:
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
-        get_first_page_response = client.get('/utilities?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/utilities?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1730,13 +1730,13 @@ class TestUtilitiesResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/utilities?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/utilities?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/utilities?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/utilities?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1744,7 +1744,7 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/utilities/1',
+        patch_response = client.patch('/v1/cost-of-living/utilities/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'utility': 'Internet',
@@ -1752,7 +1752,7 @@ class TestUtilitiesResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/utilities/1',
+        get_response = client.get('/v1/cost-of-living/utilities/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1764,7 +1764,7 @@ class TestUtilitiesResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_utilities_update_no_id_exist(self,client):
-        patch_response = client.patch('/utilities/1',
+        patch_response = client.patch('/v1/cost-of-living/utilities/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'utility': 'Internet',
@@ -1778,7 +1778,7 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/utilities/1',
+        patch_response = client.patch('/v1/cost-of-living/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'property_location': 'Outside City Centre',
@@ -1793,14 +1793,14 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        delete_response = client.delete('/utilities/1',
+        delete_response = client.delete('/v1/cost-of-living/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Utilities.query.count() == 0
 
     def test_utilities_delete_no_id_exist(self,client):
-        delete_response = client.delete('/utilities/1',
+        delete_response = client.delete('/v1/cost-of-living/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -1810,7 +1810,7 @@ class TestUtilitiesResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        delete_response = client.delete('/utilities/1',
+        delete_response = client.delete('/v1/cost-of-living/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -1818,7 +1818,7 @@ class TestUtilitiesResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_transportation(client,type,price,city):
-    response = client.post('/transportation',
+    response = client.post('/v1/cost-of-living/transportation',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': type,
@@ -1845,7 +1845,7 @@ class TestTransportationResource:
     def test_transportation_post_transportation_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/transportation',
+        post_response = client.post('/v1/cost-of-living/transportation',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'Monthly Public Transportation Pass',
@@ -1867,7 +1867,7 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        get_response = client.get('/transportation/1',
+        get_response = client.get('/v1/cost-of-living/transportation/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1882,7 +1882,7 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        get_response = client.get('/transportation/2',
+        get_response = client.get('/v1/cost-of-living/transportation/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -1898,7 +1898,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/transportation?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1920,7 +1920,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/transportation?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -1942,7 +1942,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/transportation?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -1966,13 +1966,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/transportation?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/transportation?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -1987,7 +1987,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/transportation?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2011,13 +2011,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/transportation?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/transportation?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2032,7 +2032,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/transportation?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2054,7 +2054,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation',
+        get_first_page_response = client.get('/v1/cost-of-living/transportation',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2083,13 +2083,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/transportation?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/transportation?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2104,7 +2104,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_response = client.get('/transportation?city=Perth',
+        get_response = client.get('/v1/cost-of-living/transportation?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2126,7 +2126,7 @@ class TestTransportationResource:
         create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
         create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
         create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
-        get_first_page_response = client.get('/transportation?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/transportation?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2155,13 +2155,13 @@ class TestTransportationResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/transportation?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/transportation?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/transportation?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/transportation?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2169,7 +2169,7 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        patch_response = client.patch('/transportation/1',
+        patch_response = client.patch('/v1/cost-of-living/transportation/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'One-Way Ticket',
@@ -2177,7 +2177,7 @@ class TestTransportationResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/transportation/1',
+        get_response = client.get('/v1/cost-of-living/transportation/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2189,7 +2189,7 @@ class TestTransportationResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_transportation_update_no_id_exist(self,client):
-        patch_response = client.patch('/transportation/1',
+        patch_response = client.patch('/v1/cost-of-living/transportation/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'One-Way Ticket',
@@ -2203,7 +2203,7 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        patch_response = client.patch('/transportation/1',
+        patch_response = client.patch('/v1/cost-of-living/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'One-Way Ticket',
@@ -2217,14 +2217,14 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        delete_response = client.delete('/transportation/1',
+        delete_response = client.delete('/v1/cost-of-living/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Transportation.query.count() == 0
 
     def test_transportation_delete_no_id_exist(self,client):
-        delete_response = client.delete('/transportation/1',
+        delete_response = client.delete('/v1/cost-of-living/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -2234,7 +2234,7 @@ class TestTransportationResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        delete_response = client.delete('/transportation/1',
+        delete_response = client.delete('/v1/cost-of-living/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -2242,7 +2242,7 @@ class TestTransportationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_foodbeverage(client,item_category,purchase_point,item,price,city):
-    response = client.post('/foodbeverage',
+    response = client.post('/v1/cost-of-living/foodbeverage',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': item_category,
@@ -2273,7 +2273,7 @@ class TestFoodBeverageResource:
     def test_foodbeverage_post_foodbeverage_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/foodbeverage',
+        post_response = client.post('/v1/cost-of-living/foodbeverage',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': 'Beverage',
@@ -2297,7 +2297,7 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        get_response = client.get('/foodbeverage/1',
+        get_response = client.get('/v1/cost-of-living/foodbeverage/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2314,7 +2314,7 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        get_response = client.get('/foodbeverage/2',
+        get_response = client.get('/v1/cost-of-living/foodbeverage/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -2330,7 +2330,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2354,7 +2354,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2378,7 +2378,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2408,13 +2408,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/foodbeverage?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2429,7 +2429,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2459,13 +2459,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/foodbeverage?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/foodbeverage?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2480,7 +2480,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/foodbeverage?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2504,7 +2504,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage',
+        get_first_page_response = client.get('/v1/cost-of-living/foodbeverage',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2541,13 +2541,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/foodbeverage?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/foodbeverage?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2562,7 +2562,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_response = client.get('/foodbeverage?city=Perth',
+        get_response = client.get('/v1/cost-of-living/foodbeverage?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2586,7 +2586,7 @@ class TestFoodBeverageResource:
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
-        get_first_page_response = client.get('/foodbeverage?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/foodbeverage?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2623,13 +2623,13 @@ class TestFoodBeverageResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/foodbeverage?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/foodbeverage?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/foodbeverage?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/foodbeverage?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2637,7 +2637,7 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        patch_response = client.patch('/foodbeverage/1',
+        patch_response = client.patch('/v1/cost-of-living/foodbeverage/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item_category': 'Food',
@@ -2647,7 +2647,7 @@ class TestFoodBeverageResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/foodbeverage/1',
+        get_response = client.get('/v1/cost-of-living/foodbeverage/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2661,7 +2661,7 @@ class TestFoodBeverageResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_foodbeverage_update_no_id_exist(self,client):
-        patch_response = client.patch('/foodbeverage/1',
+        patch_response = client.patch('/v1/cost-of-living/foodbeverage/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item_category': 'Food',
@@ -2677,7 +2677,7 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        patch_response = client.patch('/foodbeverage/1',
+        patch_response = client.patch('/v1/cost-of-living/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': 'Food',
@@ -2693,14 +2693,14 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        delete_response = client.delete('/foodbeverage/1',
+        delete_response = client.delete('/v1/cost-of-living/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Food_and_Beverage.query.count() == 0
 
     def test_foodbeverage_delete_no_id_exist(self,client):
-        delete_response = client.delete('/foodbeverage/1',
+        delete_response = client.delete('/v1/cost-of-living/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -2710,7 +2710,7 @@ class TestFoodBeverageResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        delete_response = client.delete('/foodbeverage/1',
+        delete_response = client.delete('/v1/cost-of-living/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -2718,7 +2718,7 @@ class TestFoodBeverageResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_childcare(client,type,annual_price,city):
-    response = client.post('/childcare',
+    response = client.post('/v1/cost-of-living/childcare',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': type,
@@ -2745,7 +2745,7 @@ class TestChildcareResource:
     def test_childcare_post_childcare_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/childcare',
+        post_response = client.post('/v1/cost-of-living/childcare',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'type': 'Preschool',
@@ -2767,7 +2767,7 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        get_response = client.get('/childcare/1',
+        get_response = client.get('/v1/cost-of-living/childcare/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2782,7 +2782,7 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        get_response = client.get('/childcare/2',
+        get_response = client.get('/v1/cost-of-living/childcare/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -2798,7 +2798,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/childcare?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2820,7 +2820,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/childcare?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2842,7 +2842,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/childcare?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2866,13 +2866,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/childcare?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/childcare?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2887,7 +2887,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/childcare?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2911,13 +2911,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/childcare?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/childcare?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -2932,7 +2932,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/childcare?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -2954,7 +2954,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare',
+        get_first_page_response = client.get('/v1/cost-of-living/childcare',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -2983,13 +2983,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/childcare?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/childcare?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3004,7 +3004,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_response = client.get('/childcare?city=Perth',
+        get_response = client.get('/v1/cost-of-living/childcare?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3026,7 +3026,7 @@ class TestChildcareResource:
         create_childcare(client,'Preschool', 21012, 'Melbourne')
         create_childcare(client,'Preschool', 20376, 'Sydney')
         create_childcare(client,'Preschool', 35616, 'Zurich')
-        get_first_page_response = client.get('/childcare?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/childcare?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3055,13 +3055,13 @@ class TestChildcareResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/childcare?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/childcare?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/childcare?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/childcare?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3069,7 +3069,7 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/childcare/1',
+        patch_response = client.patch('/v1/cost-of-living/childcare/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'International Primary School',
@@ -3077,7 +3077,7 @@ class TestChildcareResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/childcare/1',
+        get_response = client.get('/v1/cost-of-living/childcare/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3089,7 +3089,7 @@ class TestChildcareResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_childcare_update_no_id_exist(self,client):
-        patch_response = client.patch('/childcare/1',
+        patch_response = client.patch('/v1/cost-of-living/childcare/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'type': 'International Primary School',
@@ -3103,7 +3103,7 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/childcare/1',
+        patch_response = client.patch('/v1/cost-of-living/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item_category': 'Food',
@@ -3119,14 +3119,14 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        delete_response = client.delete('/childcare/1',
+        delete_response = client.delete('/v1/cost-of-living/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Childcare.query.count() == 0
 
     def test_childcare_delete_no_id_exist(self,client):
-        delete_response = client.delete('/childcare/1',
+        delete_response = client.delete('/v1/cost-of-living/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -3136,7 +3136,7 @@ class TestChildcareResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_childcare(client,'Preschool', 19632, 'Perth')
-        delete_response = client.delete('/childcare/1',
+        delete_response = client.delete('/v1/cost-of-living/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -3144,7 +3144,7 @@ class TestChildcareResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_apparel(client,item,price,city):
-    response = client.post('/apparel',
+    response = client.post('/v1/cost-of-living/apparel',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': item,
@@ -3171,7 +3171,7 @@ class TestApparelResource:
     def test_apparel_post_apparel_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/apparel',
+        post_response = client.post('/v1/cost-of-living/apparel',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': 'Levis Pair of Jeans',
@@ -3193,7 +3193,7 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        get_response = client.get('/apparel/1',
+        get_response = client.get('/v1/cost-of-living/apparel/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3208,7 +3208,7 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        get_response = client.get('/apparel/2',
+        get_response = client.get('/v1/cost-of-living/apparel/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -3224,7 +3224,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/apparel?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3246,7 +3246,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/apparel?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3268,7 +3268,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/apparel?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3292,13 +3292,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/apparel?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/apparel?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3313,7 +3313,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/apparel?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3337,13 +3337,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/apparel?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/apparel?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3358,7 +3358,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/apparel?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3380,7 +3380,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel',
+        get_first_page_response = client.get('/v1/cost-of-living/apparel',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3409,13 +3409,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/apparel?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/apparel?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3430,7 +3430,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_response = client.get('/apparel?city=Perth',
+        get_response = client.get('/v1/cost-of-living/apparel?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3452,7 +3452,7 @@ class TestApparelResource:
         create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
         create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
         create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
-        get_first_page_response = client.get('/apparel?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/apparel?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3481,13 +3481,13 @@ class TestApparelResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/apparel?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/apparel?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/apparel?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/apparel?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3495,7 +3495,7 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        patch_response = client.patch('/apparel/1',
+        patch_response = client.patch('/v1/cost-of-living/apparel/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item': 'Mens Leather Business Shoes',
@@ -3503,7 +3503,7 @@ class TestApparelResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/apparel/1',
+        get_response = client.get('/v1/cost-of-living/apparel/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3515,7 +3515,7 @@ class TestApparelResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_apparel_update_no_id_exist(self,client):
-        patch_response = client.patch('/apparel/1',
+        patch_response = client.patch('/v1/cost-of-living/apparel/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'item': 'Mens Leather Business Shoes',
@@ -3529,7 +3529,7 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        patch_response = client.patch('/apparel/1',
+        patch_response = client.patch('/v1/cost-of-living/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': 'Mens Leather Business Shoes',
@@ -3543,14 +3543,14 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        delete_response = client.delete('/apparel/1',
+        delete_response = client.delete('/v1/cost-of-living/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Apparel.query.count() == 0
 
     def test_apparel_delete_no_id_exist(self,client):
-        delete_response = client.delete('/apparel/1',
+        delete_response = client.delete('/v1/cost-of-living/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -3560,7 +3560,7 @@ class TestApparelResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        delete_response = client.delete('/apparel/1',
+        delete_response = client.delete('/v1/cost-of-living/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
@@ -3568,7 +3568,7 @@ class TestApparelResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 def create_leisure(client,activity,price,city):
-    response = client.post('/leisure',
+    response = client.post('/v1/cost-of-living/leisure',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'activity': activity,
@@ -3595,7 +3595,7 @@ class TestLeisureResource:
     def test_leisure_post_leisure_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/leisure',
+        post_response = client.post('/v1/cost-of-living/leisure',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'activity': 'Monthly Gym Membership',
@@ -3617,7 +3617,7 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        get_response = client.get('/leisure/1',
+        get_response = client.get('/v1/cost-of-living/leisure/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3632,7 +3632,7 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        get_response = client.get('/leisure/2',
+        get_response = client.get('/v1/cost-of-living/leisure/2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
@@ -3648,7 +3648,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure?country=Australia&city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/leisure?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3670,7 +3670,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure?country=Australia&city=Perth',
+        get_response = client.get('/v1/cost-of-living/leisure?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3692,7 +3692,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure?country=Australia',
+        get_first_page_response = client.get('/v1/cost-of-living/leisure?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3716,13 +3716,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure?country=Australia&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/leisure?country=Australia&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?country=Australia&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/leisure?country=Australia&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3737,7 +3737,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure?country=Australia&abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/leisure?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3761,13 +3761,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure?country=Australia&abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/leisure?country=Australia&abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?country=Australia&abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/leisure?country=Australia&abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3782,7 +3782,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure?city=Perth&abbreviation=AUD',
+        get_response = client.get('/v1/cost-of-living/leisure?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3804,7 +3804,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure',
+        get_first_page_response = client.get('/v1/cost-of-living/leisure',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3833,13 +3833,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure?page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/leisure?page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/leisure?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3854,7 +3854,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_response = client.get('/leisure?city=Perth',
+        get_response = client.get('/v1/cost-of-living/leisure?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3876,7 +3876,7 @@ class TestLeisureResource:
         create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
         create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
         create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
-        get_first_page_response = client.get('/leisure?abbreviation=AUD',
+        get_first_page_response = client.get('/v1/cost-of-living/leisure?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
@@ -3904,13 +3904,13 @@ class TestLeisureResource:
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
-        get_second_page_response = client.get('/leisure?abbreviation=AUD&page=2',
+        get_second_page_response = client.get('/v1/cost-of-living/leisure?abbreviation=AUD&page=2',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
         assert len(get_second_page_response_data['results']) == 0
         assert get_second_page_response_data['previous'] != None
-        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/leisure?abbreviation=AUD&page=1'
+        assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/cost-of-living/leisure?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
@@ -3918,7 +3918,7 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/leisure/1',
+        patch_response = client.patch('/v1/cost-of-living/leisure/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'activity': '1hr Tennis Court Rent',
@@ -3926,7 +3926,7 @@ class TestLeisureResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/leisure/1',
+        get_response = client.get('/v1/cost-of-living/leisure/1',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
@@ -3938,7 +3938,7 @@ class TestLeisureResource:
         assert get_response.status_code == HttpStatus.ok_200.value
 
     def test_leisure_update_no_id_exist(self,client):
-        patch_response = client.patch('/leisure/1',
+        patch_response = client.patch('/v1/cost-of-living/leisure/1',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
             'activity': '1hr Tennis Court Rent',
@@ -3952,7 +3952,7 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/leisure/1',
+        patch_response = client.patch('/v1/cost-of-living/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'item': 'Mens Leather Business Shoes',
@@ -3966,14 +3966,14 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        delete_response = client.delete('/leisure/1',
+        delete_response = client.delete('/v1/cost-of-living/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
         assert Leisure.query.count() == 0
 
     def test_leisure_delete_no_id_exist(self,client):
-        delete_response = client.delete('/leisure/1',
+        delete_response = client.delete('/v1/cost-of-living/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
@@ -3983,7 +3983,7 @@ class TestLeisureResource:
         create_currency(client,'AUD',1.45)
         create_location(client,'Australia','Perth','AUD')
         create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        delete_response = client.delete('/leisure/1',
+        delete_response = client.delete('/v1/cost-of-living/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))

@@ -1,0 +1,46 @@
+Logout of account
+---
+tags:
+ - Logout
+description: |
+ Logout of Account
+ 
+ Once logged out, JSON web token (JWT) will be blacklisted and login will be required to generate new token.
+
+parameters:
+ - name: Authorization
+   in: header
+   description: JSON Web Token (JWT) for authentication
+   required: true
+   type: string
+   format: Bearer {JWT}
+
+responses:
+ 200:
+  description: Successful logout
+  schema:
+   $ref: "#/definitions/LogoutPostResponse"
+  
+ 400:
+  description: Bad Request
+  schema:
+   $ref: "#/definitions/BadRequestResponse"
+
+definitions:
+ LogoutPostResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: successful logout
+    example: Successfully logged out
+ BadRequestResponse:
+  type: object
+  properties: 
+   message: 
+    type: string
+    description: bad request error message
+
+security:
+ - BearerAuth: []
+

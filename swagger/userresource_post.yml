@@ -1,0 +1,55 @@
+Creates an account
+---
+tags:
+ - User
+description: |
+ Creates an account using a given email and password combination
+
+parameters:
+ - name: body
+   in: body
+   description: User registration details
+   required: true
+   schema:
+    $ref: "#/definitions/UserPostRequest"
+
+responses:
+ 201:
+  description: User account successfully registered
+  schema:
+   $ref: "#/definitions/UserPostResponse"
+
+ 401:
+  description: Unauthorized
+  schema:
+   $ref: "#/definitions/UnauthorizedResponse"
+
+ 409:
+  description: Conflict
+  schema: 
+   $ref: "#/definitions/ConflictResponse"
+
+definitions:
+ UserPostRequest:
+  type: object
+  properties:
+   email:
+    type: string
+    format: email
+   password:
+    type: string
+ UserPostResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: successful registration message
+    example: successfully registered
+ ConflictResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: conflict error message
+    example: User already exists. Please log in
+

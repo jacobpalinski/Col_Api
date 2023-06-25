@@ -1,0 +1,54 @@
+Login to account
+---
+tags:
+ - Login
+description: |
+ Login into account and generate a JSON web token (JWT) for authentication
+
+parameters:
+ - name: body
+   in: body
+   description: User account information
+   required: true
+   schema:
+    $ref: "#/definitions/LoginPostRequest"
+
+responses:
+ 201:
+  description: Successful login
+  schema:
+   $ref: "#/definitions/LoginPostResponse"
+
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/UnauthorizedResponse"
+
+definitions:
+ LoginPostRequest:
+  type: object
+  properties:
+   email:
+    type: string
+    format: email
+   password:
+    type: string
+ LoginPostResponse:
+  type: object
+  properties:
+   data: 
+    type: object
+    properties:
+     message:
+      type: string
+      description: successful login
+      example: successfully logged in
+     auth_token:
+      type: string
+      description: jwt token
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
