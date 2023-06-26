@@ -10,7 +10,7 @@ description: |
 parameters:
  - name: Authorization
    in: header
-   description: JSON Web Token (JWT) for authentication
+   description: JSON Web Token (JWT) for Authentication
    required: true
    type: string
    format: Bearer {JWT}
@@ -35,19 +35,17 @@ definitions:
  UserGetResponse:
   type: object
   properties:
-   data:
-    type: object
-    properties:
-     user_id:
-      type: integer
-      description: user id
-     email:
-      type: string
-      description: user's email address
-     creation_date:
-      type: string
-      format: date-time
-      description: user creation date
+   user_id:
+    type: integer
+    description: user id
+    example: 1
+   email:
+    type: string
+    description: user's email address
+   creation_date:
+    type: string
+    format: date-time
+    description: user creation date
  UnauthorizedResponse:
   type: object
   properties: 

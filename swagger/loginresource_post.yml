@@ -8,7 +8,7 @@ description: |
 parameters:
  - name: body
    in: body
-   description: User account information
+   description: User Account Information
    required: true
    schema:
     $ref: "#/definitions/LoginPostRequest"
@@ -36,16 +36,14 @@ definitions:
  LoginPostResponse:
   type: object
   properties:
-   data: 
-    type: object
-    properties:
-     message:
-      type: string
-      description: successful login
-      example: successfully logged in
-     auth_token:
-      type: string
-      description: jwt token
+   message:
+    type: string
+    description: successful login
+    example: successfully logged in
+   auth_token:
+    type: string
+    description: jwt token
+    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2ODc4MjI2ODcsImlhdCI6MTY4NzgxOTA4Nywic3ViIjo2fQ.drHydN98LnZYktI7QkxGZ8HXVi3uljLCLteY4MywXIo
  NotFoundResponse:
   type: object
   properties:

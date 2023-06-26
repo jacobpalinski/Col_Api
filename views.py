@@ -183,32 +183,33 @@ class ResetPasswordResource(Resource):
             return response, HttpStatus.internal_server_error.value
             
 class CurrencyResource(Resource):
-    # Retrieves USD/local currency exchange rate for specific id or all currencies
-    def get(self,id=None):
-
+    # Retrieves USD/local currency exchange rate for specified id
+    @swag_from('swagger/currencyresource_get.yml')
+    def get(self, id):
         if authenticate_jwt() == True:
+            currency = Currency.query.get_or_404(id)
+            dumped_currency = currency_schema.dump(currency)
+            return dumped_currency
 
-            if id != None:
-                currency = Currency.query.get_or_404(id)
-                dumped_currency = currency_schema.dump(currency)
-                return dumped_currency
-        
-            else:
-                pagination_helper = PaginationHelper(
-                    request,
-                    query = Currency.query,
-                    resource_for_url = 'cost_of_living.currencyresource',
-                    key_name = 'results',
-                    schema = currency_schema
+class CurrencyListResource(Resource):
+    # Retrieves USD/local currency exchange rate for all currencies
+    def get(self):
+        if authenticate_jwt() == True:
+            pagination_helper = PaginationHelper(
+                request,
+                query = Currency.query,
+                resource_for_url = 'cost_of_living.currencyresource',
+                key_name = 'results',
+                schema = currency_schema
                 )
-                paginated_currencies = pagination_helper.paginate_query()
-                return paginated_currencies
+            paginated_currencies = pagination_helper.paginate_query()
+            return paginated_currencies
     
     # Creates a new currency
     def post(self):
         currency_dict = request.get_json()
         request_not_empty(currency_dict)
-        validate_request(currency_schema,currency_dict)
+        validate_request(currency_schema, currency_dict)
         
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -231,13 +232,13 @@ class CurrencyResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates abbreviation and exchange rate for specific currency id
-    def patch(self,id):
+    # Updates abbreviation and exchange rate for specific id
+    def patch(self, id):
         currency = Currency.query.get_or_404(id)
         
         currency_dict = request.get_json(force = True)
         request_not_empty(currency_dict)
-        validate_request(currency_schema,currency_dict)
+        validate_request(currency_schema, currency_dict)
 
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -260,7 +261,7 @@ class CurrencyResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes currency
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         currency = Currency.query.get_or_404(id)
 
@@ -278,32 +279,33 @@ class CurrencyResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
 
-class LocationListResource(Resource):
-    # Retrieve information regarding specific location id or information regarding all locations
-    def get(self,id=None):
-
+class LocationResource(Resource):
+    # Retrieve information from specific id
+    def get(self, id):
         if authenticate_jwt() == True:
+            location = Location.query.get_or_404(id)
+            dumped_location = location_schema.dump(location)
+            return dumped_location
 
-            if id != None:
-                location = Location.query.get_or_404(id)
-                dumped_location = location_schema.dump(location)
-                return dumped_location
-
-            else:
-                pagination_helper = PaginationHelper(
-                    request,
-                    query = Location.query,
-                    resource_for_url = 'cost_of_living.locationlistresource',
-                    key_name = 'results',
-                    schema = location_schema
-                )
-                paginated_locations = pagination_helper.paginate_query()
-                return paginated_locations
+class LocationListResource(Resource):
+    # Retrieve information regarding all locations
+    def get(self):
+        if authenticate_jwt() == True:
+            pagination_helper = PaginationHelper(
+                request,
+                query = Location.query,
+                resource_for_url = 'cost_of_living.locationlistresource',
+                key_name = 'results',
+                schema = location_schema
+            )
+            paginated_locations = pagination_helper.paginate_query()
+            return paginated_locations
+        
     # Creates a new location
     def post(self):
         location_dict = request.get_json()
         request_not_empty(location_dict)
-        validate_request(location_schema,location_dict)
+        validate_request(location_schema, location_dict)
 
         if location_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -329,7 +331,7 @@ class LocationListResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes location
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         location = Location.query.get_or_404(id)
 
@@ -348,34 +350,36 @@ class LocationListResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class HomePurchaseResource(Resource):
-    # Retrieves home purchase price characteristics from a specified id, country, city, abbreviation or combination of the prior three.
-    def get(self,id=None):
+    # Retrieve home purchase price information from specific id
+    def get(self, id):
+        if authenticate_jwt() == True:            
+            home_purchase = Home_Purchase.query.get_or_404(id)
+            dumped_home_purchase = home_purchase_schema.dump(home_purchase)
+            return dumped_home_purchase
+
+class HomePurchaseListResource(Resource):
+    # Retrieves home purchase price information from a specified country, city, abbreviation, combination of the 3 or all ids
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                home_purchase = Home_Purchase.query.get_or_404(id)
-                dumped_home_purchase = home_purchase_schema.dump(home_purchase)
-                return dumped_home_purchase
-        
             qry = orm.session.query(Home_Purchase).join(Location, Home_Purchase.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc(),Home_Purchase.price_per_sqm.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry= qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_home_purchase = home_purchase_schema.dump(qry_res,many=True)
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many = True)
                     for result in dumped_home_purchase:
                         result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
                     return dumped_home_purchase
@@ -395,14 +399,14 @@ class HomePurchaseResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_home_purchase = home_purchase_schema.dump(qry_res,many=True)
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many = True)
                     return dumped_home_purchase
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -417,7 +421,7 @@ class HomePurchaseResource(Resource):
     def post(self):
         home_purchase_dict = request.get_json()
         request_not_empty(home_purchase_dict)
-        validate_request(home_purchase_schema,home_purchase_dict)
+        validate_request(home_purchase_schema, home_purchase_dict)
 
         if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -446,12 +450,12 @@ class HomePurchaseResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates property location, price per sqm and mortgage interest rate for specified record
-    def patch(self,id):
+    def patch(self, id):
         home_purchase = Home_Purchase.query.get_or_404(id)
         
         home_purchase_dict = request.get_json(force = True)
         request_not_empty(home_purchase_dict)
-        validate_request(home_purchase_schema,home_purchase_dict)
+        validate_request(home_purchase_schema, home_purchase_dict)
 
         if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -476,7 +480,7 @@ class HomePurchaseResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Home_Purchase record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         home_purchase = Home_Purchase.query.get_or_404(id)
 
@@ -495,34 +499,36 @@ class HomePurchaseResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class RentResource(Resource):
-    # Retrieves rental costs from a specified id, country, city, abbreviation or combination of the prior three.
-    def get(self,id=None):
+    # Retrieve rental costs from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            rent = Rent.query.get_or_404(id)
+            dumped_rent = rent_schema.dump(rent)
+            return dumped_rent
+
+class RentListResource(Resource):
+    # Retrieves rental costs from a specified country, city, abbreviation or combination of the 3 or all ids.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                rent = Rent.query.get_or_404(id)
-                dumped_rent = rent_schema.dump(rent)
-                return dumped_rent
-        
             qry = orm.session.query(Rent).join(Location, Rent.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Rent.property_location.asc(),Rent.bedrooms.asc(),Rent.monthly_price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Rent.property_location.asc(), Rent.bedrooms.asc(), Rent.monthly_price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_rent = rent_schema.dump(qry_res,many=True)
+                    dumped_rent = rent_schema.dump(qry_res, many = True)
                     for result in dumped_rent:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_rent
@@ -542,14 +548,14 @@ class RentResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_rent = rent_schema.dump(qry_res,many=True)
+                    dumped_rent = rent_schema.dump(qry_res, many = True)
                     return dumped_rent
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -564,7 +570,7 @@ class RentResource(Resource):
     def post(self):
         rent_dict = request.get_json()
         request_not_empty(rent_dict)
-        validate_request(rent_schema,rent_dict)
+        validate_request(rent_schema, rent_dict)
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -592,12 +598,12 @@ class RentResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates property location, number of bedrooms and monthly price for a particular rental record
-    def patch(self,id):
+    def patch(self, id):
         rent = Rent.query.get_or_404(id)
         
         rent_dict = request.get_json(force = True)
         request_not_empty(rent_dict)
-        validate_request(rent_schema,rent_dict)
+        validate_request(rent_schema, rent_dict)
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -622,7 +628,7 @@ class RentResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Rent record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         rent = Rent.query.get_or_404(id)
 
@@ -641,34 +647,36 @@ class RentResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class UtilitiesResource(Resource):
-    # Retrieves information regarding a utility from a given id, country, city, abbreviation or combination of the three.
-    def get(self,id=None):
+    # Retrieve information regarding utility from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            utilities = Utilities.query.get_or_404(id)
+            dumped_utilities = utilities_schema.dump(utilities)
+            return dumped_utilities
+
+class UtilitiesListResource(Resource):
+    # Retrieves information regarding a utility from a given country, city, abbreviation, combination of the 3 or all utilities.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                utilities = Utilities.query.get_or_404(id)
-                dumped_utilities = utilities_schema.dump(utilities)
-                return dumped_utilities
-        
             qry = orm.session.query(Utilities).join(Location, Utilities.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Utilities.utility.asc(),Utilities.monthly_price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Utilities.utility.asc(), Utilities.monthly_price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_utilities = utilities_schema.dump(qry_res,many=True)
+                    dumped_utilities = utilities_schema.dump(qry_res, many = True)
                     for result in dumped_utilities:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_utilities
@@ -688,14 +696,14 @@ class UtilitiesResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_utilities = utilities_schema.dump(qry_res,many=True)
+                    dumped_utilities = utilities_schema.dump(qry_res, many = True)
                     return dumped_utilities
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -710,7 +718,7 @@ class UtilitiesResource(Resource):
     def post(self):
         utilities_dict = request.get_json()
         request_not_empty(utilities_dict)
-        validate_request(utilities_schema,utilities_dict)
+        validate_request(utilities_schema, utilities_dict)
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -738,12 +746,12 @@ class UtilitiesResource(Resource):
             return response, HttpStatus.forbidden_403.value   
     
     # Updates utility name, monthly price for a given utility
-    def patch(self,id):
+    def patch(self, id):
         utilities = Utilities.query.get_or_404(id)
         
         utilities_dict = request.get_json(force = True)
         request_not_empty(utilities_dict)
-        validate_request(utilities_schema,utilities_dict)
+        validate_request(utilities_schema, utilities_dict)
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -765,7 +773,7 @@ class UtilitiesResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Utilities record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         utilities = Utilities.query.get_or_404(id)
 
@@ -784,34 +792,36 @@ class UtilitiesResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class TransportationResource(Resource):
-    # Retrieves information for a particular mode of transport from a particular id, country, city, abbreviation or combination of the last three.
-    def get(self,id=None):
+    # Retrieves information regarding mode of transport from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:  
+            transportation = Transportation.query.get_or_404(id)
+            dumped_transportation = transportation_schema.dump(transportation)
+            return dumped_transportation
+
+class TransportationListResource(Resource):
+    # Retrieves information for a particular mode of transport from a particular country, city, abbreviation, combination of the 3 or all modes of transport.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
-        if authenticate_jwt() == True:
-
-            if id != None:
-                transportation = Transportation.query.get_or_404(id)
-                dumped_transportation = transportation_schema.dump(transportation)
-                return dumped_transportation
-        
+        if authenticate_jwt() == True:    
             qry = orm.session.query(Transportation).join(Location, Transportation.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Transportation.type.asc(),Transportation.price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Transportation.type.asc(), Transportation.price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_transportation = transportation_schema.dump(qry_res,many=True)
+                    dumped_transportation = transportation_schema.dump(qry_res, many = True)
                     for result in dumped_transportation:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_transportation
@@ -831,11 +841,11 @@ class TransportationResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_transportation = transportation_schema.dump(qry_res,many=True)
+                    dumped_transportation = transportation_schema.dump(qry_res, many = True)
                     return dumped_transportation
                 
                 qry_res=qry.all()
@@ -853,7 +863,7 @@ class TransportationResource(Resource):
     def post(self):
         transportation_dict = request.get_json()
         request_not_empty(transportation_dict)
-        validate_request(transportation_schema,transportation_dict)
+        validate_request(transportation_schema, transportation_dict)
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -881,12 +891,12 @@ class TransportationResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates type and price for a particular record
-    def patch(self,id):
+    def patch(self, id):
         transportation = Transportation.query.get_or_404(id)
         
         transportation_dict = request.get_json(force = True)
         request_not_empty(transportation_dict)
-        validate_request(transportation_schema,transportation_dict)
+        validate_request(transportation_schema, transportation_dict)
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -908,7 +918,7 @@ class TransportationResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Transportation record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         transportation = Transportation.query.get_or_404(id)
 
@@ -927,21 +937,24 @@ class TransportationResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class FoodBeverageResource(Resource):
-    # Retrieves information regarding a food and beverage item from a particular id, country, city, abbreviation or combination of the three.
-    def get(self,id=None):
+    # Retrieves information regarding a food and beverage item from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            if id != None:
+                food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+                dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
+                return dumped_food_and_beverage
+
+class FoodBeverageListResource(Resource):
+    # Retrieves information regarding a food and beverage item from a particular country, city, abbreviation, combination of the 3 or all items.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                food_and_beverage = Food_and_Beverage.query.get_or_404(id)
-                dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
-                return dumped_food_and_beverage
-        
             qry = orm.session.query(Food_and_Beverage).join(Location, Food_and_Beverage.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Food_and_Beverage.item_category.asc(),Food_and_Beverage.purchase_point.asc(),Food_and_Beverage.item.asc(),
+            .join(Currency, Location.currency_id == Currency.id).order_by(Food_and_Beverage.item_category.asc(), Food_and_Beverage.purchase_point.asc(), Food_and_Beverage.item.asc(),
             Food_and_Beverage.price.asc())
         
             if abbreviation:
@@ -949,13 +962,13 @@ class FoodBeverageResource(Resource):
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res,many=True)
+                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res, many = True)
                     for result in dumped_food_and_beverage:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_food_and_beverage
@@ -975,14 +988,14 @@ class FoodBeverageResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry= qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res,many=True)
+                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res, many = True)
                     return dumped_food_and_beverage
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -997,7 +1010,7 @@ class FoodBeverageResource(Resource):
     def post(self):
         food_and_beverage_dict = request.get_json()
         request_not_empty(food_and_beverage_dict)
-        validate_request(food_and_beverage_schema,food_and_beverage_dict)
+        validate_request(food_and_beverage_schema, food_and_beverage_dict)
 
         if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1027,12 +1040,12 @@ class FoodBeverageResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates item category, purchase point, item and price for a given item
-    def patch(self,id):
+    def patch(self, id):
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
         
         food_and_beverage_dict = request.get_json(force = True)
         request_not_empty(food_and_beverage_dict)
-        validate_request(food_and_beverage_schema,food_and_beverage_dict)
+        validate_request(food_and_beverage_schema, food_and_beverage_dict)
 
         if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -1060,7 +1073,7 @@ class FoodBeverageResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Food_and_Beverage record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         food_and_beverage = Food_and_Beverage.query.get_or_404(id)
 
@@ -1079,34 +1092,36 @@ class FoodBeverageResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class ChildcareResource(Resource):
-    # Retrives information regarding childcare service from a given, id, country, city, abbreviation or combination of the last three.
-    def get(self,id=None):
+    # Retrieves information regarding childcare service from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            childcare = Childcare.query.get_or_404(id)
+            dumped_childcare = childcare_schema.dump(childcare)
+            return dumped_childcare
+
+class ChildcareListResource(Resource):
+    # Retrives information regarding childcare service from a given country, city, abbreviation, combination of the 3 or all services.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                childcare = Childcare.query.get_or_404(id)
-                dumped_childcare = childcare_schema.dump(childcare)
-                return dumped_childcare
-        
             qry = orm.session.query(Childcare).join(Location, Childcare.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Childcare.type.asc(),Childcare.annual_price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Childcare.type.asc(), Childcare.annual_price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_childcare = childcare_schema.dump(qry_res,many=True)
+                    dumped_childcare = childcare_schema.dump(qry_res, many = True)
                     for result in dumped_childcare:
                         result['annual_price'] = round(result['annual_price'] * conversion,2)
                     return dumped_childcare
@@ -1126,14 +1141,14 @@ class ChildcareResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_childcare = childcare_schema.dump(qry_res,many=True)
+                    dumped_childcare = childcare_schema.dump(qry_res, many = True)
                     return dumped_childcare
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -1148,6 +1163,7 @@ class ChildcareResource(Resource):
     def post(self):
         childcare_dict = request.get_json()
         request_not_empty(childcare_dict)
+        validate_request(childcare_schema, childcare_dict)
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1175,12 +1191,12 @@ class ChildcareResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates type and annual price information for a given childcare service
-    def patch(self,id):
+    def patch(self, id):
         childcare = Childcare.query.get_or_404(id)
         
         childcare_dict = request.get_json(force = True)
         request_not_empty(childcare_dict)
-        validate_request(childcare_schema,childcare_dict)
+        validate_request(childcare_schema, childcare_dict)
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -1204,7 +1220,7 @@ class ChildcareResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Childcare record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         childcare = Childcare.query.get_or_404(id)
 
@@ -1223,34 +1239,36 @@ class ChildcareResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class ApparelResource(Resource):
-    # Retrieves information for a given apparel item from a particular, id, country, city, abbreviation or combination of the three.
-    def get(self,id=None):
+    # Retrieves apparel information from a specific id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            apparel = Apparel.query.get_or_404(id)
+            dumped_apparel = apparel_schema.dump(apparel)
+            return dumped_apparel
+
+class ApparelListResource(Resource):
+    # Retrieves information for a given apparel item from a particular country, city, abbreviation, combination of the 3 or all items.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                apparel = Apparel.query.get_or_404(id)
-                dumped_apparel = apparel_schema.dump(apparel)
-                return dumped_apparel
-        
             qry = orm.session.query(Apparel).join(Location, Apparel.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Apparel.item.asc(),Apparel.price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Apparel.item.asc(), Apparel.price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_apparel = apparel_schema.dump(qry_res,many=True)
+                    dumped_apparel = apparel_schema.dump(qry_res, many = True)
                     for result in dumped_apparel:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_apparel            
@@ -1269,14 +1287,14 @@ class ApparelResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_apparel = apparel_schema.dump(qry_res,many=True)
+                    dumped_apparel = apparel_schema.dump(qry_res, many = True)
                     return dumped_apparel
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -1291,7 +1309,7 @@ class ApparelResource(Resource):
     def post(self):
         apparel_dict = request.get_json()
         request_not_empty(apparel_dict)
-        validate_request(apparel_schema,apparel_dict)
+        validate_request(apparel_schema, apparel_dict)
 
         if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1319,12 +1337,12 @@ class ApparelResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Updates item name and price for a given piece of apparel
-    def patch(self,id):
+    def patch(self, id):
         apparel = Apparel.query.get_or_404(id)
         
         apparel_dict = request.get_json(force = True)
         request_not_empty(apparel_dict)
-        validate_request(apparel_schema,apparel_dict)
+        validate_request(apparel_schema, apparel_dict)
 
         if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -1346,7 +1364,7 @@ class ApparelResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
     # Deletes Apparel record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         apparel = Apparel.query.get_or_404(id)
 
@@ -1365,34 +1383,36 @@ class ApparelResource(Resource):
             return response, HttpStatus.forbidden_403.value
 
 class LeisureResource(Resource):
-    # Retrieves information for a given leisure acitivty from a given id, country, city, abbreviation or combination of the three.
-    def get(self,id=None):
+    # Retrieves information for a leisure activity from a specified id
+    def get(self, id):
+        if authenticate_jwt() == True:
+            leisure = Leisure.query.get_or_404(id)
+            dumped_leisure = leisure_schema.dump(leisure)
+            return dumped_leisure
+
+class LeisureListResource(Resource):
+    # Retrieves information for a given leisure acitivty from a given country, city, abbreviation, combination of the three or all activities.
+    def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-
-            if id != None:
-                leisure = Leisure.query.get_or_404(id)
-                dumped_leisure = leisure_schema.dump(leisure)
-                return dumped_leisure
-        
             qry = orm.session.query(Leisure).join(Location, Leisure.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Leisure.activity.asc(),Leisure.price.asc())
+            .join(Currency, Location.currency_id == Currency.id).order_by(Leisure.activity.asc(), Leisure.price.asc())
         
             if abbreviation:
 
                 conversion = orm.session.query(Currency.usd_to_local_exchange_rate).join(Location, Location.currency_id == Currency.id).filter(Currency.abbreviation == abbreviation).first()[0]
             
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_leisure = leisure_schema.dump(qry_res,many=True)
+                    dumped_leisure = leisure_schema.dump(qry_res, many = True)
                     for result in dumped_leisure:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_leisure            
@@ -1411,14 +1431,14 @@ class LeisureResource(Resource):
             
             else:
                 if country:
-                    qry = qry.filter(Location.country==country)
+                    qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city==city)
+                    qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_leisure = leisure_schema.dump(qry_res,many=True)
+                    dumped_leisure = leisure_schema.dump(qry_res, many = True)
                     return dumped_leisure
                 
-                qry_res=qry.all()
+                qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
@@ -1433,7 +1453,7 @@ class LeisureResource(Resource):
     def post(self):
         leisure_dict = request.get_json()
         request_not_empty(leisure_dict)
-        validate_request(leisure_schema,leisure_dict)
+        validate_request(leisure_schema, leisure_dict)
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1466,7 +1486,7 @@ class LeisureResource(Resource):
         
         leisure_dict = request.get_json(force = True)
         request_not_empty(leisure_dict)
-        validate_request(leisure_schema,leisure_dict)
+        validate_request(leisure_schema, leisure_dict)
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
@@ -1488,7 +1508,7 @@ class LeisureResource(Resource):
             return response, HttpStatus.forbidden_403.value
     
     # Deletes Leisure record
-    def delete(self,id):
+    def delete(self, id):
         admin_dict = request.get_json()
         leisure = Leisure.query.get_or_404(id)
 
@@ -1509,14 +1529,24 @@ class LeisureResource(Resource):
 cost_of_living.add_resource(UserResource,'/auth/user')
 cost_of_living.add_resource(LoginResource,'/auth/login')
 cost_of_living.add_resource(LogoutResource, '/auth/logout')
-cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')        
-cost_of_living.add_resource(CurrencyResource, '/currencies','/currencies/<int:id>')
-cost_of_living.add_resource(LocationListResource, '/locations','/locations/<int:id>')
-cost_of_living.add_resource(HomePurchaseResource, '/homepurchase','/homepurchase/<int:id>')
-cost_of_living.add_resource(RentResource, '/rent','/rent/<int:id>')
-cost_of_living.add_resource(UtilitiesResource, '/utilities','/utilities/<int:id>')
-cost_of_living.add_resource(TransportationResource, '/transportation', '/transportation/<int:id>')
-cost_of_living.add_resource(FoodBeverageResource,'/foodbeverage', '/foodbeverage/<int:id>')
-cost_of_living.add_resource(ChildcareResource,'/childcare', '/childcare/<int:id>')
-cost_of_living.add_resource(ApparelResource, '/apparel', '/apparel/<int:id>')
-cost_of_living.add_resource(LeisureResource, '/leisure', '/leisure/<int:id>')
+cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')
+cost_of_living.add_resource(CurrencyResource,'/currencies/<int:id>')        
+cost_of_living.add_resource(CurrencyListResource, '/currencies')
+cost_of_living.add_resource(LocationResource, '/locations/<int:id>')
+cost_of_living.add_resource(LocationListResource, '/locations')
+cost_of_living.add_resource(HomePurchaseResource, '/homepurchase/<int:id>')
+cost_of_living.add_resource(HomePurchaseListResource, '/homepurchase')
+cost_of_living.add_resource(RentResource, '/rent/<int:id>')
+cost_of_living.add_resource(RentListResource, '/rent')
+cost_of_living.add_resource(UtilitiesResource, '/utilities/<int:id>')
+cost_of_living.add_resource(UtilitiesListResource, '/utilities')
+cost_of_living.add_resource(TransportationResource, '/transportation/<int:id>')
+cost_of_living.add_resource(TransportationListResource, '/transportation')
+cost_of_living.add_resource(FoodBeverageResource, '/foodbeverage/<int:id>')
+cost_of_living.add_resource(FoodBeverageListResource, '/foodbeverage')
+cost_of_living.add_resource(ChildcareResource, '/childcare/<int:id>')
+cost_of_living.add_resource(ChildcareListResource, '/childcare')
+cost_of_living.add_resource(ApparelResource, '/apparel/<int:id>')
+cost_of_living.add_resource(ApparelListResource, '/apparel')
+cost_of_living.add_resource(LeisureResource, '/leisure/<int:id>')
+cost_of_living.add_resource(LeisureListResource, '/leisure')

@@ -5,10 +5,14 @@ tags:
 description: |
  Creates an account using a given email and password combination
 
+ Password should be longer than > 8 characters and < 32 characters in length and 1 each of the following: uppercase letter, lowercase letter, digit and symbol
+ 
+ Example: 4Password$ 
+
 parameters:
  - name: body
    in: body
-   description: User registration details
+   description: User Registration Details
    required: true
    schema:
     $ref: "#/definitions/UserPostRequest"

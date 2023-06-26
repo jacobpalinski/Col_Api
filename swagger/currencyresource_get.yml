@@ -1,0 +1,64 @@
+Retrieve USD/local currency exchange rate for specified id
+---
+tags:
+ - Currencies
+description: |
+ Retrieve USD/local currency exchange rate for specified id
+
+parameters:
+ - name: id
+   in: path
+   description: Currency ID
+   required: true
+   type: integer
+
+responses:
+ 200:
+  description: User account information retrieved successfully
+  schema:
+   $ref: "#/definitions/CurrencyGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ CurrencyGetResponse:
+  type: object
+  properties:
+   id:
+    type: integer
+    description: currency id
+    example: 1
+   abbreviation:
+    type: string
+    description: currency abbreviation
+    example: AUD
+   usd_to_local_exchange_rate:
+    type: number
+    format: float
+    description: usd/local currency exchange rate
+    example: 1.50
+   last_updated:
+    type: string
+    format: date-time
+    description: last update time
+   location:
+    type: array
+    items:
+     type: object
+     properties:
+      city:
+       type: string
+       description: city which uses currency abbreviation
+       example: Melbourne
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []

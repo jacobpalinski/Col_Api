@@ -10,7 +10,7 @@ description: |
 parameters:
  - name: Authorization
    in: header
-   description: JSON Web Token (JWT) for authentication
+   description: JSON Web Token (JWT) for Authentication
    required: true
    type: string
    format: Bearer {JWT}
