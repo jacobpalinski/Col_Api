@@ -14,7 +14,7 @@ parameters:
 
 responses:
  200:
-  description: User account information retrieved successfully
+  description: Currency information from specific id retrieved successfully
   schema:
    $ref: "#/definitions/CurrencyGetResponse"
  404:

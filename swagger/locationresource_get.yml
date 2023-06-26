@@ -1,0 +1,61 @@
+Retrieve location information for specified id
+---
+tags:
+ - Locations
+description: |
+ Retrieve location information for specified id
+
+parameters:
+ - name: id
+   in: path
+   description: Location ID
+   required: true
+   type: integer
+
+responses:
+ 200:
+  description: Location information from specific id retrieved successfully
+  schema:
+   $ref: "#/definitions/LocationGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ LocationGetResponse:
+  type: object
+  properties:
+   id:
+    type: integer
+    description: location id
+    example: 1
+   country:
+    type: string
+    description: country name
+    example: Australia
+   city:
+    type: string
+    description: city name
+    example: Melbourne
+   currency:
+    type: object
+    properties:
+     abbreviation:
+      type: string
+      description: currency abbreviation
+      example: AUD
+     id:
+      type: integer
+      description: currency id
+      example: 1
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []

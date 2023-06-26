@@ -281,6 +281,7 @@ class CurrencyListResource(Resource):
 
 class LocationResource(Resource):
     # Retrieve information from specific id
+    @swag_from('swagger/locationresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             location = Location.query.get_or_404(id)
@@ -351,6 +352,7 @@ class LocationListResource(Resource):
 
 class HomePurchaseResource(Resource):
     # Retrieve home purchase price information from specific id
+    @swag_from('swagger/homepurchaseresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:            
             home_purchase = Home_Purchase.query.get_or_404(id)
