@@ -4,8 +4,8 @@ from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from httpstatus import HttpStatus
 from models import (User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
-Home_Purchase,Home_PurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
-Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
+HomePurchase,HomePurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
+Transportation,TransportationSchema,FoodBeverage, FoodBeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
 from helpers import *
 from sqlalchemy.exc import SQLAlchemyError
@@ -24,11 +24,11 @@ cost_of_living_blueprint = Blueprint('cost_of_living', __name__)
 user_schema = UserSchema()
 currency_schema = CurrencySchema()
 location_schema = LocationSchema()
-home_purchase_schema = Home_PurchaseSchema()
+home_purchase_schema = HomePurchaseSchema()
 rent_schema = RentSchema()
 utilities_schema = UtilitiesSchema()
 transportation_schema = TransportationSchema()
-food_and_beverage_schema = Food_and_BeverageSchema()
+food_and_beverage_schema = FoodBeverageSchema()
 childcare_schema = ChildcareSchema()
 apparel_schema = ApparelSchema()
 leisure_schema = LeisureSchema()
@@ -355,7 +355,7 @@ class HomePurchaseResource(Resource):
     @swag_from('swagger/homepurchaseresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:            
-            home_purchase = Home_Purchase.query.get_or_404(id)
+            home_purchase = HomePurchase.query.get_or_404(id)
             dumped_home_purchase = home_purchase_schema.dump(home_purchase)
             return dumped_home_purchase
 
@@ -367,8 +367,8 @@ class HomePurchaseListResource(Resource):
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-            qry = orm.session.query(Home_Purchase).join(Location, Home_Purchase.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Home_Purchase.property_location.asc(), Home_Purchase.price_per_sqm.asc())
+            qry = orm.session.query(HomePurchase).join(Location, HomePurchase.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(HomePurchase.property_location.asc(), HomePurchase.price_per_sqm.asc())
         
             if abbreviation:
 
@@ -435,12 +435,12 @@ class HomePurchaseListResource(Resource):
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                home_purchase = Home_Purchase(property_location = home_purchase_dict['property_location'], 
+                home_purchase = HomePurchase(property_location = home_purchase_dict['property_location'], 
                 price_per_sqm = home_purchase_dict['price_per_sqm'], 
                 mortgage_interest = home_purchase_dict['mortgage_interest'],
                 location = location)
                 home_purchase.add(home_purchase)
-                query = Home_Purchase.query.get(home_purchase.id)
+                query = HomePurchase.query.get(home_purchase.id)
                 dump_result = home_purchase_schema.dump(query)
                 return dump_result, HttpStatus.created_201.value
 
@@ -453,7 +453,7 @@ class HomePurchaseListResource(Resource):
     
     # Updates property location, price per sqm and mortgage interest rate for specified record
     def patch(self, id):
-        home_purchase = Home_Purchase.query.get_or_404(id)
+        home_purchase = HomePurchase.query.get_or_404(id)
         
         home_purchase_dict = request.get_json(force = True)
         request_not_empty(home_purchase_dict)
@@ -484,7 +484,7 @@ class HomePurchaseListResource(Resource):
     # Deletes Home_Purchase record
     def delete(self, id):
         admin_dict = request.get_json()
-        home_purchase = Home_Purchase.query.get_or_404(id)
+        home_purchase = HomePurchase.query.get_or_404(id)
 
         if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -502,6 +502,7 @@ class HomePurchaseListResource(Resource):
 
 class RentResource(Resource):
     # Retrieve rental costs from a specific id
+    @swag_from('swagger/rentresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             rent = Rent.query.get_or_404(id)
@@ -650,6 +651,7 @@ class RentListResource(Resource):
 
 class UtilitiesResource(Resource):
     # Retrieve information regarding utility from a specific id
+    @swag_from('swagger/utilitiesresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             utilities = Utilities.query.get_or_404(id)
@@ -795,6 +797,7 @@ class UtilitiesListResource(Resource):
 
 class TransportationResource(Resource):
     # Retrieves information regarding mode of transport from a specific id
+    @swag_from('swagger/transportationresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:  
             transportation = Transportation.query.get_or_404(id)
@@ -940,10 +943,11 @@ class TransportationListResource(Resource):
 
 class FoodBeverageResource(Resource):
     # Retrieves information regarding a food and beverage item from a specific id
+    @swag_from('swagger/foodbeverageresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             if id != None:
-                food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+                food_and_beverage = FoodBeverage.query.get_or_404(id)
                 dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
                 return dumped_food_and_beverage
 
@@ -955,9 +959,9 @@ class FoodBeverageListResource(Resource):
         abbreviation = request.args.get('abbreviation')
 
         if authenticate_jwt() == True:
-            qry = orm.session.query(Food_and_Beverage).join(Location, Food_and_Beverage.location_id == Location.id)\
-            .join(Currency, Location.currency_id == Currency.id).order_by(Food_and_Beverage.item_category.asc(), Food_and_Beverage.purchase_point.asc(), Food_and_Beverage.item.asc(),
-            Food_and_Beverage.price.asc())
+            qry = orm.session.query(FoodBeverage).join(Location, FoodBeverage.location_id == Location.id)\
+            .join(Currency, Location.currency_id == Currency.id).order_by(FoodBeverage.item_category.asc(), FoodBeverage.purchase_point.asc(), FoodBeverage.item.asc(),
+            FoodBeverage.price.asc())
         
             if abbreviation:
 
@@ -1024,13 +1028,13 @@ class FoodBeverageListResource(Resource):
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                food_and_beverage = Food_and_Beverage(item_category = food_and_beverage_dict['item_category'], 
+                food_and_beverage = FoodBeverage(item_category = food_and_beverage_dict['item_category'], 
                 purchase_point = food_and_beverage_dict['purchase_point'],
                 item = food_and_beverage_dict['item'],
                 price = food_and_beverage_dict['price'],
                 location = location)
                 food_and_beverage.add(food_and_beverage)
-                query = Food_and_Beverage.query.get(food_and_beverage.id)
+                query = FoodBeverage.query.get(food_and_beverage.id)
                 dump_result = food_and_beverage_schema.dump(query)
                 return dump_result, HttpStatus.created_201.value
 
@@ -1043,7 +1047,7 @@ class FoodBeverageListResource(Resource):
     
     # Updates item category, purchase point, item and price for a given item
     def patch(self, id):
-        food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+        food_and_beverage = FoodBeverage.query.get_or_404(id)
         
         food_and_beverage_dict = request.get_json(force = True)
         request_not_empty(food_and_beverage_dict)
@@ -1077,7 +1081,7 @@ class FoodBeverageListResource(Resource):
     # Deletes Food_and_Beverage record
     def delete(self, id):
         admin_dict = request.get_json()
-        food_and_beverage = Food_and_Beverage.query.get_or_404(id)
+        food_and_beverage = FoodBeverage.query.get_or_404(id)
 
         if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1095,6 +1099,7 @@ class FoodBeverageListResource(Resource):
 
 class ChildcareResource(Resource):
     # Retrieves information regarding childcare service from a specific id
+    @swag_from('swagger/childcareresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             childcare = Childcare.query.get_or_404(id)
@@ -1242,6 +1247,7 @@ class ChildcareListResource(Resource):
 
 class ApparelResource(Resource):
     # Retrieves apparel information from a specific id
+    @swag_from('swagger/apparelresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             apparel = Apparel.query.get_or_404(id)
@@ -1386,6 +1392,7 @@ class ApparelListResource(Resource):
 
 class LeisureResource(Resource):
     # Retrieves information for a leisure activity from a specified id
+    @swag_from('swagger/leisureresource_get.yml')
     def get(self, id):
         if authenticate_jwt() == True:
             leisure = Leisure.query.get_or_404(id)

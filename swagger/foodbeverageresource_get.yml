@@ -1,49 +1,52 @@
-Retrieve home purchase price information for specified id
+Retrieve food and beverage item information for specified id
 ---
 tags:
- - Home Purchase
+ - Food and Beverage
 description: |
- Retrieve home purchase price information for specified id
+ Retrieve food and beverage item information for specified id
 
 parameters:
  - name: id
    in: path
-   description: Home Purchase ID
+   description: Food and Beverage ID
    required: true
    type: integer
 
 responses:
  200:
-  description: Home Purchase price information from specific id retrieved successfully
+  description: Food and beverage item information from specific id retrieved successfully
   schema:
-   $ref: "#/definitions/HomePurchaseGetResponse"
+   $ref: "#/definitions/FoodBeverageGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- HomePurchaseGetResponse:
+ FoodBeverageGetResponse:
   type: object
   properties:
    id:
     type: integer
-    description: home purchase id
+    description: transportation id
     example: 1
-   property_location:
+   item_category:
     type: string
-    description: property location
-    example: City Centre
-   price_per_sqm:
+    description: food or beverage item
+    example: Food
+   purchase_point:
+    type: string
+    description: restaurant or supermarket item
+    example: Supermarket
+   item:
+    type: string
+    description: item name
+    example: Chicken Breast (1kg)  
+   price:
     type: number
     format: float
-    description: price per sqm
-    example: 10435.22
-   mortgage_interest:
-    type: number
-    format: float
-    description: mortagage interest rate
-    example: 5.85
+    description: price
+    example: 13.64
    last_updated:
     type: string
     format: date-time

@@ -4,8 +4,8 @@ import os
 from flask import json
 from httpstatus import HttpStatus
 from models import (orm,User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
-Home_Purchase,Home_PurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
-Transportation,TransportationSchema,Food_and_Beverage, Food_and_BeverageSchema,
+HomePurchase,HomePurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
+Transportation,TransportationSchema,FoodBeverage, FoodBeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
 from datetime import datetime, date
 from dotenv import load_dotenv
@@ -514,7 +514,7 @@ class TestHomePurchaseResource:
         assert post_response_data['location']['country'] == 'Australia'
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
-        assert Home_Purchase.query.count() == 1
+        assert HomePurchase.query.count() == 1
     
     def test_home_purchase_post_home_purchase_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
@@ -536,7 +536,7 @@ class TestHomePurchaseResource:
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
-        assert Home_Purchase.query.count() == 0
+        assert HomePurchase.query.count() == 0
 
     def test_home_purchase_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -897,7 +897,7 @@ class TestHomePurchaseResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Home_Purchase.query.count() == 0
+        assert HomePurchase.query.count() == 0
     
     def test_home_purchase_update_no_admin(self,client):
         create_currency(client,'AUD',1.45)
@@ -922,14 +922,14 @@ class TestHomePurchaseResource:
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
-        assert Home_Purchase.query.count() == 0
+        assert HomePurchase.query.count() == 0
 
     def test_home_purchase_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/cost-of-living/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
-        assert Home_Purchase.query.count() == 0
+        assert HomePurchase.query.count() == 0
     
     def test_home_purchase_delete_no_admin(self,client):
         create_currency(client,'AUD',1.45)
@@ -2268,7 +2268,7 @@ class TestFoodBeverageResource:
         assert post_response_data['location']['country'] == 'Australia'
         assert post_response_data['location']['city'] == 'Perth'
         assert post_response.status_code == HttpStatus.created_201.value
-        assert Food_and_Beverage.query.count() == 1
+        assert FoodBeverage.query.count() == 1
     
     def test_foodbeverage_post_foodbeverage_location_exist_no_admin(self,client):
         create_currency(client,'AUD',1.45)
@@ -2291,7 +2291,7 @@ class TestFoodBeverageResource:
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
-        assert Food_and_Beverage.query.count() == 0
+        assert FoodBeverage.query.count() == 0
 
     def test_foodbeverage_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -2671,7 +2671,7 @@ class TestFoodBeverageResource:
             'admin': os.environ.get('ADMIN_KEY')
             }))
         assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Food_and_Beverage.query.count() == 0
+        assert FoodBeverage.query.count() == 0
     
     def test_foodbeverage_update_no_admin(self,client):
         create_currency(client,'AUD',1.45)
@@ -2697,14 +2697,14 @@ class TestFoodBeverageResource:
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.no_content_204.value
-        assert Food_and_Beverage.query.count() == 0
+        assert FoodBeverage.query.count() == 0
 
     def test_foodbeverage_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/cost-of-living/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
-        assert Food_and_Beverage.query.count() == 0
+        assert FoodBeverage.query.count() == 0
     
     def test_foodbeverage_delete_no_admin(self,client):
         create_currency(client,'AUD',1.45)

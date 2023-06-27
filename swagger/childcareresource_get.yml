@@ -1,49 +1,44 @@
-Retrieve home purchase price information for specified id
+Retrieve childcare cost information for specified id
 ---
 tags:
- - Home Purchase
+ - Childcare
 description: |
- Retrieve home purchase price information for specified id
+ Retrieve childcare cost information for specified id
 
 parameters:
  - name: id
    in: path
-   description: Home Purchase ID
+   description: Childcare ID
    required: true
    type: integer
 
 responses:
  200:
-  description: Home Purchase price information from specific id retrieved successfully
+  description: Childcare cost information from specific id retrieved successfully
   schema:
-   $ref: "#/definitions/HomePurchaseGetResponse"
+   $ref: "#/definitions/ChildcareGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- HomePurchaseGetResponse:
+ ChildcareGetResponse:
   type: object
   properties:
    id:
     type: integer
-    description: home purchase id
+    description: childcare id
     example: 1
-   property_location:
+   type:
     type: string
-    description: property location
-    example: City Centre
-   price_per_sqm:
+    description: type of childcare
+    example: International Primary School, Yearly for 1 Child
+   annual_price:
     type: number
     format: float
-    description: price per sqm
-    example: 10435.22
-   mortgage_interest:
-    type: number
-    format: float
-    description: mortagage interest rate
-    example: 5.85
+    description: price
+    example: 30550.00
    last_updated:
     type: string
     format: date-time

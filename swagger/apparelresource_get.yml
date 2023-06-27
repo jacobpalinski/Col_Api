@@ -1,49 +1,44 @@
-Retrieve home purchase price information for specified id
+Retrieve apparel cost information for specified id
 ---
 tags:
- - Home Purchase
+ - Apparel
 description: |
- Retrieve home purchase price information for specified id
+ Retrieve apparel cost information for specified id
 
 parameters:
  - name: id
    in: path
-   description: Home Purchase ID
+   description: Apparel ID
    required: true
    type: integer
 
 responses:
  200:
-  description: Home Purchase price information from specific id retrieved successfully
+  description: Apparel cost information from specific id retrieved successfully
   schema:
-   $ref: "#/definitions/HomePurchaseGetResponse"
+   $ref: "#/definitions/ApparelGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- HomePurchaseGetResponse:
+ ApparelGetResponse:
   type: object
   properties:
    id:
     type: integer
-    description: home purchase id
+    description: apparel id
     example: 1
-   property_location:
+   item:
     type: string
-    description: property location
-    example: City Centre
-   price_per_sqm:
+    description: item
+    example: Mens Leather Business Shoes
+   price:
     type: number
     format: float
-    description: price per sqm
-    example: 10435.22
-   mortgage_interest:
-    type: number
-    format: float
-    description: mortagage interest rate
-    example: 5.85
+    description: price
+    example: 194.63
    last_updated:
     type: string
     format: date-time

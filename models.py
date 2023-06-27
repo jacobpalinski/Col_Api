@@ -145,7 +145,7 @@ class Location(orm.Model,ResourceAddUpdateDelete):
         self.city = city
         self.currency = currency
     
-class Home_Purchase(orm.Model,ResourceAddUpdateDelete):
+class HomePurchase(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
     property_location = orm.Column(orm.String(30),nullable = False)
     price_per_sqm = orm.Column(orm.Float,nullable = False)
@@ -197,7 +197,7 @@ class Transportation(orm.Model,ResourceAddUpdateDelete):
         self.price = price
         self.location = location
 
-class Food_and_Beverage(orm.Model,ResourceAddUpdateDelete):
+class FoodBeverage(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
     item_category = orm.Column(orm.String(20),nullable = False)
     purchase_point = orm.Column(orm.String(20),nullable = False)
@@ -267,7 +267,7 @@ class LocationSchema(ma.Schema):
     city = fields.String(required = True)
     currency = fields.Nested('CurrencySchema',only = ['id','abbreviation'])
 
-class Home_PurchaseSchema(ma.Schema):
+class HomePurchaseSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
     location = fields.Nested(LocationSchema,only = ['id','country','city'])
     property_location = fields.String(validate = validate.Length(10))
@@ -297,7 +297,7 @@ class TransportationSchema(ma.Schema):
     price = fields.Float()
     last_updated = fields.DateTime()
 
-class Food_and_BeverageSchema(ma.Schema):
+class FoodBeverageSchema(ma.Schema):
     id = fields.Integer(dumpy_only = True)
     location = fields.Nested(LocationSchema,only = ['id','country','city'])
     item_category = fields.String()
