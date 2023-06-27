@@ -1,0 +1,91 @@
+Retrieve all home purchase data
+---
+tags:
+ - Home Purchase
+description: |
+ Retrieve all home purchase data
+
+parameters:
+ - name: country
+   in: path
+   description: country name
+   type: string
+ - name: city
+   in: path
+   description: city name
+   type: string
+ - name: abbreviation
+   in: path
+   description: currency abbreviation
+   type: string
+
+responses:
+ 200:
+  description: Home Purchase information retrieved successfully
+  schema:
+   $ref: "#/definitions/HomePurchaseListGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ HomePurchaseListGetResponse:
+  type: object
+  properties:
+   home purchase data:
+    type: array
+    items:
+     type: object
+     properties:
+      id:
+       type: integer
+       description: home purchase id
+       example: 1
+      property_location:
+       type: string
+       description: property location
+       example: City Centre
+      price_per_sqm:
+       type: number
+       format: float
+       description: price per sqm
+       example: 10435.22
+      mortgage_interest:
+       type: number
+       format: float
+       description: mortagage interest rate
+       example: 5.85
+      last_updated:
+       type: string
+       format: date-time
+       description: last update time
+       location:
+        type: object
+        properties:
+         id:
+          type: integer
+          description: location id
+          example: 1
+         country:
+          type: string
+          description: country name
+          example: Australia
+         city:
+          type: string
+          description: city name
+          example: Melbourne
+    example:
+     - id: 1
+       property_location: City Centre
+       price_per_sqm: 
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []

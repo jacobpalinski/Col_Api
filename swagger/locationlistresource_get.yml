@@ -1,0 +1,84 @@
+Retrieve all locations
+---
+tags:
+ - Locations
+description: |
+ Retrieve all locations
+
+responses:
+ 200:
+  description: Location information for all locations retrieved successfully
+  schema:
+   $ref: "#/definitions/LocationListGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ LocationListGetResponse:
+  type: object
+  properties:
+   locations:
+    type: array
+    items:
+     type: object
+     properties:
+      id:
+       type: integer
+       description: location id
+       example: 1
+      country:
+       type: string
+       description: country name
+       example: Australia
+      city:
+       type: string
+       description: city name
+       example: Melbourne
+      currency:
+       type: object
+       properties:
+        abbreviation:
+         type: string
+         description: currency abbreviation
+         example: AUD
+        id:
+         type: integer
+         description: currency id
+         example: 1
+    example:
+     - id: 1
+       country: Australia
+       city: Melbourne
+       currency:
+        abbreviation: AUD
+        id: 1
+     - id: 2
+       country: Switzerland
+       city: Zurich
+       currency:
+        abbreviation: CHF
+        id: 2
+   previous:
+    type: string
+    description: url of previous page
+    example: http://127.0.0.1/v1/cost-of-living/locations?page=1
+   next:
+    type: string
+    description: url of next page
+    example: http://127.0.0.1/v1/cost-of-living/locations?page=3
+   count:
+    type: integer
+    description: total number of locations
+    example: 75
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []

@@ -200,7 +200,7 @@ class CurrencyListResource(Resource):
                 request,
                 query = Currency.query,
                 resource_for_url = 'cost_of_living.currencyresource',
-                key_name = 'results',
+                key_name = 'currencies',
                 schema = currency_schema
                 )
             paginated_currencies = pagination_helper.paginate_query()
@@ -291,13 +291,14 @@ class LocationResource(Resource):
 
 class LocationListResource(Resource):
     # Retrieve information regarding all locations
+    @swag_from('swagger/locationlistresource_get.yml')
     def get(self):
         if authenticate_jwt() == True:
             pagination_helper = PaginationHelper(
                 request,
                 query = Location.query,
                 resource_for_url = 'cost_of_living.locationlistresource',
-                key_name = 'results',
+                key_name = 'locations',
                 schema = location_schema
             )
             paginated_locations = pagination_helper.paginate_query()
@@ -362,6 +363,7 @@ class HomePurchaseResource(Resource):
 
 class HomePurchaseListResource(Resource):
     # Retrieves home purchase price information from a specified country, city, abbreviation, combination of the 3 or all ids
+    @swag_from('swagger/homepurchaselistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -392,11 +394,11 @@ class HomePurchaseListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.homepurchaseresource',
-                    key_name = 'results',   
+                    key_name = 'home purchase data',   
                     schema = home_purchase_schema
                     )
                     dumped_home_purchase = pagination_helper.paginate_query()
-                    for result in dumped_home_purchase['results']:
+                    for result in dumped_home_purchase['home purchase data']:
                         result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
                     return dumped_home_purchase
             
@@ -414,7 +416,7 @@ class HomePurchaseListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.homepurchaseresource',
-                key_name = 'results',   
+                key_name = 'home purchase data',   
                 schema = home_purchase_schema
                 )
                 dumped_home_purchase = pagination_helper.paginate_query()
@@ -542,11 +544,11 @@ class RentListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.rentresource',
-                    key_name = 'results',   
+                    key_name = 'rental data',   
                     schema = rent_schema
                     )
                     dumped_rent = pagination_helper.paginate_query()
-                    for result in dumped_rent['results']:
+                    for result in dumped_rent['rental data']:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_rent
             
@@ -564,7 +566,7 @@ class RentListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.rentresource',
-                key_name = 'results',   
+                key_name = 'rental data',   
                 schema = rent_schema
                 )
                 dumped_rent = pagination_helper.paginate_query()
@@ -691,11 +693,11 @@ class UtilitiesListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.utilitiesresource',
-                    key_name = 'results',   
+                    key_name = 'utilities',   
                     schema = utilities_schema
                     )
                     dumped_utilities = pagination_helper.paginate_query()
-                    for result in dumped_utilities['results']:
+                    for result in dumped_utilities['utilities']:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_utilities
             
@@ -713,7 +715,7 @@ class UtilitiesListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.utilitiesresource',
-                key_name = 'results',   
+                key_name = 'utilities',   
                 schema = utilities_schema
                 )
                 dumped_utilities = pagination_helper.paginate_query()
@@ -837,11 +839,11 @@ class TransportationListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.transportationresource',
-                    key_name = 'results',   
+                    key_name = 'transportation data',   
                     schema = transportation_schema
                     )
                     dumped_transportation = pagination_helper.paginate_query()
-                    for result in dumped_transportation['results']:
+                    for result in dumped_transportation['transportation data']:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_transportation
             
@@ -859,7 +861,7 @@ class TransportationListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.transportationresource',
-                key_name = 'results',   
+                key_name = 'transportation data',   
                 schema = transportation_schema
                 )
                 dumped_transportation = pagination_helper.paginate_query()
@@ -985,11 +987,11 @@ class FoodBeverageListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.foodbeverageresource',
-                    key_name = 'results',   
+                    key_name = 'food and beverage data',   
                     schema = food_and_beverage_schema
                     )
                     dumped_food_and_beverage = pagination_helper.paginate_query()
-                    for result in dumped_food_and_beverage['results']:
+                    for result in dumped_food_and_beverage['food and beverage data']:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_food_and_beverage
             
@@ -1007,7 +1009,7 @@ class FoodBeverageListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.foodbeverageresource',
-                key_name = 'results',   
+                key_name = 'food and beverage data',   
                 schema = food_and_beverage_schema
                 )
                 dumped_food_and_beverage = pagination_helper.paginate_query()
@@ -1139,11 +1141,11 @@ class ChildcareListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.childcareresource',
-                    key_name = 'results',   
+                    key_name = 'childcare data',   
                     schema = childcare_schema
                     )
                     dumped_childcare = pagination_helper.paginate_query()
-                    for result in dumped_childcare['results']:
+                    for result in dumped_childcare['childcare data']:
                         result['annual_price'] = round(result['annual_price'] * conversion,2)
                     return dumped_childcare
             
@@ -1161,7 +1163,7 @@ class ChildcareListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.childcareresource',
-                key_name = 'results',   
+                key_name = 'childcare data',   
                 schema = childcare_schema
                 )
                 dumped_childcare = pagination_helper.paginate_query()
@@ -1286,11 +1288,11 @@ class ApparelListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.apparelresource',
-                    key_name = 'results',   
+                    key_name = 'apparel data',   
                     schema = apparel_schema
                     )
                     dumped_apparel = pagination_helper.paginate_query()
-                    for result in dumped_apparel['results']:
+                    for result in dumped_apparel['apparel data']:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_apparel
             
@@ -1308,7 +1310,7 @@ class ApparelListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.apparelresource',
-                key_name = 'results',   
+                key_name = 'apparel data',   
                 schema = apparel_schema
                 )
                 dumped_apparel = pagination_helper.paginate_query()
@@ -1431,11 +1433,11 @@ class LeisureListResource(Resource):
                     request,
                     query = qry,
                     resource_for_url = 'cost_of_living.leisureresource',
-                    key_name = 'results',   
+                    key_name = 'leisure data',   
                     schema = leisure_schema
                     )
                     dumped_leisure = pagination_helper.paginate_query()
-                    for result in dumped_leisure['results']:
+                    for result in dumped_leisure['leisure data']:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_leisure
             
@@ -1453,7 +1455,7 @@ class LeisureListResource(Resource):
                 request,
                 query = qry,
                 resource_for_url = 'cost_of_living.leisureresource',
-                key_name = 'results',   
+                key_name = 'leisure data',   
                 schema = leisure_schema
                 )
                 dumped_leisure = pagination_helper.paginate_query()

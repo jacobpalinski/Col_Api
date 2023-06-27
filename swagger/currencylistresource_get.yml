@@ -1,0 +1,86 @@
+Retrieve USD/local currency exchange rate for all currencies
+---
+tags:
+ - Currencies
+description: |
+ Retrieve USD/local currency exchange rate for all currencies
+
+responses:
+ 200:
+  description: Currency information for all currencies retrieved successfully
+  schema:
+   $ref: "#/definitions/CurrencyListGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ CurrencyListGetResponse:
+  type: object
+  properties:
+   currencies:
+    type: array
+    items:
+     type: object
+     properties:
+      id:
+       type: integer
+       description: currency id
+      abbreviation:
+       type: string
+       description: currency abbreviation
+      usd_to_local_exchange_rate:
+       type: number
+       format: float
+       description: usd/local currency exchange rate
+      last_updated:
+       type: string
+       format: date-time
+       description: last update time
+       default: '2023-06-27T22:40:09.710Z'
+      location:
+       type: array
+       items:
+        type: object
+        properties:
+         city:
+          type: string
+          description: city which uses currency abbreviation
+    example:
+     - id: 1
+       abbreviation: AUD
+       usd_local_exchange_rate: 1.5
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - city: Melbourne
+        - city: Sydney
+     - id: 2
+       abbreviation: CHF
+       usd_local_exchange_rate: 0.89
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - city: Zurich
+        - city: Geneva
+   previous:
+    type: string
+    description: url of previous page
+    example: http://127.0.0.1/v1/cost-of-living/currencies?page=1
+   next:
+    type: string
+    description: url of next page
+    example: http://127.0.0.1/v1/cost-of-living/currencies?page=3
+   count:
+    type: integer
+    description: total number of currencies
+    example: 75
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []
