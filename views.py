@@ -193,6 +193,7 @@ class CurrencyResource(Resource):
 
 class CurrencyListResource(Resource):
     # Retrieves USD/local currency exchange rate for all currencies
+    @swag_from('swagger/currencylistresource_get.yml')
     def get(self):
         if authenticate_jwt() == True:
             pagination_helper = PaginationHelper(
