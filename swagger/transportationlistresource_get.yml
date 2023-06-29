@@ -1,9 +1,9 @@
-Retrieve mode of transport information for specified criterea
+Retrieve mode of transport information for specified parameters
 ---
 tags:
  - Transportation
 description: |
- Retrieve mode of transport information for specified criterea
+ Retrieve mode of transport information for specified parameters
 
 parameters:
  - name: country

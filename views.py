@@ -958,6 +958,7 @@ class FoodBeverageResource(Resource):
                 return dumped_food_and_beverage
 
 class FoodBeverageListResource(Resource):
+    @swag_from('swagger/foodbeveragelistresource_get.yml')
     # Retrieves information regarding a food and beverage item from a particular country, city, abbreviation, combination of the 3 or all items.
     def get(self):
         country = request.args.get('country')
@@ -1114,6 +1115,7 @@ class ChildcareResource(Resource):
 
 class ChildcareListResource(Resource):
     # Retrives information regarding childcare service from a given country, city, abbreviation, combination of the 3 or all services.
+    @swag_from('swagger/childcarelistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -1262,6 +1264,7 @@ class ApparelResource(Resource):
 
 class ApparelListResource(Resource):
     # Retrieves information for a given apparel item from a particular country, city, abbreviation, combination of the 3 or all items.
+    @swag_from('swagger/apparellistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -1407,6 +1410,7 @@ class LeisureResource(Resource):
 
 class LeisureListResource(Resource):
     # Retrieves information for a given leisure acitivty from a given country, city, abbreviation, combination of the three or all activities.
+    @swag_from('swagger/leisurelistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')

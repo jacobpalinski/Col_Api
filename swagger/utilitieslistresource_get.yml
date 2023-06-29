@@ -1,9 +1,9 @@
-Retrieve utility information for specified criterea
+Retrieve utility information for specified parameters
 ---
 tags:
  - Utilities
 description: |
- Retrieve utility information for specified criterea
+ Retrieve utility information for specified parameters
 
 parameters:
  - name: country

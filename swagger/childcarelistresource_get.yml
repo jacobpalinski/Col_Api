@@ -1,9 +1,9 @@
-Retrieve all rental expense information for specified parameters
+Retrieve childcare cost information for specified parameters
 ---
 tags:
- - Rent
+ - Childcare
 description: |
- Retrieve all rental expense information for specified parameters
+ Retrieve childcare cost information for specified parameters
 
 parameters:
  - name: country
@@ -21,36 +21,33 @@ parameters:
 
 responses:
  200:
-  description: Rental expense information retrieved successfully
+  description: Childcare cost information retrieved successfully
   schema:
-   $ref: "#/definitions/RentListGetResponse"
+   $ref: "#/definitions/ChildcareListGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- RentListGetResponse:
+ ChildcareListGetResponse:
   type: object
   properties:
-   rental data:
+   childcare data:
     type: array
-    items:
+    item:
      type: object
      properties:
       id:
        type: integer
-       description: rent id
-      property_location:
+       description: childcare id
+      type:
        type: string
-       description: property location
-      bedrooms:
-       type: integer
-       description: number of bedrooms
-      monthly_price:
+       description: type of childcare
+      annual_price:
        type: number
        format: float
-       description: monthly price
+       description: price
       last_updated:
        type: string
        format: date-time
@@ -61,29 +58,24 @@ definitions:
         id:
          type: integer
          description: location id
-         example: 1
         country:
          type: string
          description: country name
-         example: Australia
         city:
          type: string
          description: city name
-         example: Melbourne
     example:
      - id: 1
-       property_location: City Centre
-       bedrooms: 1
-       monthly_price: 2249.74
+       type: International Primary School, Yearly for 1 Child
+       annual_price: 30550.00
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
         - id: 1
           country: Australia
           city: Melbourne
      - id: 2
-       property_location: City Centre
-       bedrooms: 1
-       monthly_price: 3274.34
+       type: International Primary School, Yearly for 1 Child
+       annual_price: 23684.09
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
         - id: 2
@@ -92,14 +84,14 @@ definitions:
    previous:
     type: string
     description: url of previous page
-    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=1'
+    example: 'http://127.0.0.1/v1/cost-of-living/childcare?abbreviation=AUD&page=1'
    next:
     type: string
     description: url of next page
-    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=3'
+    example: 'http://127.0.0.1/v1/cost-of-living/childcare?abbreviation=AUD&page=3'
    count:
     type: integer
-    description: total number of rental data results
+    description: total number of childcare data results
     example: 75
  NotFoundResponse:
   type: object

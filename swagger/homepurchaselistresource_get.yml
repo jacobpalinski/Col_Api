@@ -1,9 +1,9 @@
-Retrieve all home purchase data for specified criterea
+Retrieve all home purchase data for specified parameters
 ---
 tags:
  - Home Purchase
 description: |
- Retrieve all home purchase data for specified criterea
+ Retrieve all home purchase data for specified parameters
 
 parameters:
  - name: country

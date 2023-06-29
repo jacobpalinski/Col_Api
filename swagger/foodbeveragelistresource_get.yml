@@ -1,9 +1,9 @@
-Retrieve all rental expense information for specified parameters
+Retrieve food and beverage item information for specified criterea
 ---
 tags:
- - Rent
+ - Food and Beverage
 description: |
- Retrieve all rental expense information for specified parameters
+ Retrieve food and beverage item information for specified criterea
 
 parameters:
  - name: country
@@ -21,36 +21,39 @@ parameters:
 
 responses:
  200:
-  description: Rental expense information retrieved successfully
+  description: Food and beverage item information retrieved successfully
   schema:
-   $ref: "#/definitions/RentListGetResponse"
+   $ref: "#/definitions/FoodBeverageListGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- RentListGetResponse:
+ FoodBeverageListGetResponse:
   type: object
   properties:
-   rental data:
+   food and beverage data:
     type: array
-    items:
+    item:
      type: object
      properties:
       id:
        type: integer
-       description: rent id
-      property_location:
+       description: transportation id
+      item_category:
        type: string
-       description: property location
-      bedrooms:
-       type: integer
-       description: number of bedrooms
-      monthly_price:
+       description: food or beverage item
+      purchase_point:
+       type: string
+       description: restaurant or supermarket item
+      item:
+       type: string
+       description: item name  
+      price:
        type: number
        format: float
-       description: monthly price
+       description: price
       last_updated:
        type: string
        format: date-time
@@ -61,45 +64,44 @@ definitions:
         id:
          type: integer
          description: location id
-         example: 1
         country:
          type: string
          description: country name
-         example: Australia
         city:
          type: string
          description: city name
-         example: Melbourne
     example:
      - id: 1
-       property_location: City Centre
-       bedrooms: 1
-       monthly_price: 2249.74
+       item_category: Food
+       purchase_point: Supermarket
+       item: Chicken Breast (1kg)
+       price: 13.64
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
         - id: 1
           country: Australia
           city: Melbourne
      - id: 2
-       property_location: City Centre
-       bedrooms: 1
-       monthly_price: 3274.34
+       item_category: Food
+       purchase_point: Supermarket
+       item: Chicken Breast (1kg)
+       price: 13.04
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
-        - id: 2
+        - id: 1
           country: Australia
           city: Sydney
    previous:
     type: string
     description: url of previous page
-    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=1'
+    example: 'http://127.0.0.1/v1/cost-of-living/foodbeverage?abbreviation=AUD&page=1'
    next:
     type: string
     description: url of next page
-    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=3'
+    example: 'http://127.0.0.1/v1/cost-of-living/foodbeverage?abbreviation=AUD&page=3'
    count:
     type: integer
-    description: total number of rental data results
+    description: total number of food and beverage data results
     example: 75
  NotFoundResponse:
   type: object

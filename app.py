@@ -11,7 +11,8 @@ def create_app(config_filename):
     app.config.from_object(config_filename)
     app.config['SWAGGER'] = {
         'title': "Cost of Living API",
-        'uiversion': 3
+        'uiversion': 3,
+        'version': '1.0.0'
     }
     orm.init_app(app)
     app.register_blueprint(cost_of_living_blueprint,url_prefix='/v1/cost-of-living')
