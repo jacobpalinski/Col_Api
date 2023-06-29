@@ -38,7 +38,6 @@ definitions:
        type: string
        format: date-time
        description: last update time
-       default: '2023-06-27T22:40:09.710Z'
       location:
        type: array
        items:

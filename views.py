@@ -514,6 +514,7 @@ class RentResource(Resource):
 
 class RentListResource(Resource):
     # Retrieves rental costs from a specified country, city, abbreviation or combination of the 3 or all ids.
+    @swag_from('swagger/rentlistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -663,6 +664,7 @@ class UtilitiesResource(Resource):
 
 class UtilitiesListResource(Resource):
     # Retrieves information regarding a utility from a given country, city, abbreviation, combination of the 3 or all utilities.
+    @swag_from('swagger/utilitieslistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')
@@ -809,6 +811,7 @@ class TransportationResource(Resource):
 
 class TransportationListResource(Resource):
     # Retrieves information for a particular mode of transport from a particular country, city, abbreviation, combination of the 3 or all modes of transport.
+    @swag_from('swagger/transportationlistresource_get.yml')
     def get(self):
         country = request.args.get('country')
         city = request.args.get('city')

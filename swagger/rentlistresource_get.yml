@@ -1,9 +1,9 @@
-Retrieve all home purchase data for specified criterea
+Retrieve all rental expense information for specified criterea
 ---
 tags:
- - Home Purchase
+ - Rent
 description: |
- Retrieve all home purchase data for specified criterea
+ Retrieve all rental expense information for specified criterea
 
 parameters:
  - name: country
@@ -21,65 +21,60 @@ parameters:
 
 responses:
  200:
-  description: Home Purchase information retrieved successfully
+  description: Rental expense information retrieved successfully
   schema:
-   $ref: "#/definitions/HomePurchaseListGetResponse"
+   $ref: "#/definitions/RentListGetResponse"
  404:
   description: Not found
   schema:
    $ref: "#/definitions/NotFoundResponse"
 
 definitions:
- HomePurchaseListGetResponse:
+ RentListGetResponse:
   type: object
   properties:
-   home purchase data:
+   rental data:
     type: array
     items:
      type: object
      properties:
       id:
        type: integer
-       description: home purchase id
-       example: 1
+       description: rent id
       property_location:
        type: string
        description: property location
-       example: City Centre
-      price_per_sqm:
+      bedrooms:
+       type: integer
+       description: number of bedrooms
+      monthly_price:
        type: number
        format: float
-       description: price per sqm
-       example: 10435.22
-      mortgage_interest:
-       type: number
-       format: float
-       description: mortagage interest rate
-       example: 5.85
+       description: monthly price
       last_updated:
        type: string
        format: date-time
        description: last update time
-       location:
-        type: object
-        properties:
-         id:
-          type: integer
-          description: location id
-          example: 1
-         country:
-          type: string
-          description: country name
-          example: Australia
-         city:
-          type: string
-          description: city name
-          example: Melbourne
+      location:
+       type: object
+       properties:
+        id:
+         type: integer
+         description: location id
+         example: 1
+        country:
+         type: string
+         description: country name
+         example: Australia
+        city:
+         type: string
+         description: city name
+         example: Melbourne
     example:
      - id: 1
        property_location: City Centre
-       price_per_sqm: 11745.22
-       mortgage_interest: 5.48
+       bedrooms: 1
+       monthly_price: 2249.74
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
         - id: 1
@@ -87,8 +82,8 @@ definitions:
           city: Melbourne
      - id: 2
        property_location: City Centre
-       price_per_sqm: 23134.92
-       mortgage_interest: 5.57
+       bedrooms: 1
+       monthly_price: 3274.34
        last_updated: '2023-06-27T22:40:09.710Z'
        location:
         - id: 2
@@ -97,14 +92,14 @@ definitions:
    previous:
     type: string
     description: url of previous page
-    example: 'http://127.0.0.1/v1/cost-of-living/homepurchase?abbreviation=AUD&page=1'
+    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=1'
    next:
     type: string
     description: url of next page
-    example: 'http://127.0.0.1/v1/cost-of-living/homepurchase?abbreviation=AUD&page=3'
+    example: 'http://127.0.0.1/v1/cost-of-living/rent?abbreviation=AUD&page=3'
    count:
     type: integer
-    description: total number of home purchase data results
+    description: total number of rental data results
     example: 75
  NotFoundResponse:
   type: object
@@ -112,6 +107,7 @@ definitions:
    message:
     type: string
     description: not found error message
+
 
 security:
  - BearerAuth: []

@@ -1,0 +1,105 @@
+Retrieve mode of transport information for specified criterea
+---
+tags:
+ - Transportation
+description: |
+ Retrieve mode of transport information for specified criterea
+
+parameters:
+ - name: country
+   in: path
+   description: country name
+   type: string
+ - name: city
+   in: path
+   description: city name
+   type: string
+ - name: abbreviation
+   in: path
+   description: currency abbreviation
+   type: string
+
+responses:
+ 200:
+  description: Mode of transport information from specific id retrieved successfully
+  schema:
+   $ref: "#/definitions/TransportationListGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ TransportationListGetResponse:
+  type: object
+  properties:
+   transportation data:
+    type: array
+    items:
+     type: object
+     properties:
+      id:
+       type: integer
+       description: transportation id
+      type:
+       type: string
+       description: type of transport
+      price:
+       type: number
+       format: float
+       description: price
+      last_updated:
+       type: string
+       format: date-time
+       description: last update time
+      location:
+       type: object
+       properties:
+        id:
+         type: integer
+         description: location id
+        country:
+         type: string
+         description: country name
+        city:
+         type: string
+         description: city name
+    example:
+     - id: 1
+       type: Monthly Train Pass
+       price: 165.80
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - id: 1
+          country: Australia
+          city: Melbourne
+     - id: 2
+       type: Monthly Train Pass
+       price: 217.39
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - id: 2
+          country: Australia
+          city: Sydney
+   previous:
+    type: string
+    description: url of previous page
+    example: 'http://127.0.0.1/v1/cost-of-living/transportation?abbreviation=AUD&page=1'
+   next:
+    type: string
+    description: url of next page
+    example: 'http://127.0.0.1/v1/cost-of-living/transportation?abbreviation=AUD&page=3'
+   count:
+    type: integer
+    description: total number of transportation data results
+    example: 75
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []

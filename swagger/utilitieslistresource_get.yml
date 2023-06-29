@@ -1,0 +1,105 @@
+Retrieve utility information for specified criterea
+---
+tags:
+ - Utilities
+description: |
+ Retrieve utility information for specified criterea
+
+parameters:
+ - name: country
+   in: path
+   description: country name
+   type: string
+ - name: city
+   in: path
+   description: city name
+   type: string
+ - name: abbreviation
+   in: path
+   description: currency abbreviation
+   type: string
+
+responses:
+ 200:
+  description: Utility information retrieved successfully
+  schema:
+   $ref: "#/definitions/UtilitiesListGetResponse"
+ 404:
+  description: Not found
+  schema:
+   $ref: "#/definitions/NotFoundResponse"
+
+definitions:
+ UtilitiesListGetResponse:
+  type: object
+  properties:
+   utilities:
+    type: array
+    items:
+     type: object
+     properties:
+      id:
+       type: integer
+       description: utilities id
+      utility:
+       type: string
+       description: utility
+      monthly_price:
+       type: number
+       format: float
+       description: monthly price
+      last_updated:
+       type: string
+       format: date-time
+       description: last update time
+      location:
+       type: object
+       properties:
+        id:
+         type: integer
+         description: location id
+        country:
+         type: string
+         description: country name
+        city:
+         type: string
+         description: city name
+    example: 
+     - id: 1
+       utility: Electricity, Heating, Cooling, Water, Garbage for 85sqm Apartment
+       monthly_price: 269.70
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - id: 1
+          country: Australia
+          city: Melbourne
+     - id: 2
+       utility: Electricity, Heating, Cooling, Water, Garbage for 85sqm Apartment
+       monthly_price: 306.96
+       last_updated: '2023-06-27T22:40:09.710Z'
+       location:
+        - id: 2
+          country: Australia
+          city: Sydney
+   previous:
+    type: string
+    description: url of previous page
+    example: 'http://127.0.0.1/v1/cost-of-living/utilities?abbreviation=AUD&page=1'
+   next:
+    type: string
+    description: url of next page
+    example: 'http://127.0.0.1/v1/cost-of-living/utilities?abbreviation=AUD&page=3'
+   count:
+    type: integer
+    description: total number of utilities results
+    example: 75
+ NotFoundResponse:
+  type: object
+  properties:
+   message:
+    type: string
+    description: not found error message
+
+
+security:
+ - BearerAuth: []
