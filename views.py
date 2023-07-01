@@ -6,7 +6,7 @@ from httpstatus import HttpStatus
 from models import (User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
 HomePurchase,HomePurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
 Transportation,TransportationSchema,FoodBeverage, FoodBeverageSchema,
-Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
+Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema, INCLUDE)
 from helpers import *
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, Float
@@ -52,7 +52,7 @@ class UserResource(Resource):
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp,str):
                 user = User.query.filter_by(id = resp).first()
-                response = {'data': {
+                response = {'details': {
                     'user_id': user.id,
                     'email' : user.email,
                     'creation_date': str(user.creation_date)
@@ -69,8 +69,11 @@ class UserResource(Resource):
     @swag_from('swagger/userresource_post.yml')
     def post(self):
         user_register_dict = request.get_json()
-        request_not_empty(user_register_dict)
-        validate_request(user_schema,user_register_dict)
+        try:
+            user_schema.load(user_register_dict)
+        except ValidationError:
+            response = {'message': 'Invalid email address'}
+            return response, HttpStatus.bad_request_400.value
 
         user = User.query.filter_by(email = user_register_dict['email']).first()
         if not user and not user_register_dict.get('admin') == os.environ.get('ADMIN_KEY'):
@@ -78,11 +81,11 @@ class UserResource(Resource):
                 user = User(email = user_register_dict['email'])
                 user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
-                response = {'message': 'successfully registered'}
+                response = {'message': 'Successfully registered'}
                 return response, HttpStatus.created_201.value
 
             except Exception as e:
-                response = {'message' : 'Error. Please try again'}
+                response = {'message' : 'Invalid password'}
                 return response, HttpStatus.unauthorized_401.value
         
         elif not user and user_register_dict['admin'] == os.environ.get('ADMIN_KEY'):
@@ -90,11 +93,11 @@ class UserResource(Resource):
                 user = User(email = user_register_dict['email'],admin = True)
                 user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
-                response = {'message': 'successfully registered with admin privileges'}
+                response = {'message': 'Successfully registered with admin privileges'}
                 return response, HttpStatus.created_201.value
             
             except Exception as e:
-                response = {'message' : 'Error. Please try again'}
+                response = {'message' : 'Invalid password'}
                 return response, HttpStatus.unauthorized_401.value
         
         else:
@@ -106,8 +109,11 @@ class LoginResource(Resource):
     @swag_from('swagger/loginresource_post.yml')
     def post(self):
         user_dict = request.get_json()
-        request_not_empty(user_dict)
-        validate_request(user_schema,user_dict)
+        try:
+            user_schema.load(user_dict)
+        except ValidationError:
+            response = {'message': 'Invalid email address'}
+            return response, HttpStatus.bad_request_400.value
 
         try:
             user = User.query.filter_by(email = user_dict['email']).first()
@@ -152,9 +158,8 @@ class LogoutResource(Resource):
                     response = {'message': e}
                     return response, HttpStatus.bad_request_400.value
             else:
-                response = {'message' : resp}
-                return response, HttpStatus.unauthorized_401.value
-            
+                response = {'message' : 'Provide a valid auth token'}
+                return response, HttpStatus.forbidden_403.value  
         else:
             response = {'message' : 'Provide a valid auth token'}
             return response, HttpStatus.forbidden_403.value
@@ -164,8 +169,11 @@ class ResetPasswordResource(Resource):
     @swag_from('swagger/resetpasswordresource_post.yml')
     def post(self):
         reset_password_dict = request.get_json()
-        request_not_empty(reset_password_dict)
-        validate_request(user_schema,reset_password_dict)
+        try:
+            user_schema.load(reset_password_dict)
+        except ValidationError:
+            response = {'message': 'Invalid email address'}
+            return response, HttpStatus.bad_request_400.value
         
         try:
             user = User.query.filter_by(email = reset_password_dict['email']).first()
@@ -190,6 +198,55 @@ class CurrencyResource(Resource):
             currency = Currency.query.get_or_404(id)
             dumped_currency = currency_schema.dump(currency)
             return dumped_currency
+    
+    # Updates abbreviation and exchange rate for specific id
+    def patch(self, id):
+        currency = Currency.query.get_or_404(id)
+        
+        currency_dict = request.get_json(force = True)
+        try:
+            currency_schema.load(currency_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'abbreviation' in currency_dict and currency_dict['abbreviation'] != None:
+                    currency.abbreviation = currency_dict['abbreviation']
+                if 'usd_to_local_exchange_rate' in currency_dict and \
+                currency_dict['usd_to_local_exchange_rate'] != None:
+                    currency.usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate']
+                currency.last_updated = datetime.now()
+            
+                currency.update()
+                response = {'message': 'Currency id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    def delete(self, id):
+        admin_dict = request.get_json()
+        currency = Currency.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                currency.delete(currency)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class CurrencyListResource(Resource):
     # Retrieves USD/local currency exchange rate for all currencies
@@ -209,12 +266,15 @@ class CurrencyListResource(Resource):
     # Creates a new currency
     def post(self):
         currency_dict = request.get_json()
-        request_not_empty(currency_dict)
-        validate_request(currency_schema, currency_dict)
+        try:
+            currency_schema.load(currency_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
         
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
 
-            if not Currency.is_abbreviation_unique(id=0,abbreviation = currency_dict['abbreviation']):
+            if not Currency.is_abbreviation_unique(abbreviation = currency_dict['abbreviation']):
                 response = {'message': f"Error currency abbreviation {currency_dict['abbreviation']} already exists"}
                 return response, HttpStatus.bad_request_400.value
 
@@ -232,53 +292,6 @@ class CurrencyListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates abbreviation and exchange rate for specific id
-    def patch(self, id):
-        currency = Currency.query.get_or_404(id)
-        
-        currency_dict = request.get_json(force = True)
-        request_not_empty(currency_dict)
-        validate_request(currency_schema, currency_dict)
-
-        if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'abbreviation' in currency_dict and currency_dict['abbreviation'] != None:
-                    currency.abbreviation = currency_dict['abbreviation']
-                if 'usd_to_local_exchange_rate' in currency_dict and \
-                currency_dict['usd_to_local_exchange_rate'] != None:
-                    currency.usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate']
-                currency.last_updated = datetime.now()
-            
-                currency.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes currency
-    def delete(self, id):
-        admin_dict = request.get_json()
-        currency = Currency.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                currency.delete(currency)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class LocationResource(Resource):
     # Retrieve information from specific id
@@ -288,6 +301,24 @@ class LocationResource(Resource):
             location = Location.query.get_or_404(id)
             dumped_location = location_schema.dump(location)
             return dumped_location
+    
+    # Deletes location
+    def delete(self, id):
+        admin_dict = request.get_json()
+        location = Location.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                location.delete(location)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class LocationListResource(Resource):
     # Retrieve information regarding all locations
@@ -307,8 +338,11 @@ class LocationListResource(Resource):
     # Creates a new location
     def post(self):
         location_dict = request.get_json()
-        request_not_empty(location_dict)
-        validate_request(location_schema, location_dict)
+        try:
+            location_schema.load(location_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if location_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -332,25 +366,6 @@ class LocationListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Deletes location
-    def delete(self, id):
-        admin_dict = request.get_json()
-        location = Location.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                location.delete(location)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class HomePurchaseResource(Resource):
     # Retrieve home purchase price information from specific id
@@ -360,6 +375,58 @@ class HomePurchaseResource(Resource):
             home_purchase = HomePurchase.query.get_or_404(id)
             dumped_home_purchase = home_purchase_schema.dump(home_purchase)
             return dumped_home_purchase
+    
+    # Updates property location, price per sqm and mortgage interest rate for specified record
+    def patch(self, id):
+        home_purchase = HomePurchase.query.get_or_404(id)
+        
+        home_purchase_dict = request.get_json(force = True)
+        try:
+            home_purchase_schema.load(home_purchase_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'property_location' in home_purchase_dict and home_purchase_dict['property_location'] != None:
+                    home_purchase.property_location = home_purchase_dict['property_location']
+                if 'price_per_sqm' in home_purchase_dict and \
+                home_purchase_dict['price_per_sqm'] != None:
+                    home_purchase.price_per_sqm = home_purchase_dict['price_per_sqm']
+                if 'mortgage_interest' in home_purchase_dict and \
+                home_purchase_dict['mortgage_interest'] != None:
+                    home_purchase.mortgage_interest = home_purchase_dict['mortgage_interest']
+            
+                home_purchase.update()
+                response = {'message': 'HomePurchase id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+            
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes HomePurchase record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        home_purchase = HomePurchase.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                home_purchase.delete(home_purchase)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class HomePurchaseListResource(Resource):
     # Retrieves home purchase price information from a specified country, city, abbreviation, combination of the 3 or all ids
@@ -380,13 +447,13 @@ class HomePurchaseListResource(Resource):
                 if country:
                     qry = qry.filter(Location.country == country)
                 if city:
-                    qry= qry.filter(Location.city == city)
+                    qry = qry.filter(Location.city == city)
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
                     dumped_home_purchase = home_purchase_schema.dump(qry_res, many = True)
                     for result in dumped_home_purchase:
-                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
+                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion, 2)
                     return dumped_home_purchase
                 
                 else:
@@ -399,7 +466,7 @@ class HomePurchaseListResource(Resource):
                     )
                     dumped_home_purchase = pagination_helper.paginate_query()
                     for result in dumped_home_purchase['home purchase data']:
-                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion,2)
+                        result['price_per_sqm'] = round(result['price_per_sqm'] * conversion, 2)
                     return dumped_home_purchase
             
             else:
@@ -425,8 +492,11 @@ class HomePurchaseListResource(Resource):
     # Creates an record for relevant purchasing costs of buying a property in a particular location
     def post(self):
         home_purchase_dict = request.get_json()
-        request_not_empty(home_purchase_dict)
-        validate_request(home_purchase_schema, home_purchase_dict)
+        try:
+            home_purchase_schema.load(home_purchase_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -453,55 +523,6 @@ class HomePurchaseListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates property location, price per sqm and mortgage interest rate for specified record
-    def patch(self, id):
-        home_purchase = HomePurchase.query.get_or_404(id)
-        
-        home_purchase_dict = request.get_json(force = True)
-        request_not_empty(home_purchase_dict)
-        validate_request(home_purchase_schema, home_purchase_dict)
-
-        if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'property_location' in home_purchase_dict and home_purchase_dict['property_location'] != None:
-                    home_purchase.property_location = home_purchase_dict['property_location']
-                if 'price_per_sqm' in home_purchase_dict and \
-                home_purchase_dict['price_per_sqm'] != None:
-                    home_purchase.price_per_sqm = home_purchase_dict['price_per_sqm']
-                if 'mortgage_interest' in home_purchase_dict and \
-                home_purchase_dict['mortgage_interest'] != None:
-                    home_purchase.mortgage_interest = home_purchase_dict['mortgage_interest']
-            
-                home_purchase.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-            
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Home_Purchase record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        home_purchase = HomePurchase.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                home_purchase.delete(home_purchase)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class RentResource(Resource):
     # Retrieve rental costs from a specific id
@@ -511,6 +532,58 @@ class RentResource(Resource):
             rent = Rent.query.get_or_404(id)
             dumped_rent = rent_schema.dump(rent)
             return dumped_rent
+    
+    # Updates property location, number of bedrooms and monthly price for a particular rental record
+    def patch(self, id):
+        rent = Rent.query.get_or_404(id)
+        
+        rent_dict = request.get_json(force = True)
+        try:
+            rent_schema.load(rent_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'property_location' in rent_dict and rent_dict['property_location'] != None:
+                    rent.property_location = rent_dict['property_location']
+                if 'bedrooms' in rent_dict and \
+                rent_dict['bedrooms'] != None:
+                    rent.bedrooms = rent_dict['bedrooms']
+                if 'monthly_price' in rent_dict and \
+                rent_dict['monthly_price'] != None:
+                    rent.monthly_price = rent_dict['monthly_price']
+            
+                rent.update()
+                response = {'message': 'Rent id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes Rent record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        rent = Rent.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                rent.delete(rent)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class RentListResource(Resource):
     # Retrieves rental costs from a specified country, city, abbreviation or combination of the 3 or all ids.
@@ -576,8 +649,11 @@ class RentListResource(Resource):
     # Creates a record of rental costs for a particular location
     def post(self):
         rent_dict = request.get_json()
-        request_not_empty(rent_dict)
-        validate_request(rent_schema, rent_dict)
+        try:
+            rent_schema.load(rent_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -603,55 +679,6 @@ class RentListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates property location, number of bedrooms and monthly price for a particular rental record
-    def patch(self, id):
-        rent = Rent.query.get_or_404(id)
-        
-        rent_dict = request.get_json(force = True)
-        request_not_empty(rent_dict)
-        validate_request(rent_schema, rent_dict)
-
-        if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'property_location' in rent_dict and rent_dict['property_location'] != None:
-                    rent.property_location = rent_dict['property_location']
-                if 'bedrooms' in rent_dict and \
-                rent_dict['bedrooms'] != None:
-                    rent.bedrooms = rent_dict['bedrooms']
-                if 'monthly_price' in rent_dict and \
-                rent_dict['monthly_price'] != None:
-                    rent.monthly_price = rent_dict['monthly_price']
-            
-                rent.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Rent record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        rent = Rent.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                rent.delete(rent)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class UtilitiesResource(Resource):
     # Retrieve information regarding utility from a specific id
@@ -661,6 +688,55 @@ class UtilitiesResource(Resource):
             utilities = Utilities.query.get_or_404(id)
             dumped_utilities = utilities_schema.dump(utilities)
             return dumped_utilities
+    
+    # Updates utility name, monthly price for a given utility
+    def patch(self, id):
+        utilities = Utilities.query.get_or_404(id)
+        
+        utilities_dict = request.get_json(force = True)
+        try:
+            utilities_schema.load(utilities_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'utility' in utilities_dict and utilities_dict['utility'] != None:
+                    utilities.utility = utilities_dict['utility']
+                if 'monthly_price' in utilities_dict and \
+                utilities_dict['monthly_price'] != None:
+                    utilities.monthly_price = utilities_dict['monthly_price']
+            
+                utilities.update()
+                response = {'message': 'Utilities id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes Utilities record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        utilities = Utilities.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                utilities.delete(utilities)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class UtilitiesListResource(Resource):
     # Retrieves information regarding a utility from a given country, city, abbreviation, combination of the 3 or all utilities.
@@ -726,8 +802,11 @@ class UtilitiesListResource(Resource):
     # Creates a new utility record
     def post(self):
         utilities_dict = request.get_json()
-        request_not_empty(utilities_dict)
-        validate_request(utilities_schema, utilities_dict)
+        try:
+            utilities_schema.load(utilities_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -753,52 +832,6 @@ class UtilitiesListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value   
-    
-    # Updates utility name, monthly price for a given utility
-    def patch(self, id):
-        utilities = Utilities.query.get_or_404(id)
-        
-        utilities_dict = request.get_json(force = True)
-        request_not_empty(utilities_dict)
-        validate_request(utilities_schema, utilities_dict)
-
-        if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'utility' in utilities_dict and utilities_dict['utility'] != None:
-                    utilities.utility = utilities_dict['utility']
-                if 'monthly_price' in utilities_dict and \
-                utilities_dict['monthly_price'] != None:
-                    utilities.monthly_price = utilities_dict['monthly_price']
-            
-                utilities.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Utilities record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        utilities = Utilities.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                utilities.delete(utilities)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class TransportationResource(Resource):
     # Retrieves information regarding mode of transport from a specific id
@@ -808,6 +841,55 @@ class TransportationResource(Resource):
             transportation = Transportation.query.get_or_404(id)
             dumped_transportation = transportation_schema.dump(transportation)
             return dumped_transportation
+    
+    # Updates type and price for a particular record
+    def patch(self, id):
+        transportation = Transportation.query.get_or_404(id)
+        
+        transportation_dict = request.get_json(force = True)
+        try:
+            transportation_schema.load(transportation_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'type' in transportation_dict and transportation_dict['type'] != None:
+                    transportation.type = transportation_dict['type']
+                if 'price' in transportation_dict and \
+                transportation_dict['price'] != None:
+                    transportation.price = transportation_dict['price']
+            
+                transportation.update()
+                response = {'message': 'Transportation id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes Transportation record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        transportation = Transportation.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                transportation.delete(transportation)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class TransportationListResource(Resource):
     # Retrieves information for a particular mode of transport from a particular country, city, abbreviation, combination of the 3 or all modes of transport.
@@ -873,8 +955,11 @@ class TransportationListResource(Resource):
     # Creates a new record for a mode of transport
     def post(self):
         transportation_dict = request.get_json()
-        request_not_empty(transportation_dict)
-        validate_request(transportation_schema, transportation_dict)
+        try:
+            transportation_schema.load(transportation_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -900,52 +985,6 @@ class TransportationListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates type and price for a particular record
-    def patch(self, id):
-        transportation = Transportation.query.get_or_404(id)
-        
-        transportation_dict = request.get_json(force = True)
-        request_not_empty(transportation_dict)
-        validate_request(transportation_schema, transportation_dict)
-
-        if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'type' in transportation_dict and transportation_dict['type'] != None:
-                    transportation.type = transportation_dict['type']
-                if 'price' in transportation_dict and \
-                transportation_dict['price'] != None:
-                    transportation.price = transportation_dict['price']
-            
-                transportation.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Transportation record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        transportation = Transportation.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                transportation.delete(transportation)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class FoodBeverageResource(Resource):
     # Retrieves information regarding a food and beverage item from a specific id
@@ -956,6 +995,61 @@ class FoodBeverageResource(Resource):
                 food_and_beverage = FoodBeverage.query.get_or_404(id)
                 dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
                 return dumped_food_and_beverage
+    
+    # Updates item category, purchase point, item and price for a given item
+    def patch(self, id):
+        food_and_beverage = FoodBeverage.query.get_or_404(id)
+        
+        food_and_beverage_dict = request.get_json(force = True)
+        try:
+            food_and_beverage_schema.load(food_and_beverage_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'item_category' in food_and_beverage_dict and food_and_beverage_dict['item_category'] != None:
+                    food_and_beverage.item_category = food_and_beverage_dict['item_category']
+                if 'purchase_point' in food_and_beverage_dict and \
+                food_and_beverage_dict['purchase_point'] != None:
+                    food_and_beverage.purchase_point = food_and_beverage_dict['purchase_point']
+                if 'item' in food_and_beverage_dict and \
+                food_and_beverage_dict['item'] != None:
+                    food_and_beverage.item = food_and_beverage_dict['item']
+                if 'price' in food_and_beverage_dict and \
+                food_and_beverage_dict['price'] != None:
+                    food_and_beverage.price = food_and_beverage_dict['price']
+            
+                food_and_beverage.update()
+                response = {'message': 'FoodBeverage id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes FoodBeverage record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        food_and_beverage = FoodBeverage.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                food_and_beverage.delete(food_and_beverage)
+                return HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class FoodBeverageListResource(Resource):
     @swag_from('swagger/foodbeveragelistresource_get.yml')
@@ -1022,8 +1116,11 @@ class FoodBeverageListResource(Resource):
     # Creates a new record for food and beverage item
     def post(self):
         food_and_beverage_dict = request.get_json()
-        request_not_empty(food_and_beverage_dict)
-        validate_request(food_and_beverage_schema, food_and_beverage_dict)
+        try:
+            food_and_beverage_schema.load(food_and_beverage_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1051,58 +1148,6 @@ class FoodBeverageListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates item category, purchase point, item and price for a given item
-    def patch(self, id):
-        food_and_beverage = FoodBeverage.query.get_or_404(id)
-        
-        food_and_beverage_dict = request.get_json(force = True)
-        request_not_empty(food_and_beverage_dict)
-        validate_request(food_and_beverage_schema, food_and_beverage_dict)
-
-        if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'item_category' in food_and_beverage_dict and food_and_beverage_dict['item_category'] != None:
-                    food_and_beverage.item_category = food_and_beverage_dict['item_category']
-                if 'purchase_point' in food_and_beverage_dict and \
-                food_and_beverage_dict['purchase_point'] != None:
-                    food_and_beverage.purchase_point = food_and_beverage_dict['purchase_point']
-                if 'item' in food_and_beverage_dict and \
-                food_and_beverage_dict['item'] != None:
-                    food_and_beverage.item = food_and_beverage_dict['item']
-                if 'price' in food_and_beverage_dict and \
-                food_and_beverage_dict['price'] != None:
-                    food_and_beverage.price = food_and_beverage_dict['price']
-            
-                food_and_beverage.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Food_and_Beverage record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        food_and_beverage = FoodBeverage.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                food_and_beverage.delete(food_and_beverage)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class ChildcareResource(Resource):
     # Retrieves information regarding childcare service from a specific id
@@ -1112,6 +1157,57 @@ class ChildcareResource(Resource):
             childcare = Childcare.query.get_or_404(id)
             dumped_childcare = childcare_schema.dump(childcare)
             return dumped_childcare
+    
+    # Updates type and annual price information for a given childcare service
+    def patch(self, id):
+        childcare = Childcare.query.get_or_404(id)
+        
+        childcare_dict = request.get_json(force = True)
+        try:
+            childcare_schema.load(childcare_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'type' in childcare_dict and childcare_dict['type'] != None:
+                    childcare.type = childcare_dict['type']
+                if 'annual_price' in childcare_dict and \
+                childcare_dict['annual_price'] != None:
+                    childcare.annual_price = childcare_dict['annual_price']
+            
+                childcare.update()
+                response = {'message': 'Childcare id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                orm.session.rollback()
+                response = {"error": str(e)}
+                return response, HttpStatus.bad_request_400.value
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes Childcare record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        childcare = Childcare.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                childcare.delete(childcare)
+                return response, HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class ChildcareListResource(Resource):
     # Retrives information regarding childcare service from a given country, city, abbreviation, combination of the 3 or all services.
@@ -1177,8 +1273,11 @@ class ChildcareListResource(Resource):
     # Creates a new childcare record
     def post(self):
         childcare_dict = request.get_json()
-        request_not_empty(childcare_dict)
-        validate_request(childcare_schema, childcare_dict)
+        try:
+            childcare_schema.load(childcare_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1204,54 +1303,6 @@ class ChildcareListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates type and annual price information for a given childcare service
-    def patch(self, id):
-        childcare = Childcare.query.get_or_404(id)
-        
-        childcare_dict = request.get_json(force = True)
-        request_not_empty(childcare_dict)
-        validate_request(childcare_schema, childcare_dict)
-
-        if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'type' in childcare_dict and childcare_dict['type'] != None:
-                    childcare.type = childcare_dict['type']
-                if 'annual_price' in childcare_dict and \
-                childcare_dict['annual_price'] != None:
-                    childcare.annual_price = childcare_dict['annual_price']
-            
-                childcare.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                orm.session.rollback()
-                response = {"error": str(e)}
-                return response, HttpStatus.bad_request_400.value
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Childcare record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        childcare = Childcare.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                childcare.delete(childcare)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class ApparelResource(Resource):
     # Retrieves apparel information from a specific id
@@ -1261,6 +1312,55 @@ class ApparelResource(Resource):
             apparel = Apparel.query.get_or_404(id)
             dumped_apparel = apparel_schema.dump(apparel)
             return dumped_apparel
+    
+    # Updates item name and price for a given piece of apparel
+    def patch(self, id):
+        apparel = Apparel.query.get_or_404(id)
+        
+        apparel_dict = request.get_json(force = True)
+        try:
+            apparel_schema.load(apparel_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'item' in apparel_dict and apparel_dict['item'] != None:
+                    apparel.item = apparel_dict['item']
+                if 'price' in apparel_dict and \
+                apparel_dict['price'] != None:
+                    apparel.price = apparel_dict['price']
+            
+                apparel.update()
+                response = {'message': 'Apparel id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+
+    # Deletes Apparel record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        apparel = Apparel.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                apparel.delete(apparel)
+                return response, HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class ApparelListResource(Resource):
     # Retrieves information for a given apparel item from a particular country, city, abbreviation, combination of the 3 or all items.
@@ -1325,8 +1425,11 @@ class ApparelListResource(Resource):
     # Creates a new apparel item
     def post(self):
         apparel_dict = request.get_json()
-        request_not_empty(apparel_dict)
-        validate_request(apparel_schema, apparel_dict)
+        try:
+            apparel_schema.load(apparel_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1352,52 +1455,6 @@ class ApparelListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates item name and price for a given piece of apparel
-    def patch(self, id):
-        apparel = Apparel.query.get_or_404(id)
-        
-        apparel_dict = request.get_json(force = True)
-        request_not_empty(apparel_dict)
-        validate_request(apparel_schema, apparel_dict)
-
-        if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'item' in apparel_dict and apparel_dict['item'] != None:
-                    apparel.item = apparel_dict['item']
-                if 'price' in apparel_dict and \
-                apparel_dict['price'] != None:
-                    apparel.price = apparel_dict['price']
-            
-                apparel.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-
-    # Deletes Apparel record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        apparel = Apparel.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                apparel.delete(apparel)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 class LeisureResource(Resource):
     # Retrieves information for a leisure activity from a specified id
@@ -1407,6 +1464,55 @@ class LeisureResource(Resource):
             leisure = Leisure.query.get_or_404(id)
             dumped_leisure = leisure_schema.dump(leisure)
             return dumped_leisure
+    
+    # Updates activity name and price information for a given leisure activity
+    def patch(self,id):
+        leisure = Leisure.query.get_or_404(id)
+        
+        leisure_dict = request.get_json(force = True)
+        try:
+            leisure_schema.load(leisure_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
+
+        if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+
+            try:
+                if 'activity' in leisure_dict and leisure_dict['activity'] != None:
+                    leisure.activity = leisure_dict['activity']
+                if 'price' in leisure_dict and \
+                leisure_dict['price'] != None:
+                    leisure.price = leisure_dict['price']
+            
+                leisure.update()
+                response = {'message': 'Leisure id updated successfully'}
+                return response, HttpStatus.ok_200.value
+
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Deletes Leisure record
+    def delete(self, id):
+        admin_dict = request.get_json()
+        leisure = Leisure.query.get_or_404(id)
+
+        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+        
+            try:
+                leisure.delete(leisure)
+                return response, HttpStatus.no_content_204.value
+            
+            except SQLAlchemyError as e:
+                sql_alchemy_error_response(e)
+        
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
 
 class LeisureListResource(Resource):
     # Retrieves information for a given leisure acitivty from a given country, city, abbreviation, combination of the three or all activities.
@@ -1471,8 +1577,11 @@ class LeisureListResource(Resource):
     # Creates a new leisure activity
     def post(self):
         leisure_dict = request.get_json()
-        request_not_empty(leisure_dict)
-        validate_request(leisure_schema, leisure_dict)
+        try:
+            leisure_schema.load(leisure_dict, unknown = INCLUDE)
+        except ValidationError:
+            response = {'message': 'Invalid schema'}
+            return response, HttpStatus.bad_request_400.value
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
         
@@ -1498,57 +1607,11 @@ class LeisureListResource(Resource):
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
-    
-    # Updates activity name and price information for a given leisure activity
-    def patch(self,id):
-        leisure = Leisure.query.get_or_404(id)
-        
-        leisure_dict = request.get_json(force = True)
-        request_not_empty(leisure_dict)
-        validate_request(leisure_schema, leisure_dict)
-
-        if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'activity' in leisure_dict and leisure_dict['activity'] != None:
-                    leisure.activity = leisure_dict['activity']
-                if 'price' in leisure_dict and \
-                leisure_dict['price'] != None:
-                    leisure.price = leisure_dict['price']
-            
-                leisure.update()
-                self.get(id)
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
-    # Deletes Leisure record
-    def delete(self, id):
-        admin_dict = request.get_json()
-        leisure = Leisure.query.get_or_404(id)
-
-        if admin_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
-            try:
-                leisure.delete(leisure)
-                response = {'message': 'Successfully deleted'}
-                return response, HttpStatus.no_content_204.value
-            
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
 cost_of_living.add_resource(UserResource,'/auth/user')
 cost_of_living.add_resource(LoginResource,'/auth/login')
 cost_of_living.add_resource(LogoutResource, '/auth/logout')
-cost_of_living.add_resource(ResetPasswordResource,'/user/password_reset')
+cost_of_living.add_resource(ResetPasswordResource,'/auth/user/password_reset')
 cost_of_living.add_resource(CurrencyResource,'/currencies/<int:id>')        
 cost_of_living.add_resource(CurrencyListResource, '/currencies')
 cost_of_living.add_resource(LocationResource, '/locations/<int:id>')

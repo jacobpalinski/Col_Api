@@ -36,17 +36,17 @@ class User(orm.Model,ResourceAddUpdateDelete):
 
     def check_password_strength_and_hash_if_ok(self, password):
         if len(password) < 8:
-            return 'The password is too short. Please, specify a password with at least 8 characters'
+            return False
         if len(password) > 32:
-            return 'The password is too long. Please, specify a password with no more than 32 characters'
+            return False
         if re.search(r'[A-Z]', password) == None:
-            return 'The password must include at least one uppercase letter'
+            return False
         if re.search(r'[a-z]', password) == None:
-            return 'The password must include at least one lowercase letter'
+            return False
         if re.search(r'\d', password) == None:
-            return 'The password must include at least one digit'
+            return False
         if re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) == None:
-            return 'The password must include at least one symbol'
+            return False
         self.password_hash = password_context.hash(password)
     
     def verify_password(self,password):
@@ -112,15 +112,12 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     location = orm.relationship('Location',backref = orm.backref('currency'))
 
     @classmethod
-    def is_abbreviation_unique(cls, id, abbreviation):
-        existing_abbreviation = cls.query.filter_by(abbreviation=abbreviation).first()
+    def is_abbreviation_unique(cls, abbreviation):
+        existing_abbreviation = cls.query.filter_by(abbreviation = abbreviation).first()
         if existing_abbreviation is None:
             return True
         else:
-            if existing_abbreviation.id == id:
-                return True
-            else:
-                return False
+            return False
 
     def __init__(self,abbreviation,usd_to_local_exchange_rate):
         self.abbreviation = abbreviation
@@ -251,12 +248,12 @@ class Leisure(orm.Model,ResourceAddUpdateDelete):
 
 class UserSchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    email = fields.String()
+    email = fields.Email(required = True)
     password = fields.String()
 
 class CurrencySchema(ma.Schema):
     id = fields.Integer(dump_only = True)
-    abbreviation = fields.String(validate = validate.Length(3))
+    abbreviation = fields.String(validate = validate.Length(min= 3, max = 3))
     usd_to_local_exchange_rate = fields.Float()
     last_updated = fields.DateTime()
     location = fields.Nested('LocationSchema',only = ['city'],many = True)

@@ -5,19 +5,6 @@ from flask import url_for
 from flask import current_app
 from marshmallow import ValidationError
 
-# Checks post or patch request is not made with an empty body
-def request_not_empty(dict):
-    if dict == False:
-        response = {'message': 'No input data provided'}
-        return response, HttpStatus.bad_request_400.value
-
-# Validates request body is inline with schema specified using marshmallow
-def validate_request(schema,dict):
-    try:
-        validated_data = schema.validate(dict)
-    except ValidationError as error:
-        return error.messages, HttpStatus.bad_request_400.value
-
 # Generates error statement for SQLAlchemy error
 def sql_alchemy_error_response(error):
     orm.session.rollback()
