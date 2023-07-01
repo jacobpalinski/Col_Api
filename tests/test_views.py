@@ -440,15 +440,15 @@ class TestLocationResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 2
-        assert get_first_page_response_data['results'][0]['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['city'] == 'Perth'
-        assert get_first_page_response_data['results'][0]['currency']['id'] == 1
-        assert get_first_page_response_data['results'][0]['currency']['abbreviation'] == 'AUD'
-        assert get_first_page_response_data['results'][1]['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['currency']['id'] == 1
-        assert get_first_page_response_data['results'][1]['currency']['abbreviation'] == 'AUD'
+        assert len(get_first_page_response_data['locations']) == 2
+        assert get_first_page_response_data['locations'][0]['country'] == 'Australia'
+        assert get_first_page_response_data['locations'][0]['city'] == 'Perth'
+        assert get_first_page_response_data['locations'][0]['currency']['id'] == 1
+        assert get_first_page_response_data['locations'][0]['currency']['abbreviation'] == 'AUD'
+        assert get_first_page_response_data['locations'][1]['country'] == 'Australia'
+        assert get_first_page_response_data['locations'][1]['city'] == 'Melbourne'
+        assert get_first_page_response_data['locations'][1]['currency']['id'] == 1
+        assert get_first_page_response_data['locations'][1]['currency']['abbreviation'] == 'AUD'
         assert get_first_page_response_data['count'] == 2
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -628,25 +628,25 @@ class TestHomePurchaseResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['price_per_sqm'] == 6339
-        assert get_first_page_response_data['results'][0]['mortgage_interest'] == 5.09
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['price_per_sqm'] == 7252
-        assert get_first_page_response_data['results'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['price_per_sqm'] == 14619
-        assert get_first_page_response_data['results'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['home purchase data']) == 3
+        assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6339
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 7252
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 14619
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -676,25 +676,25 @@ class TestHomePurchaseResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['price_per_sqm'] == 9191.55
-        assert get_first_page_response_data['results'][0]['mortgage_interest'] == 5.09
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['price_per_sqm'] == 10515.4
-        assert get_first_page_response_data['results'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['price_per_sqm'] == 21197.55
-        assert get_first_page_response_data['results'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['home purchase data']) == 3
+        assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 9191.55
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 10515.4
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 21197.55
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -747,31 +747,31 @@ class TestHomePurchaseResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['price_per_sqm'] == 6339
-        assert get_first_page_response_data['results'][0]['mortgage_interest'] == 5.09
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['price_per_sqm'] == 7252
-        assert get_first_page_response_data['results'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['price_per_sqm'] == 14619
-        assert get_first_page_response_data['results'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][3]['price_per_sqm'] == 20775
-        assert get_first_page_response_data['results'][3]['mortgage_interest'] == 1.92
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['home purchase data']) == 4
+        assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6339
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 7252
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 14619
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['home purchase data'][3]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 20775
+        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 1.92
+        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -824,30 +824,30 @@ class TestHomePurchaseResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['price_per_sqm'] == 9191.55
-        assert get_first_page_response_data['results'][0]['mortgage_interest'] == 5.09
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['price_per_sqm'] == 10515.4
-        assert get_first_page_response_data['results'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['price_per_sqm'] == 21197.55
-        assert get_first_page_response_data['results'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['price_per_sqm'] == 30123.75
-        assert get_first_page_response_data['results'][3]['mortgage_interest'] == 1.92
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['home purchase data']) == 4
+        assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 9191.55
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 10515.4
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 21197.55
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 30123.75
+        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 1.92
+        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1077,25 +1077,25 @@ class TestRentResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 1408
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 1642
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 1999
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['rental data']) == 3
+        assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1408
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 1642
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1999
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1125,25 +1125,25 @@ class TestRentResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 2041.6
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 2380.9
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 2898.55
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['rental data']) == 3
+        assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2041.6
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2380.9
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 2898.55
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1196,31 +1196,31 @@ class TestRentResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 1408
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 1642
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 1999
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][3]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][3]['monthly_price'] == 2263
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['rental data']) == 4
+        assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1408
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 1642
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1999
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['rental data'][3]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 2263
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1273,31 +1273,31 @@ class TestRentResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 2041.6
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 2380.9
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 2898.55
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['results'][3]['bedrooms'] == 1
-        assert get_first_page_response_data['results'][3]['monthly_price'] == 3281.35
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['rental data']) == 4
+        assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2041.6
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2380.9
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 2898.55
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['rental data'][3]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 3281.35
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1521,22 +1521,22 @@ class TestUtilitiesResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 172
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 174
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 210
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
+        assert len(get_first_page_response_data['utilities']) == 3
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 172
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 174
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 210
+        assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1566,22 +1566,22 @@ class TestUtilitiesResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 249.4
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 252.3
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 304.5
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
+        assert len(get_first_page_response_data['utilities']) == 3
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 249.4
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 252.3
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 304.5
+        assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1633,27 +1633,27 @@ class TestUtilitiesResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 172
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 174
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 210
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][3]['monthly_price'] == 273
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['utilities']) == 4
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 172
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 174
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 210
+        assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 273
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 4
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1705,27 +1705,27 @@ class TestUtilitiesResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][0]['monthly_price'] == 249.4
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][1]['monthly_price'] == 252.3
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][2]['monthly_price'] == 304.5
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['results'][3]['monthly_price'] == 395.85
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['utilities']) == 4
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 249.4
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 252.3
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 304.5
+        assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 395.85
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 4
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1946,22 +1946,22 @@ class TestTransportationResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][0]['price'] == 103
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][1]['price'] == 112
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][2]['price'] == 150
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['transportation data']) == 3
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 103
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 112
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 150
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -1991,22 +1991,22 @@ class TestTransportationResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][0]['price'] == 149.35
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][1]['price'] == 162.4
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][2]['price'] == 217.5
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['transportation data']) == 3
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 149.35
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 162.4
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 217.5
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2058,27 +2058,27 @@ class TestTransportationResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][0]['price'] == 102
-        assert get_first_page_response_data['results'][0]['location']['id'] == 4
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][1]['price'] == 103
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][2]['price'] == 112
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][3]['price'] == 150
-        assert get_first_page_response_data['results'][3]['location']['id'] == 3
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['transportation data']) == 4
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 102
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 4
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 103
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 112
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 150
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2130,27 +2130,27 @@ class TestTransportationResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][0]['price'] == 147.9
-        assert get_first_page_response_data['results'][0]['location']['id'] == 4
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['results'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][1]['price'] == 149.35
-        assert get_first_page_response_data['results'][1]['location']['id'] == 1
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][2]['price'] == 162.4
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['results'][3]['price'] == 217.5
-        assert get_first_page_response_data['results'][3]['location']['id'] == 3
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['transportation data']) == 4
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 147.9
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 4
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 149.35
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 162.4
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Monthly Public Transportation Pass'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 217.5
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2382,28 +2382,28 @@ class TestFoodBeverageResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][0]['price'] == 1.50
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][1]['price'] == 1.62
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][2]['price'] == 1.77
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
+        assert len(get_first_page_response_data['food and beverage data']) == 3
+        assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 1.50
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 1.62
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 1.77
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2433,28 +2433,28 @@ class TestFoodBeverageResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][0]['price'] == 2.17
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][1]['price'] == 2.35
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][2]['price'] == 2.57
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
+        assert len(get_first_page_response_data['food and beverage data']) == 3
+        assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 2.17
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 2.35
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 2.57
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2508,35 +2508,35 @@ class TestFoodBeverageResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][0]['price'] == 1.50
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][1]['price'] == 1.62
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][2]['price'] == 1.77
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][3]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][3]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][3]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][3]['price'] == 1.80
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['food and beverage data']) == 4
+        assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 1.50
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 1.62
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 1.77
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 1.80
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2590,35 +2590,35 @@ class TestFoodBeverageResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][0]['price'] == 2.17
-        assert get_first_page_response_data['results'][0]['location']['id'] == 2
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][1]['price'] == 2.35
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][2]['price'] == 2.57
-        assert get_first_page_response_data['results'][2]['location']['id'] == 1
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][3]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['results'][3]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['results'][3]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['results'][3]['price'] == 2.61
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['food and beverage data']) == 4
+        assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 2.17
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 2.35
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 2.57
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Milk 1L'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 2.61
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2846,22 +2846,22 @@ class TestChildcareResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][0]['annual_price'] == 19632
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][1]['annual_price'] == 20376
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][2]['annual_price'] == 21012
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+        assert len(get_first_page_response_data['childcare data']) == 3
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 19632
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 20376
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 21012
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2891,22 +2891,22 @@ class TestChildcareResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][0]['annual_price'] == 28466.4
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][1]['annual_price'] == 29545.2
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][2]['annual_price'] == 30467.4
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+        assert len(get_first_page_response_data['childcare data']) == 3
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 28466.4
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 29545.2
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 30467.4
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -2958,27 +2958,27 @@ class TestChildcareResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][0]['annual_price'] == 19632
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][1]['annual_price'] == 20376
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][2]['annual_price'] == 21012
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][3]['annual_price'] == 35616
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['childcare data']) == 4
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 19632
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 20376
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 21012
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['childcare data'][3]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 35616
+        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3030,27 +3030,27 @@ class TestChildcareResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][0]['annual_price'] == 28466.4
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][1]['annual_price'] == 29545.2
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][2]['annual_price'] == 30467.4
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['type'] == 'Preschool'
-        assert get_first_page_response_data['results'][3]['annual_price'] == 51643.2
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['childcare data']) == 4
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 28466.4
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 29545.2
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 30467.4
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['childcare data'][3]['type'] == 'Preschool'
+        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 51643.2
+        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3272,22 +3272,22 @@ class TestApparelResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][0]['price'] == 77
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][1]['price'] == 83
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][2]['price'] == 84
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+        assert len(get_first_page_response_data['apparel data']) == 3
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 77
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 83
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 84
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3317,22 +3317,22 @@ class TestApparelResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][0]['price'] == 111.65
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][1]['price'] == 120.35
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][2]['price'] == 121.8
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
+        assert len(get_first_page_response_data['apparel data']) == 3
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 111.65
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 120.35
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 121.8
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3384,27 +3384,27 @@ class TestApparelResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][0]['price'] == 77
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][1]['price'] == 83
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][2]['price'] == 84
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][3]['price'] == 114
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['apparel data']) == 4
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 77
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 83
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 84
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 114
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3456,27 +3456,27 @@ class TestApparelResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][0]['price'] == 111.65
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][1]['price'] == 120.35
-        assert get_first_page_response_data['results'][1]['location']['id'] == 3
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][2]['price'] == 121.8
-        assert get_first_page_response_data['results'][2]['location']['id'] == 2
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][3]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['results'][3]['price'] == 165.3
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['apparel data']) == 4
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 111.65
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 120.35
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 121.8
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Levis Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 165.3
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3696,22 +3696,22 @@ class TestLeisureResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][0]['price'] == 48
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][1]['price'] == 50
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][2]['price'] == 61
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['leisure data']) == 3
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 48
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 50
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 61
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3741,22 +3741,22 @@ class TestLeisureResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 3
-        assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][0]['price'] == 69.6
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][1]['price'] == 72.5
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][2]['price'] == 88.45
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
+        assert len(get_first_page_response_data['leisure data']) == 3
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 69.6
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 72.5
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 88.45
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3808,27 +3808,27 @@ class TestLeisureResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][0]['price'] == 48
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][1]['price'] == 50
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][2]['price'] == 61
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][3]['price'] == 93
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['leisure data']) == 4
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 48
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 50
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 61
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['leisure data'][3]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][3]['price'] == 93
+        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3880,26 +3880,26 @@ class TestLeisureResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['results']) == 4
-        assert get_first_page_response_data['results'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][0]['price'] == 69.6
-        assert get_first_page_response_data['results'][0]['location']['id'] == 1
-        assert get_first_page_response_data['results'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['results'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][1]['price'] == 72.5
-        assert get_first_page_response_data['results'][1]['location']['id'] == 2
-        assert get_first_page_response_data['results'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['results'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['results'][2]['price'] == 88.45
-        assert get_first_page_response_data['results'][2]['location']['id'] == 3
-        assert get_first_page_response_data['results'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['results'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['results'][3]['price'] == 134.85
-        assert get_first_page_response_data['results'][3]['location']['id'] == 4
-        assert get_first_page_response_data['results'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['results'][3]['location']['city'] == 'Zurich'
+        assert len(get_first_page_response_data['leisure data']) == 4
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 69.6
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 72.5
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 88.45
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['leisure data'][3]['price'] == 134.85
+        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 4
+        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Switzerland'
+        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Zurich'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
