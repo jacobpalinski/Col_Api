@@ -15,7 +15,7 @@ def create_app(config_filename):
         'version': '1.0.0'
     }
     orm.init_app(app)
-    app.register_blueprint(cost_of_living_blueprint,url_prefix='/v1/cost-of-living')
+    app.register_blueprint(cost_of_living_blueprint,url_prefix='/v1')
     migrate = Migrate(app,orm)
     swagger = Swagger(app)
     return app
