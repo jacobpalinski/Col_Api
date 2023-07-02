@@ -1,9 +1,44 @@
-Retrieve food and beverage item information for specified criterea
+Retrieve food and beverage item information for specified parameters
 ---
 tags:
  - Food and Beverage
 description: |
- Retrieve food and beverage item information for specified criterea
+ Retrieve food and beverage item information for specified parameters
+
+ Purchase Points:
+  - Supermarket
+  - Restaurant
+
+ Supermarket Items:
+  - Milk (1L)
+  - Bread (500g)
+  - Rice (1kg)
+  - Eggs (x12)
+  - Cheese (1kg)
+  - Chicken Fillets (1kg)
+  - Beef Round (1kg)
+  - Apples (1kg)
+  - Banana (1kg)
+  - Oranges (1kg)
+  - Tomato (1kg)
+  - Potato (1kg)
+  - Onion (1kg)
+  - Lettuce (1 Head)
+  - Water (1L)
+  - Wine (1 Bottle Mid Range)
+  - Domestic Beer (0.5L Bottle)
+  - Cigarettes (20 Pack Malboro)
+
+ Restaurant Items:
+  - Dinner (2 People Mid Range Restaurant)
+  - Lunch
+  - Domestic Beer (0.5L)
+  - Cappuccino (Regular)
+  - Pepsi / Coke (0.5L)
+
+
+
+
 
 parameters:
  - name: country

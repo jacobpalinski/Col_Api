@@ -23,6 +23,11 @@ responses:
   schema:
    $ref: "#/definitions/UserPostResponse"
 
+ 400:
+  description: Bad Request
+  schema:
+   $ref: "#/definitions/BadRequestResponse"
+
  401:
   description: Unauthorized
   schema:

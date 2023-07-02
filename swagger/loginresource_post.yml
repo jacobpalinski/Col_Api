@@ -19,6 +19,11 @@ responses:
   schema:
    $ref: "#/definitions/LoginPostResponse"
 
+ 400:
+  description: Bad Request
+  schema:
+   $ref: "#/definitions/BadRequestResponse"
+
  404:
   description: Not found
   schema:

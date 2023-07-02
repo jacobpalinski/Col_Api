@@ -5,6 +5,10 @@ tags:
 description: |
  Retrieve all home purchase data for specified parameters
 
+ Property Locations:
+  - City Centre
+  - Outside of Centre
+
 parameters:
  - name: country
    in: path

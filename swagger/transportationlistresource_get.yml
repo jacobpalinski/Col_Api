@@ -5,6 +5,12 @@ tags:
 description: |
  Retrieve mode of transport information for specified parameters
 
+ Types:
+  - Public Transport (One Way Ticket)
+  - Public Transport (Monthly)
+  - Taxi (8km)
+  - Petrol (1L)
+
 parameters:
  - name: country
    in: path

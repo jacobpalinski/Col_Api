@@ -5,6 +5,10 @@ tags:
 description: |
  Retrieve childcare cost information for specified parameters
 
+ Types of Childcare:
+  - Daycare / Preschool (1 Month)
+  - International Primary School (1 Year)
+
 parameters:
  - name: country
    in: path

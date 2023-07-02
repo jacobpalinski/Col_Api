@@ -70,7 +70,7 @@ class UserResource(Resource):
     def post(self):
         user_register_dict = request.get_json()
         try:
-            user_schema.load(user_register_dict)
+            user_schema.load(user_register_dict, unknown = INCLUDE)
         except ValidationError:
             response = {'message': 'Invalid email address'}
             return response, HttpStatus.bad_request_400.value
@@ -239,7 +239,8 @@ class CurrencyResource(Resource):
         
             try:
                 currency.delete(currency)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'Currency id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -256,7 +257,7 @@ class CurrencyListResource(Resource):
             pagination_helper = PaginationHelper(
                 request,
                 query = Currency.query,
-                resource_for_url = 'cost_of_living.currencyresource',
+                resource_for_url = 'cost_of_living.currencylistresource',
                 key_name = 'currencies',
                 schema = currency_schema
                 )
@@ -311,7 +312,8 @@ class LocationResource(Resource):
         
             try:
                 location.delete(location)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'Location id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -419,7 +421,8 @@ class HomePurchaseResource(Resource):
         
             try:
                 home_purchase.delete(home_purchase)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'HomePurchase id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -460,7 +463,7 @@ class HomePurchaseListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.homepurchaseresource',
+                    resource_for_url = 'cost_of_living.homepurchaselistresource',
                     key_name = 'home purchase data',   
                     schema = home_purchase_schema
                     )
@@ -482,7 +485,7 @@ class HomePurchaseListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.homepurchaseresource',
+                resource_for_url = 'cost_of_living.homepurchaselistresource',
                 key_name = 'home purchase data',   
                 schema = home_purchase_schema
                 )
@@ -576,7 +579,8 @@ class RentResource(Resource):
         
             try:
                 rent.delete(rent)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'Rent id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -617,7 +621,7 @@ class RentListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.rentresource',
+                    resource_for_url = 'cost_of_living.rentlistresource',
                     key_name = 'rental data',   
                     schema = rent_schema
                     )
@@ -639,7 +643,7 @@ class RentListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.rentresource',
+                resource_for_url = 'cost_of_living.rentlistresource',
                 key_name = 'rental data',   
                 schema = rent_schema
                 )
@@ -729,7 +733,8 @@ class UtilitiesResource(Resource):
         
             try:
                 utilities.delete(utilities)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'Utilities id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -770,7 +775,7 @@ class UtilitiesListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.utilitiesresource',
+                    resource_for_url = 'cost_of_living.utilitieslistresource',
                     key_name = 'utilities',   
                     schema = utilities_schema
                     )
@@ -792,7 +797,7 @@ class UtilitiesListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.utilitiesresource',
+                resource_for_url = 'cost_of_living.utilitieslistresource',
                 key_name = 'utilities',   
                 schema = utilities_schema
                 )
@@ -882,7 +887,8 @@ class TransportationResource(Resource):
         
             try:
                 transportation.delete(transportation)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'Transportation id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -923,7 +929,7 @@ class TransportationListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.transportationresource',
+                    resource_for_url = 'cost_of_living.transportationlistresource',
                     key_name = 'transportation data',   
                     schema = transportation_schema
                     )
@@ -945,7 +951,7 @@ class TransportationListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.transportationresource',
+                resource_for_url = 'cost_of_living.transportationlistresource',
                 key_name = 'transportation data',   
                 schema = transportation_schema
                 )
@@ -1042,7 +1048,8 @@ class FoodBeverageResource(Resource):
         
             try:
                 food_and_beverage.delete(food_and_beverage)
-                return HttpStatus.no_content_204.value
+                response = {'message': 'FoodBeverage id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -1084,7 +1091,7 @@ class FoodBeverageListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.foodbeverageresource',
+                    resource_for_url = 'cost_of_living.foodbeveragelistresource',
                     key_name = 'food and beverage data',   
                     schema = food_and_beverage_schema
                     )
@@ -1106,7 +1113,7 @@ class FoodBeverageListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.foodbeverageresource',
+                resource_for_url = 'cost_of_living.foodbeveragelistresource',
                 key_name = 'food and beverage data',   
                 schema = food_and_beverage_schema
                 )
@@ -1200,7 +1207,8 @@ class ChildcareResource(Resource):
         
             try:
                 childcare.delete(childcare)
-                return response, HttpStatus.no_content_204.value
+                response = {'message': 'Childcare id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -1241,7 +1249,7 @@ class ChildcareListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.childcareresource',
+                    resource_for_url = 'cost_of_living.childcarelistresource',
                     key_name = 'childcare data',   
                     schema = childcare_schema
                     )
@@ -1263,7 +1271,7 @@ class ChildcareListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.childcareresource',
+                resource_for_url = 'cost_of_living.childcarelistresource',
                 key_name = 'childcare data',   
                 schema = childcare_schema
                 )
@@ -1353,7 +1361,8 @@ class ApparelResource(Resource):
         
             try:
                 apparel.delete(apparel)
-                return response, HttpStatus.no_content_204.value
+                response = {'message': 'Apparel id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -1393,7 +1402,7 @@ class ApparelListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.apparelresource',
+                    resource_for_url = 'cost_of_living.apparellistresource',
                     key_name = 'apparel data',   
                     schema = apparel_schema
                     )
@@ -1415,7 +1424,7 @@ class ApparelListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.apparelresource',
+                resource_for_url = 'cost_of_living.apparellistresource',
                 key_name = 'apparel data',   
                 schema = apparel_schema
                 )
@@ -1505,7 +1514,8 @@ class LeisureResource(Resource):
         
             try:
                 leisure.delete(leisure)
-                return response, HttpStatus.no_content_204.value
+                response = {'message': 'Leisure id successfully deleted'}
+                return response
             
             except SQLAlchemyError as e:
                 sql_alchemy_error_response(e)
@@ -1545,7 +1555,7 @@ class LeisureListResource(Resource):
                     pagination_helper = PaginationHelper(
                     request,
                     query = qry,
-                    resource_for_url = 'cost_of_living.leisureresource',
+                    resource_for_url = 'cost_of_living.leisurelistresource',
                     key_name = 'leisure data',   
                     schema = leisure_schema
                     )
@@ -1567,7 +1577,7 @@ class LeisureListResource(Resource):
                 pagination_helper = PaginationHelper(
                 request,
                 query = qry,
-                resource_for_url = 'cost_of_living.leisureresource',
+                resource_for_url = 'cost_of_living.leisurelistresource',
                 key_name = 'leisure data',   
                 schema = leisure_schema
                 )

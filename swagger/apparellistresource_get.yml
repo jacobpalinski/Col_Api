@@ -5,6 +5,12 @@ tags:
 description: |
  Retrieve apparel cost information for specified parameters
 
+ Items:
+  - Mens Leather Business Shoes
+  - Pair of Jeans
+  - Brand Sneakers
+  - Summer Dress Chain Store
+
 parameters:
  - name: country
    in: path

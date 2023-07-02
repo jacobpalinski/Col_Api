@@ -5,6 +5,12 @@ tags:
 description: |
  Retrieve utility information for specified parameters
 
+ Utilities:
+  - Electricity, Heating, Cooling, Water and Garbage (1 Person)
+  - Electricity, Heating, Cooling, Water and Garbage (Family)
+  - Internet (60 Mbps, Unlimited Data, Monthly)
+  - Mobile Plan (10GB+ Data, Monthly)
+
 parameters:
  - name: country
    in: path
