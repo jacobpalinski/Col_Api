@@ -14,7 +14,7 @@ def extract_currency_conversion_rates():
     abbreviations = ['AED','ALL','AMD', 'AUD', 'AZN', 'BAM', 'BGN', 'BHD', 'BRL', 'BYN', 'CAD',
     'CHF', 'CLP', 'CNY', 'COP', 'CZK', 'DKK', 'EUR', 'GEL', 'HKD', 'HUF', 'ISK', 'ILS', 'JPY',
     'KRW', 'MOP', 'MYR', 'MXN', 'MDL', 'NZD', 'MKD', 'NOK', 'OMR', 'PLN', 'QAR', 'RON', 'RUB',
-    'SAR', 'RSD', 'SGD', 'SEK', 'CHF', 'TWD', 'THB', 'TRY', 'UAH', 'GBP', 'UYU']
+    'SAR', 'RSD', 'SGD', 'SEK', 'CHF', 'TWD', 'THB', 'TRY', 'UAH', 'GBP', 'UYU', 'PYG']
     
     # Request
     response = requests.get('https://www.numbeo.com/common/currency_settings.jsp')
