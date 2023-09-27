@@ -1,5 +1,10 @@
 import requests
+import json
+import os
+import boto3
+import datetime
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 # Countries to extract cities from
 countries = ['United Arab Emirates', 'Albania', 'Armenia', 'Australia', 'Azerbaijan', 'Bosnia and Herzegovina', 'Bahrain', 'Bulgaria',
@@ -25,4 +30,12 @@ def extract_cities(countries):
             city = row.find('a').text
             cities.append(city)
     
-    return cities
+    # Load S3 environment variables
+    load_dotenv()
+
+    # Load data to S3 raw bucket
+    boto3_s3 = boto3.client('s3', aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY'))
+    extracted_cities_json = json.dumps(cities)
+    current_date = datetime.date.today().strftime('%Y%m%d')
+    object_name = f'cities{current_date}'
+    boto3_s3.put_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = object_name, Body = extracted_cities_json)

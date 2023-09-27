@@ -5,6 +5,11 @@ tags:
 description: |
  Retrieve leisure activity cost information for specified parameters
 
+ Leisure Products:
+  - Gym Membership (Monthly)
+  - Tennis Court Rent (1hr)
+  - Cinema International Release
+
 parameters:
  - name: country
    in: path
