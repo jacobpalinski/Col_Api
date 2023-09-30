@@ -16,7 +16,6 @@ def extract_numbeo_prices_from_city():
     # Retrieve latest cities file
     current_date = datetime.date.today().strftime('%Y%m%d')
     file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = f'cities{current_date}')
-    print(file)
     contents = file['Body'].read().decode('utf-8')
     cities = json.loads(contents)
 

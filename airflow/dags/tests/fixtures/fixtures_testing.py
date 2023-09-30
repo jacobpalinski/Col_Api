@@ -41,3 +41,9 @@ def mock_numbeo_prices_perth_html():
     with open('mock_html/numbeo_prices_perth.html', encoding = 'utf-8') as html_content:
         html = html_content.read()
         yield html
+
+@pytest.fixture
+def mock_livingcost_prices_perth_html():
+    with open('mock_html/livingcost_prices_perth.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html

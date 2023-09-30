@@ -34,11 +34,7 @@ description: |
   - Lunch
   - Domestic Beer (0.5L)
   - Cappuccino (Regular)
-  - Pepsi / Coke (0.5L)
-
-
-
-
+  - Coke (0.5L)
 
 parameters:
  - name: country
