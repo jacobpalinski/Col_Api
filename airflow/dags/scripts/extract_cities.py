@@ -28,7 +28,7 @@ def extract_cities(countries):
         rows = numbeo_country_html.find('table', {'id': 't2'}).find('tbody').find_all('tr')
         for row in rows:
             city = row.find('a').text
-            cities.append(city)
+            cities.append({country: city})
     
     # Load S3 environment variables
     load_dotenv()
