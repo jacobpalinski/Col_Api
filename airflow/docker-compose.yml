@@ -85,8 +85,42 @@ x-airflow-common:
       condition: service_healthy
 
 services:
+  spark:
+    image: apache/spark:latest
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    environment:
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8282
+    ports:
+     - "7077:7077"
+     - "8282:8282"
+    restart: always
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+      - ${AIRFLOW_PROJ_DIR:-.}/.env:/opt/airflow/.env
+  
+  spark-worker-1:
+    image: apache/spark:latest
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark:7077
+    restart: always
+    depends_on:
+      - spark
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+      - ${AIRFLOW_PROJ_DIR:-.}/.env:/opt/airflow/.env
+  
+  spark-worker-2:
+    image: apache/spark:latest
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark:7077
+    restart: always
+    depends_on:
+      - spark
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+      - ${AIRFLOW_PROJ_DIR:-.}/.env:/opt/airflow/.env
+
   postgres:
-    image: postgres:latest
+    image: postgres:15
     ports: 
       - "5434:5432"
     environment:
