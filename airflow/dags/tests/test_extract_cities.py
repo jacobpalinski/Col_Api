@@ -3,7 +3,7 @@ import datetime
 import pytest
 import requests
 import requests_mock
-from scripts.extract_cities import extract_cities
+from extraction_scripts.extract_cities import extract_cities
 from tests.fixtures.fixtures_testing import mock_extract_cities_html, mock_countries, mock_environment_variables, mock_boto3_s3
 
 def test_extract_cities(requests_mock, mock_extract_cities_html, mock_countries, mock_environment_variables, mock_boto3_s3):

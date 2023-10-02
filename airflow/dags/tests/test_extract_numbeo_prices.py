@@ -3,7 +3,7 @@ import json
 import os
 import requests_mock
 from tests.fixtures.fixtures_testing import mock_environment_variables, mock_boto3_s3, mock_numbeo_prices_perth_html
-from scripts.extract_numbeo_prices import extract_numbeo_prices_from_city
+from extraction_scripts.extract_numbeo_prices import extract_numbeo_prices_from_city
 
 def test_extract_numbeo_prices_from_city(requests_mock, mock_environment_variables, mock_boto3_s3, mock_numbeo_prices_perth_html):
     # Mock request output

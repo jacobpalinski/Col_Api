@@ -3,7 +3,7 @@ import json
 import os
 import requests_mock
 from tests.fixtures.fixtures_testing import mock_boto3_s3, mock_currency_conversion_rates_html, mock_environment_variables
-from scripts.extract_currency_conversion_rates import extract_currency_conversion_rates
+from extraction_scripts.extract_currency_conversion_rates import extract_currency_conversion_rates
 
 def test_extract_currency_conversion_rates(requests_mock, mock_boto3_s3, mock_currency_conversion_rates_html, mock_environment_variables):
     # Mock request output
