@@ -92,6 +92,7 @@ services:
     environment:
       - SPARK_MASTER_PORT=7077
       - SPARK_MASTER_WEBUI_PORT=8282
+      - SPARK_MASTER_HOST=spark
     ports:
      - "7077:7077"
      - "8282:8282"
