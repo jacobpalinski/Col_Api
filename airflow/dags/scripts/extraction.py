@@ -65,7 +65,13 @@ def extract_currency_conversion_rates():
 def extract_livingcost_prices_from_city():
 
     # Retrieve latest cities file
-    cities = get_data(file_prefix = 'cities')
+    data = get_data(file_prefix = 'cities')
+
+    # Retrieve cities from file
+    cities = []
+    for location in data:
+        for country,city in location.items():
+            cities.append(city)
 
     livingcost_price_info = []
 
@@ -114,7 +120,13 @@ def extract_livingcost_prices_from_city():
 def extract_numbeo_prices_from_city():
 
     # Retrieve latest cities file
-    cities = get_data(file_prefix = 'cities')
+    data = get_data(file_prefix = 'cities')
+
+    # Retrieve cities from file
+    cities = []
+    for location in data:
+        for country,city in location.items():
+            cities.append(city)
 
     numbeo_price_info = []
 

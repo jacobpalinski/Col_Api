@@ -19,7 +19,7 @@ def test_extract_cities(requests_mock, mock_extract_cities_html, mock_countries,
     
     # Test function
     extract_cities(mock_countries)
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'bucket', Key = expected_object_name, Body = expected_extracted_cities_json)
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_extracted_cities_json)
 
 def test_extract_currency_conversion_rates(requests_mock, mock_boto3_s3, mock_currency_conversion_rates_html, mock_environment_variables):
     # Mock request output
@@ -37,7 +37,7 @@ def test_extract_currency_conversion_rates(requests_mock, mock_boto3_s3, mock_cu
 
     # Test function
     extract_currency_conversion_rates()
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'bucket', Key = expected_object_name, Body = expected_currency_conversion_rates_json)
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_currency_conversion_rates_json)
 
 def test_extract_livingcost_prices_from_city(requests_mock, mock_environment_variables, mock_boto3_s3, mock_livingcost_prices_perth_html):
     # Mock request output
@@ -57,8 +57,8 @@ def test_extract_livingcost_prices_from_city(requests_mock, mock_environment_var
 
     # Test function
     extract_livingcost_prices_from_city()
-    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'bucket', Key = f'cities{current_date}')
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'bucket', Key = expected_object_name, Body = expected_livingcost_price_info_json)
+    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'cities{current_date}')
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_livingcost_price_info_json)
 
 def test_extract_numbeo_prices_from_city(requests_mock, mock_environment_variables, mock_boto3_s3, mock_numbeo_prices_perth_html):
     # Mock request output
@@ -108,5 +108,5 @@ def test_extract_numbeo_prices_from_city(requests_mock, mock_environment_variabl
 
     # Test function
     extract_numbeo_prices_from_city()
-    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'bucket', Key = f'cities{current_date}')
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'bucket', Key = expected_object_name, Body = expected_numbeo_price_info_json)
+    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'cities{current_date}')
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_numbeo_price_info_json)

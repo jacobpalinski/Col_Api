@@ -1,2 +1,2 @@
-from pyspark.sql import SparkSession
+from utils.spark_utils import create_spark_session
 

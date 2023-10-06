@@ -3,6 +3,8 @@ import requests_mock
 import boto3
 import os
 import json
+import datetime
+from utils.spark_utils import create_spark_session
 
 @pytest.fixture
 def mock_currency_conversion_rates_html():
@@ -15,14 +17,31 @@ def mock_environment_variables(mocker):
     mocker.patch.dict(os.environ, {
         'AWS_ACCESS_KEY_ID': 'access-key',
         'AWS_SECRET_ACCESS_KEY': 'secret-key',
-        'S3_BUCKET_RAW': 'bucket'
+        'S3_BUCKET_RAW': 'test-bucket-raw',
+        'S3_BUCKET_TRANSFORMED': 'test-bucket-transformed'
     })
 
 @ pytest.fixture
 def mock_boto3_s3(mocker, monkeypatch):
     mock_s3 = mocker.Mock()
     monkeypatch.setattr(boto3, 'client', lambda *args, **kwargs: mock_s3)
-    mock_s3.get_object.return_value = {'Body': mocker.MagicMock(read = mocker.MagicMock(return_value = json.dumps(['Perth']).encode('utf-8')))}
+
+    # Current date for return_value prefixes
+    current_date = datetime.date.today().strftime('%Y%m%d')
+
+    return_values = {
+        f'cities{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Australia': 'Perth'}]).encode('utf-8')))},
+        # Add more mappings for different prefixes as needed
+    }
+
+    def mock_get_object(Bucket, Key, **kwargs):
+        # Extract the prefix from the Key
+        file_prefix = Key[:]
+
+        # Return the corresponding value from return_values
+        return return_values.get(file_prefix, {})
+
+    mock_s3.get_object.side_effect = mock_get_object
     return mock_s3
 
 @pytest.fixture
@@ -49,6 +68,7 @@ def mock_livingcost_prices_perth_html():
         yield html
 
 @pytest.fixture
-def mock_spark_session(mocker):
-    mock_spark_session = mocker.Mock()
-    mocker.patch('pyspark.sql.SparkSession.builder.getOrCreate', return_value = mock_spark_session)
+def spark_session():
+    session = create_spark_session('test_spark_session')
+    yield session
+    session.stop()
