@@ -47,3 +47,8 @@ def mock_livingcost_prices_perth_html():
     with open('mock_html/livingcost_prices_perth.html', encoding = 'utf-8') as html_content:
         html = html_content.read()
         yield html
+
+@pytest.fixture
+def mock_spark_session(mocker):
+    mock_spark_session = mocker.Mock()
+    mocker.patch('pyspark.sql.SparkSession.builder.getOrCreate', return_value = mock_spark_session)
