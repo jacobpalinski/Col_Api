@@ -7,6 +7,10 @@ import datetime
 from utils.spark_utils import create_spark_session
 
 @pytest.fixture
+def current_date():
+    return datetime.date.today().strftime('%Y%m%d')
+
+@pytest.fixture
 def mock_currency_conversion_rates_html():
     with open('mock_html/numbeo_currency_conversion.html', encoding = 'utf-8') as html_content:
         html = html_content.read()
@@ -45,15 +49,26 @@ def mock_boto3_s3(mocker, monkeypatch):
     return mock_s3
 
 @pytest.fixture
-def mock_extract_cities_html():
-    with open('mock_html/numbeo_country_page.html', encoding = 'utf-8') as html_content:
+def mock_locations_with_cities_html():
+    with open('mock_html/numbeo_country_page_with_cities.html', encoding = 'utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
-def mock_countries():
+def mock_locations_without_cities_html():
+    with open('mock_html/numbeo_country_page_without_cities.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html
+
+@pytest.fixture
+def mock_countries_with_cities():
     # Only use 1 country for testing extract_cities
     return ['Australia']
+
+@pytest.fixture
+def mock_countries_without_cities():
+    # Only use 1 country for testing extract_cities
+    return ['Hong Kong']
 
 @pytest.fixture
 def mock_numbeo_prices_perth_html():
@@ -68,7 +83,7 @@ def mock_livingcost_prices_perth_html():
         yield html
 
 @pytest.fixture
-def spark_session():
+def pyspark_session():
     session = create_spark_session('test_spark_session')
     yield session
     session.stop()

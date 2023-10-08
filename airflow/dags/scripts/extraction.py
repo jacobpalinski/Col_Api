@@ -11,17 +11,17 @@ from utils.aws_utils import *
 load_dotenv()
 
 # Countries to extract cities from
-countries = ['United Arab Emirates', 'Albania', 'Armenia', 'Australia', 'Azerbaijan', 'Bosnia and Herzegovina', 'Bahrain', 'Bulgaria',
-    'Belarus', 'Brazil', 'Canada', 'Switzerland', 'Liechtenstein', 'Chile', 'China', 'Colombia', 'Czech Republic', 'Denmark', 'Faroe Islands', 'Andorra',
-    'Austria', 'Belgium', 'Croatia', 'Cyprus', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Ireland', 'Italy', 'Kosovo', 'Latvia',
+countries = ['United Arab Emirates', 'Australia', 'Bosnia and Herzegovina', 'Bahrain', 'Bulgaria',
+    'Brazil', 'Canada', 'Switzerland', 'Liechtenstein', 'Chile', 'China', 'Colombia', 'Costa Rica' 'Czech Republic', 'Denmark', 'Andorra',
+    'Austria', 'Belgium', 'Croatia', 'Cyprus', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Ireland', 'Italy', 'Latvia',
     'Lithuania', 'Luxembourg', 'Malta', 'Montenegro', 'Monaco', 'Netherlands', 'Portugal', 'San Marino', 'Slovakia', 'Slovenia', 'Spain',
-    'Georgia', 'Hong Kong (China)', 'Hungary', 'Israel', 'Japan', 'South Korea', 'Macau', 'Malaysia', 'Mexico', 'Moldova', 'New Zealand',
-    'North Macedonia' 'Norway', 'Oman', 'Poland', 'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Serbia', 'Singapore', 'Sweden', 'Taiwan',
-    'Thailand', 'Turkey', 'Ukraine', 'United Kingdom', 'Gibraltar', 'Isle of Man', 'Jersey', 'Uruguay', 'United States', 'Ecuador', 'Paraguay', 'Argentina']
+    'Georgia', 'Hong Kong', 'Hungary', 'Israel', 'Japan', 'South Korea', 'Kuwait', 'Macau', 'Malaysia', 'Mexico', 'New Zealand', 'Norway', 'Oman', 
+    'Poland', 'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Serbia', 'Singapore', 'Sweden', 'Taiwan',
+    'Thailand', 'Turkey', 'Ukraine', 'United Kingdom', 'Uruguay', 'United States', 'Ecuador', 'Paraguay', 'Panama', 'Argentina']
 
-def extract_cities(countries: list):
+def extract_locations(countries: list):
     # Cities
-    cities = []
+    locations = []
 
     for country in countries:
         # Request
@@ -29,23 +29,26 @@ def extract_cities(countries: list):
         
         # Parse Html
         numbeo_country_html = BeautifulSoup(response.text, 'html.parser')
-        rows = numbeo_country_html.find('table', {'id': 't2'}).find('tbody').find_all('tr')
-        for row in rows:
-            city = row.find('a').text
-            cities.append({country: city})
+        if numbeo_country_html.find('table', {'id': 't2'}):
+            cities = numbeo_country_html.find('table', {'id': 't2'}).find('tbody').find_all('tr')
+            for city in cities:
+                city_name = city.find('a').text
+                locations.append({'Country': country, 'City': city_name})
+        else:
+            locations.append({'Country': country, 'City': None})
 
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'cities', data = cities)
+    put_data(file_prefix = 'locations', data = locations, bucket_type = 'raw')
 
 def extract_currency_conversion_rates():
     # Scraped conversion rates USD -> local
     currency_conversion_rates = []
 
     # Abbreviations to extract
-    abbreviations = ['AED','ALL','AMD', 'AUD', 'AZN', 'BAM', 'BGN', 'BHD', 'BRL', 'BYN', 'CAD',
-    'CHF', 'CLP', 'CNY', 'COP', 'CZK', 'DKK', 'EUR', 'GEL', 'HKD', 'HUF', 'ISK', 'ILS', 'JPY',
-    'KRW', 'MOP', 'MYR', 'MXN', 'MDL', 'NZD', 'MKD', 'NOK', 'OMR', 'PLN', 'QAR', 'RON', 'RUB',
-    'SAR', 'RSD', 'SGD', 'SEK', 'CHF', 'TWD', 'THB', 'TRY', 'UAH', 'GBP', 'UYU', 'PYG']
+    abbreviations = ['AED', 'AUD', 'BAM', 'BGN', 'BHD', 'BRL', 'CAD',
+    'CHF', 'CLP', 'CNY', 'COP', 'CRC', 'CZK', 'DKK', 'EUR', 'GEL', 'HKD', 'HUF', 'ISK', 'ILS', 'JPY',
+    'KRW', 'KWD', 'MOP', 'MYR', 'MXN', 'NOK', 'NZD', 'OMR', 'PLN', 'QAR', 'RON', 'RUB',
+    'SAR', 'RSD', 'SGD', 'SEK', 'THB', 'TRY', 'TWD', 'UAH', 'GBP', 'UYU', 'PYG']
     
     # Request
     response = requests.get('https://www.numbeo.com/common/currency_settings.jsp')
@@ -57,27 +60,21 @@ def extract_currency_conversion_rates():
         abbreviation = row.find('td').text
         if abbreviation in abbreviations:
             conversion_rate = row.find_all('td', {'style': 'text-align: right'})[1].text
-            currency_conversion_rates.append({abbreviation : conversion_rate})
+            currency_conversion_rates.append({'Abbreviation': abbreviation , 'USD_to_local': conversion_rate})
 
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'currency_conversion_rates', data = currency_conversion_rates)
+    put_data(file_prefix = 'currency_conversion_rates', data = currency_conversion_rates, bucket_type = 'raw')
 
 def extract_livingcost_prices_from_city():
 
     # Retrieve latest cities file
-    data = get_data(file_prefix = 'cities')
-
-    # Retrieve cities from file
-    cities = []
-    for location in data:
-        for country,city in location.items():
-            cities.append(city)
+    data = get_data(file_prefix = 'locations')
 
     livingcost_price_info = []
 
-    for city in cities:
+    for location in data:
         # Request
-        response = requests.get(f'https://livingcost.org/cost/australia/{city}')
+        response = requests.get(f'https://livingcost.org/cost/{location["Country"]}/{location["City"]}')
         
         # Extract price information from relevant items
         livingcost_prices_city_html = BeautifulSoup(response.text, 'html.parser')
@@ -105,14 +102,14 @@ def extract_livingcost_prices_from_city():
         other_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[4].find('tbody').find_all('tr')
         brand_sneakers = other_table[5].find('div', {'class': 'bar-table text-center'}).find('span').text
         
-        livingcost_price_info.extend([{'City': city, 'Item': 'Lunch', 'Price': lunch},
-        {'City': city, 'Item': 'Coke (0.5L)', 'Price': coke},
-        {'City': city, 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': utilities_one_person },
-        {'City': city, 'Item': 'Electricity, Heating, Cooling, Water and Garbage (Family)', 'Price': utilities_family},
-        {'City': city, 'Item': 'Taxi (8km)', 'Price': taxi},
-        {'City': city, 'Item': 'Water (1L)', 'Price': water},
-        {'City': city, 'Item': 'Wine (750ml Bottle Mid Range)', 'Price': wine},
-        {'City': city, 'Item': 'Brand Sneakers', 'Price': brand_sneakers}])
+        livingcost_price_info.extend([{'Country': location['Country'], 'City': location['City'], 'Item': 'Lunch', 'Price': lunch},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Coke (0.5L)', 'Price': coke},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': utilities_one_person },
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (Family)', 'Price': utilities_family},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Taxi (8km)', 'Price': taxi},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Water (1L)', 'Price': water},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Wine (750ml Bottle Mid Range)', 'Price': wine},
+        {'Country': location['Country'], 'City': location['City'], 'Item': 'Brand Sneakers', 'Price': brand_sneakers}])
 
     # Load data to S3 raw bucket
     put_data(file_prefix = 'livingcost_price_info', data = livingcost_price_info)
@@ -122,15 +119,9 @@ def extract_numbeo_prices_from_city():
     # Retrieve latest cities file
     data = get_data(file_prefix = 'cities')
 
-    # Retrieve cities from file
-    cities = []
-    for location in data:
-        for country,city in location.items():
-            cities.append(city)
-
     numbeo_price_info = []
 
-    for city in cities:
+    for location in data:
         # Request
         response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{city}?displayCurrency=USD')
         
