@@ -15,7 +15,7 @@ countries = ['United Arab Emirates', 'Australia', 'Bosnia and Herzegovina', 'Bah
     'Brazil', 'Canada', 'Switzerland', 'Liechtenstein', 'Chile', 'China', 'Colombia', 'Costa Rica' 'Czech Republic', 'Denmark', 'Andorra',
     'Austria', 'Belgium', 'Croatia', 'Cyprus', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Ireland', 'Italy', 'Latvia',
     'Lithuania', 'Luxembourg', 'Malta', 'Montenegro', 'Monaco', 'Netherlands', 'Portugal', 'San Marino', 'Slovakia', 'Slovenia', 'Spain',
-    'Georgia', 'Hong Kong', 'Hungary', 'Israel', 'Japan', 'South Korea', 'Kuwait', 'Macau', 'Malaysia', 'Mexico', 'New Zealand', 'Norway', 'Oman', 
+    'Georgia', 'Hong Kong', 'Hungary', 'Iceland', 'Israel', 'Japan', 'South Korea', 'Kuwait', 'Macau', 'Malaysia', 'Mexico', 'New Zealand', 'Norway', 'Oman', 
     'Poland', 'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Serbia', 'Singapore', 'Sweden', 'Taiwan',
     'Thailand', 'Turkey', 'Ukraine', 'United Kingdom', 'Uruguay', 'United States', 'Ecuador', 'Paraguay', 'Panama', 'Argentina']
 
