@@ -10,15 +10,6 @@ from utils.aws_utils import *
 # Load S3 environment variables
 load_dotenv()
 
-# Countries to extract cities from
-countries = ['United Arab Emirates', 'Australia', 'Bosnia and Herzegovina', 'Bahrain', 'Bulgaria',
-    'Brazil', 'Canada', 'Switzerland', 'Liechtenstein', 'Chile', 'China', 'Colombia', 'Costa Rica' 'Czech Republic', 'Denmark', 'Andorra',
-    'Austria', 'Belgium', 'Croatia', 'Cyprus', 'Estonia', 'Finland', 'France', 'Germany', 'Greece', 'Ireland', 'Italy', 'Latvia',
-    'Lithuania', 'Luxembourg', 'Malta', 'Montenegro', 'Monaco', 'Netherlands', 'Portugal', 'San Marino', 'Slovakia', 'Slovenia', 'Spain',
-    'Georgia', 'Hong Kong', 'Hungary', 'Iceland', 'Israel', 'Japan', 'South Korea', 'Kuwait', 'Macau', 'Malaysia', 'Mexico', 'New Zealand', 'Norway', 'Oman', 
-    'Poland', 'Qatar', 'Romania', 'Russia', 'Saudi Arabia', 'Serbia', 'Singapore', 'Sweden', 'Taiwan',
-    'Thailand', 'Turkey', 'Ukraine', 'United Kingdom', 'Uruguay', 'United States', 'Ecuador', 'Paraguay', 'Panama', 'Argentina']
-
 def extract_locations(countries: list):
     # Cities
     locations = []
@@ -68,7 +59,7 @@ def extract_currency_conversion_rates():
 def extract_livingcost_prices_from_city():
 
     # Retrieve latest cities file
-    data = get_data(file_prefix = 'locations')
+    locations = get_data(file_prefix = 'locations')
 
     livingcost_price_info = []
 
@@ -117,7 +108,7 @@ def extract_livingcost_prices_from_city():
 def extract_numbeo_prices_from_city():
 
     # Retrieve latest cities file
-    data = get_data(file_prefix = 'cities')
+    locations = get_data(file_prefix = 'locations')
 
     numbeo_price_info = []
 
