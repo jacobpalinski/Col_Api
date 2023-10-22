@@ -34,8 +34,8 @@ def mock_boto3_s3(mocker, monkeypatch):
     current_date = datetime.date.today().strftime('%Y%m%d')
 
     return_values = {
-        f'cities{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Country': 'Australia', 'City': 'Perth'},
-        {'Country': 'New Zealand', 'City': 'Auckland'}, {'Country': 'Singapore', 'City': None}, {'Country': 'Paraguay', 'City': None}]).encode('utf-8')))},
+        'locations.json': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Country': 'Australia', 'City': 'Perth'},
+        {'Country': 'New Zealand', 'City': 'Auckland'}, {'Country': 'Hong Kong', 'City': 'Hong Kong'}, {'Country': 'Paraguay', 'City': 'Asuncion'}]).encode('utf-8')))},
         f'currency_conversion_rates{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Abbreviation': 'AUD', 'USD_to_local': '1.55'},
         {'Abbreviation': 'NZD', 'USD_to_local': '1.69'}, {'Abbreviation': 'SGD', 'USD_to_local': '1.36'}, {'Abbreviation': 'PYG', 'USD_to_local': '7,258.93'}]).encode('utf-8')))}
     }
@@ -75,6 +75,24 @@ def mock_countries_without_cities():
 @pytest.fixture
 def mock_numbeo_prices_perth_html():
     with open('mock_html/numbeo_prices_perth.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html
+
+@pytest.fixture
+def mock_numbeo_prices_auckland_html():
+    with open('mock_html/numbeo_prices_auckland.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html
+
+@pytest.fixture
+def mock_numbeo_prices_hong_kong_html():
+    with open('mock_html/numbeo_prices_hong_kong.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html
+
+@pytest.fixture
+def mock_numbeo_prices_asuncion_html():
+    with open('mock_html/numbeo_prices_asuncion.html', encoding = 'utf-8') as html_content:
         html = html_content.read()
         yield html
 

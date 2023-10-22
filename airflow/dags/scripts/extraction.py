@@ -10,27 +10,6 @@ from utils.aws_utils import *
 # Load S3 environment variables
 load_dotenv()
 
-def extract_locations(countries: list):
-    # Cities
-    locations = []
-
-    for country in countries:
-        # Request
-        response = requests.get(f'https://www.numbeo.com/cost-of-living/country_result.jsp?country={country}')
-        
-        # Parse Html
-        numbeo_country_html = BeautifulSoup(response.text, 'html.parser')
-        if numbeo_country_html.find('table', {'id': 't2'}):
-            cities = numbeo_country_html.find('table', {'id': 't2'}).find('tbody').find_all('tr')
-            for city in cities:
-                city_name = city.find('a').text
-                locations.append({'Country': country, 'City': city_name})
-        else:
-            locations.append({'Country': country, 'City': None})
-
-    # Load data to S3 raw bucket
-    put_data(file_prefix = 'locations', data = locations, bucket_type = 'raw')
-
 def extract_currency_conversion_rates():
     # Scraped conversion rates USD -> local
     currency_conversion_rates = []
@@ -108,17 +87,22 @@ def extract_livingcost_prices_from_city():
 def extract_numbeo_prices_from_city():
 
     # Retrieve latest cities file
-    locations = get_data(file_prefix = 'locations')
+    locations = get_data(file_prefix = 'locations.json')
 
     numbeo_price_info = []
 
-    for location in data:
+    for location in locations:
+        # Format city for request
+        city_name = location['City'].split()
+        capitalised_city_name = [word.capitalize() for word in city_name]
+        formatted_city_name = '-'.join(capitalised_city_name)
+
         # Request
-        response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{city}?displayCurrency=USD')
+        response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}?displayCurrency=USD')
         
         # Extract price information from relevant items
         numbeo_prices_city_html = BeautifulSoup(response.text, 'html.parser')
-        prices_table = numbeo_prices_city_html.find('table', {'class': 'data_wide_table new_bar_table'}).find('tbody').find_all('tr')
+        prices_table = numbeo_prices_city_html.find('table', {'class': 'data_wide_table new_bar_table'}).find_all('tr')
 
         # Prices from restaurants
         meal_two_people_mid_range = prices_table[2].find('td', {'style': 'text-align: right'}).find('span').text
@@ -174,44 +158,44 @@ def extract_numbeo_prices_from_city():
         price_per_sqm_apartment_city_centre = prices_table[60].find('td', {'style': 'text-align: right'}).find('span').text
         price_per_sqm_apartment_outside_city_centre = prices_table[61].find('td', {'style': 'text-align: right'}).find('span').text
 
-        numbeo_price_info.extend([{'City': city, 'Item': 'Dinner (2 People Mid Range Restaurant)', 'Price': meal_two_people_mid_range},
-        {'City': city, 'Item': 'Domestic Draught (0.5L)', 'Price': domestic_draught},
-        {'City': city, 'Item': 'Cappuccino (Regular)', 'Price': cappuccino},
-        {'City': city, 'Item': 'Milk (1L)', 'Price': milk},
-        {'City': city, 'Item': 'Bread (500g)', 'Price': bread},
-        {'City': city, 'Item': 'Rice (1kg)', 'Price': rice},
-        {'City': city, 'Item': 'Eggs (x12)', 'Price': eggs},
-        {'City': city, 'Item': 'Cheese (1kg)', 'Price': cheese},
-        {'City': city, 'Item': 'Chicken Fillets (1kg)', 'Price': chicken},
-        {'City': city, 'Item': 'Beef Round (1kg)', 'Price': beef},
-        {'City': city, 'Item': 'Apples (1kg)', 'Price': apples},
-        {'City': city, 'Item': 'Banana (1kg)', 'Price': banana},
-        {'City': city, 'Item': 'Oranges (1kg)', 'Price': oranges},
-        {'City': city, 'Item': 'Tomato (1kg)', 'Price': tomato},
-        {'City': city, 'Item': 'Potato (1kg)', 'Price': potato},
-        {'City': city, 'Item': 'Onion (1kg)', 'Price': onion},
-        {'City': city, 'Item': 'Lettuce (1 Head)', 'Price': lettuce},
-        {'City': city, 'Item': 'Domestic Beer (0.5L Bottle)', 'Price': domestic_beer},
-        {'City': city, 'Item': 'Cigarettes (20 Pack Malboro)', 'Price': cigarettes},
-        {'City': city, 'Item': 'Public Transport (One Way Ticket)', 'Price': one_way_ticket},
-        {'City': city, 'Item': 'Public Transport (Monthly)', 'Price': monthly_pass},
-        {'City': city, 'Item': 'Petrol (1L)', 'Price': petrol},
-        {'City': city, 'Item': 'Mobile Plan (10GB+ Data, Monthly)', 'Price': mobile_plan_monthly},
-        {'City': city, 'Item': 'Internet (60 Mbps, Unlimited Data, Monthly)', 'Price': internet},
-        {'City': city, 'Item': 'Gym Membership (Monthly)', 'Price': gym_membership_monthly},
-        {'City': city, 'Item': 'Tennis Court Rent (1hr)', 'Price': tennis_court_one_hour},
-        {'City': city, 'Item': 'Cinema International Release', 'Price': cinema},
-        {'City': city, 'Item': 'Daycare / Preschool (1 Month)', 'Price': preschool},
-        {'City': city, 'Item': 'International Primary School (1 Year)', 'Price': international_primary_school},
-        {'City': city, 'Item': 'Pair of Jeans', 'Price': jeans},
-        {'City': city, 'Item': 'Summer Dress Chain Store', 'Price': summer_dress},
-        {'City': city, 'Item': 'Mens Leather Business Shoes', 'Price': mens_leather_business_shoes},
-        {'City': city, 'Item': 'Rent 1 Bedroom Apartment City Centre', 'Price': apartment_one_bedroom_city},
-        {'City': city, 'Item': 'Rent 1 Bedroom Apartment Outside City Centre', 'Price': apartment_one_bedroom_outside_city},
-        {'City': city, 'Item': 'Rent 3 Bedroom Apartment City Centre', 'Price': apartment_three_bedroom_city},
-        {'City': city, 'Item': 'Rent 3 Bedroom Apartment Outside City Centre', 'Price': apartment_three_bedroom_outside_city},
-        {'City': city, 'Item': 'Price per Square Meter to Buy Apartment in City Centre', 'Price': price_per_sqm_apartment_city_centre},
-        {'City': city, 'Item': 'Price per Square Meter to Buy Apartment Outside of Centre', 'Price': price_per_sqm_apartment_outside_city_centre}])
-
+        numbeo_price_info.extend([{'City': location['City'], 'Item': 'Dinner (2 People Mid Range Restaurant)', 'Price': meal_two_people_mid_range},
+        {'City': location['City'], 'Item': 'Domestic Draught (0.5L)', 'Price': domestic_draught},
+        {'City': location['City'], 'Item': 'Cappuccino (Regular)', 'Price': cappuccino},
+        {'City': location['City'], 'Item': 'Milk (1L)', 'Price': milk},
+        {'City': location['City'], 'Item': 'Bread (500g)', 'Price': bread},
+        {'City': location['City'], 'Item': 'Rice (1kg)', 'Price': rice},
+        {'City': location['City'], 'Item': 'Eggs (x12)', 'Price': eggs},
+        {'City': location['City'], 'Item': 'Cheese (1kg)', 'Price': cheese},
+        {'City': location['City'], 'Item': 'Chicken Fillets (1kg)', 'Price': chicken},
+        {'City': location['City'], 'Item': 'Beef Round (1kg)', 'Price': beef},
+        {'City': location['City'], 'Item': 'Apples (1kg)', 'Price': apples},
+        {'City': location['City'], 'Item': 'Banana (1kg)', 'Price': banana},
+        {'City': location['City'], 'Item': 'Oranges (1kg)', 'Price': oranges},
+        {'City': location['City'], 'Item': 'Tomato (1kg)', 'Price': tomato},
+        {'City': location['City'], 'Item': 'Potato (1kg)', 'Price': potato},
+        {'City': location['City'], 'Item': 'Onion (1kg)', 'Price': onion},
+        {'City': location['City'], 'Item': 'Lettuce (1 Head)', 'Price': lettuce},
+        {'City': location['City'], 'Item': 'Domestic Beer (0.5L Bottle)', 'Price': domestic_beer},
+        {'City': location['City'], 'Item': 'Cigarettes (20 Pack Malboro)', 'Price': cigarettes},
+        {'City': location['City'], 'Item': 'Public Transport (One Way Ticket)', 'Price': one_way_ticket},
+        {'City': location['City'], 'Item': 'Public Transport (Monthly)', 'Price': monthly_pass},
+        {'City': location['City'], 'Item': 'Petrol (1L)', 'Price': petrol},
+        {'City': location['City'], 'Item': 'Mobile Plan (10GB+ Data, Monthly)', 'Price': mobile_plan_monthly},
+        {'City': location['City'], 'Item': 'Internet (60 Mbps, Unlimited Data, Monthly)', 'Price': internet},
+        {'City': location['City'], 'Item': 'Gym Membership (Monthly)', 'Price': gym_membership_monthly},
+        {'City': location['City'], 'Item': 'Tennis Court Rent (1hr)', 'Price': tennis_court_one_hour},
+        {'City': location['City'], 'Item': 'Cinema International Release', 'Price': cinema},
+        {'City': location['City'], 'Item': 'Daycare / Preschool (1 Month)', 'Price': preschool},
+        {'City': location['City'], 'Item': 'International Primary School (1 Year)', 'Price': international_primary_school},
+        {'City': location['City'], 'Item': 'Pair of Jeans', 'Price': jeans},
+        {'City': location['City'], 'Item': 'Summer Dress Chain Store', 'Price': summer_dress},
+        {'City': location['City'], 'Item': 'Mens Leather Business Shoes', 'Price': mens_leather_business_shoes},
+        {'City': location['City'], 'Item': 'Rent 1 Bedroom Apartment City Centre', 'Price': apartment_one_bedroom_city},
+        {'City': location['City'], 'Item': 'Rent 1 Bedroom Apartment Outside City Centre', 'Price': apartment_one_bedroom_outside_city},
+        {'City': location['City'], 'Item': 'Rent 3 Bedroom Apartment City Centre', 'Price': apartment_three_bedroom_city},
+        {'City': location['City'], 'Item': 'Rent 3 Bedroom Apartment Outside City Centre', 'Price': apartment_three_bedroom_outside_city},
+        {'City': location['City'], 'Item': 'Price per Square Meter to Buy Apartment in City Centre', 'Price': price_per_sqm_apartment_city_centre},
+        {'City': location['City'], 'Item': 'Price per Square Meter to Buy Apartment Outside of Centre', 'Price': price_per_sqm_apartment_outside_city_centre}])
+    
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'numbeo_price_info', data = numbeo_price_info)
+    put_data(file_prefix = 'numbeo_price_info', data = numbeo_price_info, bucket_type = 'raw')

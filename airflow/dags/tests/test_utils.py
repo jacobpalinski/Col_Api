@@ -3,10 +3,17 @@ from utils.aws_utils import *
 from utils.spark_utils import *
 from tests.fixtures.fixtures_testing import current_date, mock_environment_variables, mock_boto3_s3
 
-def test_get_data(mock_environment_variables, mock_boto3_s3, current_date):
-    data = get_data(file_prefix = 'cities')
-    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'cities{current_date}')
-    assert data == [{'Australia': 'Perth'}]
+@pytest.mark.parametrize('file_prefix', ['locations.json', 'currency_conversion_rates'])
+def test_get_data(mock_environment_variables, mock_boto3_s3, current_date, file_prefix):
+    data = get_data(file_prefix = file_prefix)
+    if file_prefix == 'locations.json':
+        mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'locations.json')
+        assert data == [{'Country': 'Australia', 'City': 'Perth'},{'Country': 'New Zealand', 'City': 'Auckland'}, 
+        {'Country': 'Hong Kong', 'City': 'Hong Kong'}, {'Country': 'Paraguay', 'City': 'Asuncion'}]
+    else:
+        mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'currency_conversion_rates{current_date}')
+        assert data == [{'Abbreviation': 'AUD', 'USD_to_local': '1.55'},{'Abbreviation': 'NZD', 'USD_to_local': '1.69'},
+        {'Abbreviation': 'SGD', 'USD_to_local': '1.36'}, {'Abbreviation': 'PYG', 'USD_to_local': '7,258.93'}]
 
 @pytest.mark.parametrize('bucket_type', ['raw','transformed'])
 def test_put_data_valid_bucket(mock_environment_variables, mock_boto3_s3, current_date, bucket_type):

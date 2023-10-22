@@ -10,7 +10,10 @@ load_dotenv()
 def get_data(file_prefix: str):
     boto3_s3 = boto3.client('s3', aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY'))
     current_date = datetime.date.today().strftime('%Y%m%d')
-    file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = file_prefix + current_date)
+    if file_prefix == 'locations.json':
+        file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = file_prefix)
+    else:
+        file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = file_prefix + current_date)
     contents = file['Body'].read().decode('utf-8')
     return json.loads(contents)
 
