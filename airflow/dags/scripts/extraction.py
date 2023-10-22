@@ -3,6 +3,7 @@ import json
 import os
 import boto3
 import datetime
+import re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from utils.aws_utils import *
@@ -38,51 +39,79 @@ def extract_currency_conversion_rates():
 def extract_livingcost_prices_from_city():
 
     # Retrieve latest cities file
-    locations = get_data(file_prefix = 'locations')
+    locations = get_data(file_prefix = 'locations.json')
 
     livingcost_price_info = []
 
-    for location in data:
-        # Request
-        response = requests.get(f'https://livingcost.org/cost/{location["Country"]}/{location["City"]}')
+    for location in locations:
+        # Format country and city for request
+        country_name = location['Country'].split()
+        city_name = location['City'].split()
+        capitalised_country_name = [word.capitalize() for word in country_name]
+        capitalised_city_name = [word.capitalize() for word in city_name]
+        formatted_country_name = '-'.join(capitalised_country_name)
+        formatted_city_name = '-'.join(capitalised_city_name)
+
+        # Request Country Page based on formatted_country_name
+        if not (formatted_country_name == 'Hong-Kong' or formatted_country_name == 'Macau'):
+            response = requests.get(f'https://livingcost.org/cost/{formatted_country_name}')
+            livingcost_country_page_html = BeautifulSoup(response.text, 'html.parser')
+            city_urls = []
+            ol_elements = livingcost_country_page_html.find_all('ol', {'class': 'row geo-gutters mb-4 list-unstyled'})
+            for ol in ol_elements:
+                li_elements = ol.find_all('li')
+
+                for li in li_elements:
+                    div_element = li.find_all('div')[0]
+                    a_element = div_element.find('a', href = True)
+                    city_urls.append(a_element['href'])
+
+            pattern = f'.*{formatted_city_name}.*'
+            for url in city_urls:
+                if re.search(pattern, url, re.IGNORECASE):
+                    url_to_extract = url
+                    break
+        else:
+            url_to_extract = f'https://livingcost.org/cost/china/{formatted_city_name}'
         
-        # Extract price information from relevant items
-        livingcost_prices_city_html = BeautifulSoup(response.text, 'html.parser')
+        # Request city prices page
+        response = requests.get(url_to_extract)
+        livingcost_city_page_html = BeautifulSoup(response.text, 'html.parser')
         
         # Prices from Eating Out
-        eating_out_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[0].find('tbody').find_all('tr')
+        eating_out_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[0].find('tbody').find_all('tr')
         lunch = eating_out_table[0].find('div', {'class': 'bar-table text-center'}).find('span').text
         coke = eating_out_table[5].find('div', {'class': 'bar-table text-center'}).find('span').text
 
         # Prices from Utilities
-        utilities_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[1].find('tbody').find_all('tr')
+        utilities_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[1].find('tbody').find_all('tr')
         utilities_one_person = utilities_table[4].find('div', {'class': 'bar-table text-center'}).find('span').text
         utilities_family = utilities_table[5].find('div', {'class': 'bar-table text-center'}).find('span').text
 
         # Prices from Transportation
-        transportation_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[2].find('tbody').find_all('tr')
+        transportation_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[2].find('tbody').find_all('tr')
         taxi = transportation_table[2].find('div', {'class': 'bar-table text-center'}).find('span').text
 
         # Prices from Groceries
-        groceries_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[3].find('tbody').find_all('tr')
+        groceries_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[3].find('tbody').find_all('tr')
         water = groceries_table[13].find('div', {'class': 'bar-table text-center'}).find('span').text
         wine = groceries_table[15].find('div', {'class': 'bar-table text-center'}).find('span').text
 
         # Prices from other
-        other_table = livingcost_prices_city_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[4].find('tbody').find_all('tr')
+        other_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[4].find('tbody').find_all('tr')
         brand_sneakers = other_table[5].find('div', {'class': 'bar-table text-center'}).find('span').text
         
-        livingcost_price_info.extend([{'Country': location['Country'], 'City': location['City'], 'Item': 'Lunch', 'Price': lunch},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Coke (0.5L)', 'Price': coke},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': utilities_one_person },
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (Family)', 'Price': utilities_family},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Taxi (8km)', 'Price': taxi},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Water (1L)', 'Price': water},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Wine (750ml Bottle Mid Range)', 'Price': wine},
-        {'Country': location['Country'], 'City': location['City'], 'Item': 'Brand Sneakers', 'Price': brand_sneakers}])
+        livingcost_price_info.extend([{'City': location['City'], 'Item': 'Lunch', 'Price': lunch},
+        {'City': location['City'], 'Item': 'Coke (0.5L)', 'Price': coke},
+        {'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': utilities_one_person},
+        {'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (Family)', 'Price': utilities_family},
+        {'City': location['City'], 'Item': 'Taxi (8km)', 'Price': taxi},
+        {'City': location['City'], 'Item': 'Water (1L)', 'Price': water},
+        {'City': location['City'], 'Item': 'Wine (750ml Bottle Mid Range)', 'Price': wine},
+        {'City': location['City'], 'Item': 'Brand Sneakers', 'Price': brand_sneakers}])
 
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'livingcost_price_info', data = livingcost_price_info)
+    put_data(file_prefix = 'livingcost_price_info', data = livingcost_price_info, bucket_type = 'raw')
 
 def extract_numbeo_prices_from_city():
 
