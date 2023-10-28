@@ -58,7 +58,7 @@ def merge_and_transform_homepurchase(spark_session: SparkSession):
    # Convert data into lists of Row objects
    numbeo_price_info_rows = [Row(**row) for row in numbeo_price_info]
 
-   # Create dataframes from row objects
+   # Create dataframes from Row objects
    numbeo_price_info_df = pyspark.createDataFrame(numbeo_price_info_rows)
 
    # Filter criterea
@@ -76,6 +76,79 @@ def merge_and_transform_homepurchase(spark_session: SparkSession):
 
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'homepurchase', data = homepurchase, bucket_type = 'transformed')
+
+def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, items_to_filter_by: list, output_file: str):
+   '''Only numbeo_price_info will be used if livingcost_price_info is not specified in files'''
+   # Retrieve numbeo_price_info from S3 bucket
+   numbeo_price_info = get_data(file_prefix = 'numbeo_price_info')
+
+   # Convert data into list of Row objects
+   numbeo_price_info_rows = [Row(**row) for row in numbeo_price_info]
+
+   # Create dataframe from Row objects
+   numbeo_price_info_df = pyspark.createDataFrame(numbeo_price_info_rows)
+
+   # Filter items
+   numbeo_price_info_df_filtered = numbeo_price_info_df.filter(functions.col('Item').isin(items_to_filter_by))
+
+   # Format price string and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Additional transformations if include_livingcost == True
+   if include_livingcost == True:
+      livingcost_price_info = get_data(file_prefix = 'livingcost_price_info')
+
+      # Convert data into list of Row objects
+      livingcost_price_info_rows = [Row(**row) for row in livingcost_price_info]
+
+      # Create dataframe from Row objects
+      livingcost_price_info_df = pyspark.createDataFrame(livingcost_price_info_rows)
+
+      # Filter items
+      livingcost_price_info_df_filtered = livingcost_price_info_df.filter(functions.col('Item').isin(items_to_filter_by))
+
+      # Format price string and convert to float
+      livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+      livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+      # Additional transformations required for foodbeverage output file
+      if output_file == 'foodbeverage':
+         restaurant_items = ['Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)', 'Cappuccino (Regular)', 'Coke (0.5L)']
+         beverage_items = ['Milk(1L)', 'Water(1L)', 'Wine (750ml Bottle Mid Range)', 'Domestic Beer (0.5L Bottle)', 'Cappuccino (Regular)',
+         'Coke (0.5L)']
+         numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Purchase Point', 
+         functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
+         numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Item Category', 
+         functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
+         livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Purchase Point', 
+         functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
+         livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Item Category', 
+         functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
+
+      # Join dataframes
+      combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+
+      # Convert to list of dictionaries
+      combined_price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in combined_price_info_df.collect()]
+
+      # Load data to S3 transformed bucket
+      put_data(file_prefix = output_file, data = combined_price_info, bucket_type = 'transformed')
+   
+   else:
+      # Convert to list of dictionaries
+      price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in numbeo_price_info_df_filtered.collect()]
+
+      # Load data to S3 transformed bucket
+      put_data(file_prefix = output_file, data = price_info, bucket_type = 'transformed')
+
+   
+
+
+
+
+
+
 
 
     

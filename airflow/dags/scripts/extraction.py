@@ -154,7 +154,6 @@ def extract_numbeo_prices_from_city():
         onion = prices_table[22].find('td', {'style': 'text-align: right'}).find('span').text
         lettuce = prices_table[23].find('td', {'style': 'text-align: right'}).find('span').text
         domestic_beer = prices_table[26].find('td', {'style': 'text-align: right'}).find('span').text
-        cigarettes = prices_table[28].find('td', {'style': 'text-align: right'}).find('span').text
         
         # Prices from transportation
         one_way_ticket = prices_table[30].find('td', {'style': 'text-align: right'}).find('span').text
@@ -205,7 +204,6 @@ def extract_numbeo_prices_from_city():
         {'City': location['City'], 'Item': 'Onion (1kg)', 'Price': onion},
         {'City': location['City'], 'Item': 'Lettuce (1 Head)', 'Price': lettuce},
         {'City': location['City'], 'Item': 'Domestic Beer (0.5L Bottle)', 'Price': domestic_beer},
-        {'City': location['City'], 'Item': 'Cigarettes (20 Pack Malboro)', 'Price': cigarettes},
         {'City': location['City'], 'Item': 'Public Transport (One Way Ticket)', 'Price': one_way_ticket},
         {'City': location['City'], 'Item': 'Public Transport (Monthly)', 'Price': monthly_pass},
         {'City': location['City'], 'Item': 'Petrol (1L)', 'Price': petrol},
