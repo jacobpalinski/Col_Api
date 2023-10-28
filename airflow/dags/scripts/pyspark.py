@@ -51,32 +51,6 @@ def merge_locations_with_currencies(spark_session: SparkSession, country_abbrevi
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'locations_with_currencies', data = locations_with_currencies, bucket_type = 'transformed')
 
-def merge_and_transform_homepurchase(spark_session: SparkSession):
-   # Retrieve numbeo_price_info from S3 bucket
-   numbeo_price_info = get_data(file_prefix = 'numbeo_price_info')
-
-   # Convert data into lists of Row objects
-   numbeo_price_info_rows = [Row(**row) for row in numbeo_price_info]
-
-   # Create dataframes from Row objects
-   numbeo_price_info_df = pyspark.createDataFrame(numbeo_price_info_rows)
-
-   # Filter criterea
-   items = ['Price per Square Meter to Buy Apartment in City Centre', 'Price per Square Meter to Buy Apartment Outside of Centre']
-
-   # Filter homepurchase items
-   numbeo_price_info_homepurchase_df = numbeo_price_info_df.filter(functions.col('Item').isin(items))
-
-   # Format price string and convert to float
-   numbeo_price_info_homepurchase_df = numbeo_price_info_homepurchase_df.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
-   numbeo_price_info_homepurchase_df = numbeo_price_info_homepurchase_df.withColumn('Price', functions.col('Price').cast('float'))
-
-   # Convert to list of dictionaries
-   homepurchase = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in numbeo_price_info_homepurchase_df.collect()]
-
-   # Load data to S3 transformed bucket
-   put_data(file_prefix = 'homepurchase', data = homepurchase, bucket_type = 'transformed')
-
 def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, items_to_filter_by: list, output_file: str):
    '''Only numbeo_price_info will be used if livingcost_price_info is not specified in files'''
    # Retrieve numbeo_price_info from S3 bucket

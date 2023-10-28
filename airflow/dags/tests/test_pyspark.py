@@ -239,32 +239,6 @@ def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, 
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'apparel{current_date}',
    Body = expected_apparel)
-
-def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
-   ['Pair of Jeans', 'Summer Dress Chain Store', 'Mens Leather Business Shoes', 'Brand Sneakers'], output_file = 'apparel')
-   expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}'),
-   call(Bucket = 'test-bucket-raw', Key = f'livingcost_price_info{current_date}')]
-   expected_apparel = json.dumps([{"City": "Perth", "Item": "Pair of Jeans", "Price": 87.19}, 
-   {"City": "Perth", "Item": "Summer Dress Chain Store", "Price": 62.76}, 
-   {"City": "Perth", "Item": "Mens Leather Business Shoes", "Price": 161.79}, 
-   {"City": "Auckland", "Item": "Pair of Jeans", "Price": 82.11}, 
-   {"City": "Auckland", "Item": "Summer Dress Chain Store", "Price": 52.16}, 
-   {"City": "Auckland", "Item": "Mens Leather Business Shoes", "Price": 122.07}, 
-   {"City": "Hong Kong", "Item": "Pair of Jeans", "Price": 81.83}, 
-   {"City": "Hong Kong", "Item": "Summer Dress Chain Store", "Price": 41.51}, 
-   {"City": "Hong Kong", "Item": "Mens Leather Business Shoes", "Price": 127.96}, 
-   {"City": "Asuncion", "Item": "Pair of Jeans", "Price": 39.76}, 
-   {"City": "Asuncion", "Item": "Summer Dress Chain Store", "Price": 26.62}, 
-   {"City": "Asuncion", "Item": "Mens Leather Business Shoes", "Price": 69.63}, 
-   {"City": "Perth", "Item": "Brand Sneakers", "Price": 139.0}, 
-   {"City": "Auckland", "Item": "Brand Sneakers", "Price": 103.0}, 
-   {"City": "Hong Kong", "Item": "Brand Sneakers", "Price": 86.5}, 
-   {"City": "Asuncion", "Item": "Brand Sneakers", "Price": 85.6}])
-   assert mock_boto3_s3.get_object.call_count == 2
-   assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
-   mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'apparel{current_date}',
-   Body = expected_apparel)
    
 def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
