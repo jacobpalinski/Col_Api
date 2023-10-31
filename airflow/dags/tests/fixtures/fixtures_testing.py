@@ -108,6 +108,7 @@ def mock_boto3_s3(mocker, monkeypatch):
         {"City": "Perth", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "1,763.16\u00a0$"},
         {"City": "Perth", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "6,741.52\u00a0$"},
         {"City": "Perth", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "5,395.77\u00a0$"},
+        {'City': "Perth", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "5.99"},
         {"City": "Auckland", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "70.01\u00a0$"},
         {"City": "Auckland", "Item": "Domestic Draught (0.5L)", "Price": "7.00\u00a0$"},
         {"City": "Auckland", "Item": "Cappuccino (Regular)", "Price": "3.56\u00a0$"},
@@ -145,6 +146,7 @@ def mock_boto3_s3(mocker, monkeypatch):
         {"City": "Auckland", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "1,926.70\u00a0$"},
         {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "9,155.42\u00a0$"},
         {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "8,089.96\u00a0$"},
+        {'City': "Auckland", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "6.81"},
         {"City": "Hong Kong", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "63.90\u00a0$"},
         {"City": "Hong Kong", "Item": "Domestic Draught (0.5L)", "Price": "6.39\u00a0$"},
         {"City": "Hong Kong", "Item": "Cappuccino (Regular)", "Price": "5.05\u00a0$"},
@@ -182,6 +184,7 @@ def mock_boto3_s3(mocker, monkeypatch):
         {"City": "Hong Kong", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "2,953.79\u00a0$"},
         {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "30,603.04\u00a0$"},
         {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "20,253.04\u00a0$"},
+        {'City': "Hong Kong", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "3.22"},
         {"City": "Asuncion", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "22.91\u00a0$"},
         {"City": "Asuncion", "Item": "Domestic Draught (0.5L)", "Price": "1.35\u00a0$"},
         {"City": "Asuncion", "Item": "Cappuccino (Regular)", "Price": "2.28\u00a0$"},
@@ -218,7 +221,8 @@ def mock_boto3_s3(mocker, monkeypatch):
         {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": "685.78\u00a0$"},
         {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "610.63\u00a0$"},
         {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "1,118.53\u00a0$"},
-        {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "933.23\u00a0$"}]).encode('utf-8')))}
+        {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "933.23\u00a0$"},
+        {'City': "Asuncion", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "9.67"}]).encode('utf-8')))}
     }
 
     def mock_get_object(Bucket, Key, **kwargs):

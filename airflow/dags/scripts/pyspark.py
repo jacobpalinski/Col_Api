@@ -2,7 +2,7 @@ import boto3
 from pyspark.sql import SparkSession, Row, functions
 from pyspark.sql.types import FloatType, StringType
 from itertools import chain
-from utils.spark_utils import create_spark_session
+from utils.spark_utils import *
 from utils.aws_utils import *
 
 country_abbreviation_combinations = {'United Arab Emirates': 'AED', 'Australia': 'AUD', 'Bosnia and Herzegovina': 'BAM', 'Bahrain': 'BHD', 
@@ -50,6 +50,55 @@ def merge_locations_with_currencies(spark_session: SparkSession, country_abbrevi
 
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'locations_with_currencies', data = locations_with_currencies, bucket_type = 'transformed')
+
+def merge_and_transform_homepurchase(spark_session : SparkSession):
+   # Create base filtered dataframe
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Price per Square Meter to Buy Apartment in City Centre', 'Price per Square Meter to Buy Apartment Outside of Centre', 
+   'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)'])
+
+   # Create seperate dataframe for 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)' rate values
+   mortgage_interest_df = numbeo_price_info_df_filtered.filter(functions.col('Item') == 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)')
+
+   # Remove rows from numbeo_price_info_df_filtered that have 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)' as value for 'Item' Column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.filter(functions.col('Item') != 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)')
+
+   # Create 'Property Location' column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Property Location', functions.when(functions.col('Item').contains('City Centre'), 'City Centre').otherwise('Outside of Centre'))
+   
+   # Create 'Price per Square Meter' column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price per Square Meter', functions.col('Price'))
+
+   # Format 'Price per Square Meter' column and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price per Square Meter', functions.regexp_replace(functions.col('Price per Square Meter'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price per Square Meter', functions.col('Price per Square Meter').cast('float'))
+
+   # Remove 'Item' and 'Price' columns
+   columns_to_include = ['City', 'Property Location', 'Price per Square Meter']
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.select(columns_to_include)
+
+   # Format 'Price' column and convert to float
+   mortgage_interest_df = mortgage_interest_df.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   mortgage_interest_df = mortgage_interest_df.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Only keep 'City' and 'Price' columns from mortgage_interest_df when joining with numbeo_price_info_df_filtered
+   columns_to_include = ['City', 'Price']
+   mortgage_interest_df= mortgage_interest_df.select(columns_to_include)
+
+   # Join
+   joined_df = numbeo_price_info_df_filtered.join(mortgage_interest_df, on = 'City', how = 'inner')
+
+   # Rename 'Price' to 'Mortgage Interest'
+   joined_df = joined_df.withColumnRenamed('Price', 'Mortgage Interest')
+
+   # Convert to list of dictionaries
+   joined_dict = [{**row.asDict(), 'Price per Square Meter': round(row['Price per Square Meter'], 2), 
+   'Mortgage Interest': round(row['Mortgage Interest'], 2)} for row in joined_df.collect()]
+
+   # Put in S3 bucket
+   put_data(file_prefix = 'homepurchase', data = joined_dict, bucket_type = 'transformed')
+
+   
 
 def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, items_to_filter_by: list, output_file: str):
    '''Only numbeo_price_info will be used if livingcost_price_info is not specified in files'''
