@@ -35,6 +35,28 @@ def test_merge_and_transform_homepurchase(mock_environment_variables, mock_boto3
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'homepurchase{current_date}',
    Body = expected_homepurchase, ContentType = 'application/json')
 
+def test_merge_and_transform_rent(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
+   merge_and_transform_rent(spark_session = pyspark_session)
+   expected_rent = json.dumps([{"City": "Perth", "Monthly Price": 1635.1, "Property Location": "City Centre", "Bedrooms": 1}, 
+   {"City": "Perth", "Monthly Price": 1191.26, "Property Location": "Outside City Centre", "Bedrooms": 1}, 
+   {"City": "Perth", "Monthly Price": 2454.62, "Property Location": "City Centre", "Bedrooms": 3}, 
+   {"City": "Perth", "Monthly Price": 1763.16, "Property Location": "Outside City Centre", "Bedrooms": 3}, 
+   {"City": "Auckland", "Monthly Price": 1279.42, "Property Location": "City Centre", "Bedrooms": 1}, 
+   {"City": "Auckland", "Monthly Price": 1213.58, "Property Location": "Outside City Centre", "Bedrooms": 1}, 
+   {"City": "Auckland", "Monthly Price": 2417.7, "Property Location": "City Centre", "Bedrooms": 3}, 
+   {"City": "Auckland", "Monthly Price": 1926.7, "Property Location": "Outside City Centre", "Bedrooms": 3}, 
+   {"City": "Hong Kong", "Monthly Price": 2315.7, "Property Location": "City Centre", "Bedrooms": 1}, 
+   {"City": "Hong Kong", "Monthly Price": 1663.1, "Property Location": "Outside City Centre", "Bedrooms": 1}, 
+   {"City": "Hong Kong", "Monthly Price": 4608.27, "Property Location": "City Centre", "Bedrooms": 3}, 
+   {"City": "Hong Kong", "Monthly Price": 2953.79, "Property Location": "Outside City Centre", "Bedrooms": 3}, 
+   {"City": "Asuncion", "Monthly Price": 362.12, "Property Location": "City Centre", "Bedrooms": 1}, 
+   {"City": "Asuncion", "Monthly Price": 272.89, "Property Location": "Outside City Centre", "Bedrooms": 1}, 
+   {"City": "Asuncion", "Monthly Price": 685.78, "Property Location": "City Centre", "Bedrooms": 3}, 
+   {"City": "Asuncion", "Monthly Price": 610.63, "Property Location": "Outside City Centre", "Bedrooms": 3}])
+   mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
+   mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'rent{current_date}',
+   Body = expected_rent, ContentType = 'application/json')
+
 def test_merge_and_transform_foodbeverage(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
    ['Milk (1L)', 'Bread (500g)', 'Rice (1kg)', 'Eggs (x12)', 'Cheese (1kg)', 'Chicken Fillets (1kg)', 'Beef Round (1kg)', 'Apples (1kg)', 'Banana (1kg)',
@@ -162,30 +184,6 @@ def test_merge_and_transform_utilities(mock_environment_variables, mock_boto3_s3
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'utilities{current_date}',
    Body = expected_utilities, ContentType = 'application/json')
-
-def test_merge_and_transform_rent(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
-   items_to_filter_by = ['Rent 1 Bedroom Apartment City Centre', 'Rent 1 Bedroom Apartment Outside City Centre',
-   'Rent 3 Bedroom Apartment City Centre', 'Rent 3 Bedroom Apartment Outside City Centre'], output_file = 'rent')
-   expected_rent = json.dumps([{"City": "Perth", "Item": "Rent 1 Bedroom Apartment City Centre", "Price": 1635.10}, 
-   {"City": "Perth", "Item": "Rent 1 Bedroom Apartment Outside City Centre", "Price": 1191.26}, 
-   {"City": "Perth", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": 2454.62}, 
-   {"City": "Perth", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": 1763.16},
-   {"City": "Auckland", "Item": "Rent 1 Bedroom Apartment City Centre", "Price": 1279.42}, 
-   {"City": "Auckland", "Item": "Rent 1 Bedroom Apartment Outside City Centre", "Price": 1213.58}, 
-   {"City": "Auckland", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": 2417.70}, 
-   {"City": "Auckland", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": 1926.70}, 
-   {"City": "Hong Kong", "Item": "Rent 1 Bedroom Apartment City Centre", "Price": 2315.70}, 
-   {"City": "Hong Kong", "Item": "Rent 1 Bedroom Apartment Outside City Centre", "Price": 1663.10}, 
-   {"City": "Hong Kong", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": 4608.27}, 
-   {"City": "Hong Kong", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": 2953.79}, 
-   {"City": "Asuncion", "Item": "Rent 1 Bedroom Apartment City Centre", "Price": 362.12}, 
-   {"City": "Asuncion", "Item": "Rent 1 Bedroom Apartment Outside City Centre", "Price": 272.89}, 
-   {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": 685.78}, 
-   {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": 610.63}])
-   mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
-   mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'rent{current_date}',
-   Body = expected_rent, ContentType = 'application/json')
 
 def test_merge_and_transform_transportation(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =

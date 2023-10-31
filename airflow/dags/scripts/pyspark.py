@@ -64,7 +64,8 @@ def merge_and_transform_homepurchase(spark_session : SparkSession):
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.filter(functions.col('Item') != 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)')
 
    # Create 'Property Location' column
-   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Property Location', functions.when(functions.col('Item').contains('City Centre'), 'City Centre').otherwise('Outside of Centre'))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Property Location', 
+   functions.when(functions.col('Item').contains('City Centre'), 'City Centre').otherwise('Outside of Centre'))
    
    # Create 'Price per Square Meter' column
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price per Square Meter', functions.col('Price'))
@@ -98,7 +99,37 @@ def merge_and_transform_homepurchase(spark_session : SparkSession):
    # Put in S3 bucket
    put_data(file_prefix = 'homepurchase', data = joined_dict, bucket_type = 'transformed')
 
-   
+def merge_and_transform_rent(spark_session: SparkSession):
+   # Create base filtered dataframe
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Rent 1 Bedroom Apartment City Centre', 'Rent 1 Bedroom Apartment Outside City Centre',
+   'Rent 3 Bedroom Apartment City Centre', 'Rent 3 Bedroom Apartment Outside City Centre'])
+
+   # Create 'Property Location' column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Property Location', 
+   functions.when(functions.col('Item').contains('Outside City Centre'), 'Outside City Centre').otherwise('City Centre'))
+
+   # Create 'Bedrooms' column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Bedrooms', functions.when(functions.col('Item').contains('3'), '3').otherwise('1'))
+
+   # Convert 'Bedrooms' column to int
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Bedrooms', functions.col('Bedrooms').cast('int'))
+
+   # Format 'Price' column and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Rename 'Price' column to 'Monthly Price'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Price', 'Monthly Price')
+
+   # Remove 'Item' column
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.select([column for column in numbeo_price_info_df_filtered.columns if column != 'Item'])
+
+   # Convert to list of dictionaries
+   numbeo_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
+
+   # Put in S3 bucket
+   put_data(file_prefix = 'rent', data = numbeo_price_info, bucket_type = 'transformed')
 
 def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, items_to_filter_by: list, output_file: str):
    '''Only numbeo_price_info will be used if livingcost_price_info is not specified in files'''
