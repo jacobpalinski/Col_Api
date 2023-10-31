@@ -219,8 +219,7 @@ def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3
    Body = expected_childcare, ContentType = 'application/json')
 
 def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
-   ['Pair of Jeans', 'Summer Dress Chain Store', 'Mens Leather Business Shoes', 'Brand Sneakers'], output_file = 'apparel')
+   merge_and_transform_apparel(spark_session = pyspark_session)
    expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}'),
    call(Bucket = 'test-bucket-raw', Key = f'livingcost_price_info{current_date}')]
    expected_apparel = json.dumps([{"City": "Perth", "Item": "Pair of Jeans", "Price": 87.19}, 
@@ -245,20 +244,19 @@ def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, 
    Body = expected_apparel, ContentType = 'application/json')
 
 def test_merge_and_transform_leisure(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
-   items_to_filter_by = ['Gym Membership (Monthly)', 'Tennis Court Rent (1hr)', 'Cinema International Release'], output_file = 'leisure')
-   expected_leisure = json.dumps([{"City": "Perth", "Item": "Gym Membership (Monthly)", "Price": 49.05}, 
-   {"City": "Perth", "Item": "Tennis Court Rent (1hr)", "Price": 14.92}, 
-   {"City": "Perth", "Item": "Cinema International Release", "Price": 14.82}, 
-   {"City": "Auckland", "Item": "Gym Membership (Monthly)", "Price": 45.83}, 
-   {"City": "Auckland", "Item": "Tennis Court Rent (1hr)", "Price": 18.16}, 
-   {"City": "Auckland", "Item": "Cinema International Release", "Price": 13.42}, 
-   {"City": "Hong Kong", "Item": "Gym Membership (Monthly)", "Price": 88.44}, 
-   {"City": "Hong Kong", "Item": "Tennis Court Rent (1hr)", "Price": 8.85}, 
-   {"City": "Hong Kong", "Item": "Cinema International Release", "Price": 12.78},
-   {"City": "Asuncion", "Item": "Gym Membership (Monthly)", "Price": 30.28}, 
-   {"City": "Asuncion", "Item": "Tennis Court Rent (1hr)", "Price": 11.12}, 
-   {"City": "Asuncion", "Item": "Cinema International Release", "Price": 6.06}])
+   merge_and_transform_leisure(spark_session = pyspark_session)
+   expected_leisure = json.dumps([{"City": "Perth", "Activity": "Gym Membership (Monthly)", "Price": 49.05}, 
+   {"City": "Perth", "Activity": "Tennis Court Rent (1hr)", "Price": 14.92}, 
+   {"City": "Perth", "Activity": "Cinema International Release", "Price": 14.82}, 
+   {"City": "Auckland", "Activity": "Gym Membership (Monthly)", "Price": 45.83}, 
+   {"City": "Auckland", "Activity": "Tennis Court Rent (1hr)", "Price": 18.16}, 
+   {"City": "Auckland", "Activity": "Cinema International Release", "Price": 13.42}, 
+   {"City": "Hong Kong", "Activity": "Gym Membership (Monthly)", "Price": 88.44}, 
+   {"City": "Hong Kong", "Activity": "Tennis Court Rent (1hr)", "Price": 8.85}, 
+   {"City": "Hong Kong", "Activity": "Cinema International Release", "Price": 12.78},
+   {"City": "Asuncion", "Activity": "Gym Membership (Monthly)", "Price": 30.28}, 
+   {"City": "Asuncion", "Activity": "Tennis Court Rent (1hr)", "Price": 11.12}, 
+   {"City": "Asuncion", "Activity": "Cinema International Release", "Price": 6.06}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'leisure{current_date}',
    Body = expected_leisure, ContentType = 'application/json')

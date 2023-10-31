@@ -236,7 +236,7 @@ def merge_and_transform_childcare(spark_session: SparkSession):
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
    items_to_filter_by = ['Daycare / Preschool (1 Month)', 'International Primary School (1 Year)'])
 
-   # Format 'Price' column in each dataframe and convert to float
+   # Format 'Price' column in dataframe and convert to float
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
 
@@ -252,7 +252,45 @@ def merge_and_transform_childcare(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'childcare', data = numbeo_price_info, bucket_type = 'transformed')
 
+def merge_and_transform_apparel(spark_session: SparkSession):
+   # Create base dataframes
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Pair of Jeans', 'Summer Dress Chain Store', 'Mens Leather Business Shoes', 'Brand Sneakers'])
+   livingcost_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'livingcost_price_info',
+   items_to_filter_by = ['Pair of Jeans', 'Summer Dress Chain Store', 'Mens Leather Business Shoes', 'Brand Sneakers'])
 
+   # Format 'Price' column in each dataframe and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Combine dataframes into single dataframe
+   combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+
+   # Convert to list of dictionaries
+   combined_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in combined_price_info_df.collect()]
+
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'apparel', data = combined_price_info, bucket_type = 'transformed')
+
+def merge_and_transform_leisure(spark_session: SparkSession):
+   # Create base dataframe
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Gym Membership (Monthly)', 'Tennis Court Rent (1hr)', 'Cinema International Release'])
+
+   # Format 'Price' column in dataframe and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Rename 'Item' column to 'Activity'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Activity')
+
+   # Convert to list of dictionaries
+   numbeo_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
+
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'leisure', data = numbeo_price_info, bucket_type = 'transformed')
 
 
 

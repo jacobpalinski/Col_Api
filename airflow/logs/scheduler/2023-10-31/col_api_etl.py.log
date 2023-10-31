@@ -12109,3 +12109,479 @@ Traceback (most recent call last):
 NameError: name 'merge_and_transform' is not defined
 [2023-10-31T23:28:41.123+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
 [2023-10-31T23:28:41.147+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.415 seconds
+[2023-10-31T23:29:11.356+0000] {processor.py:157} INFO - Started process (PID=16240) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:11.357+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:29:11.357+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:29:11.357+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:14.330+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:29:14.328+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:29:14.332+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:14.356+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.003 seconds
+[2023-10-31T23:29:44.575+0000] {processor.py:157} INFO - Started process (PID=16401) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:44.576+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:29:44.577+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:29:44.577+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:47.292+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:29:47.290+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:29:47.294+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:29:47.315+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.743 seconds
+[2023-10-31T23:30:17.522+0000] {processor.py:157} INFO - Started process (PID=16562) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:17.523+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:30:17.524+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:30:17.524+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:20.684+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:30:20.682+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:30:20.686+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:20.703+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.183 seconds
+[2023-10-31T23:30:50.912+0000] {processor.py:157} INFO - Started process (PID=16722) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:50.913+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:30:50.914+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:30:50.913+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:53.646+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:30:53.643+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:30:53.648+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:30:53.672+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.763 seconds
+[2023-10-31T23:31:23.887+0000] {processor.py:157} INFO - Started process (PID=16882) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:23.888+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:31:23.889+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:31:23.889+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:26.602+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:31:26.599+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:31:26.603+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:26.627+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.742 seconds
+[2023-10-31T23:31:56.845+0000] {processor.py:157} INFO - Started process (PID=17042) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:56.846+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:31:56.847+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:31:56.847+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:59.693+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:31:59.691+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:31:59.695+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:31:59.719+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.876 seconds
+[2023-10-31T23:32:29.942+0000] {processor.py:157} INFO - Started process (PID=17202) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:32:29.943+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:32:29.943+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:32:29.943+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:32:32.814+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:32:32.812+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:32:32.816+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:32:32.840+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.900 seconds
+[2023-10-31T23:33:03.059+0000] {processor.py:157} INFO - Started process (PID=17364) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:03.060+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:33:03.061+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:33:03.061+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:06.280+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:33:06.278+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:33:06.282+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:06.298+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.242 seconds
+[2023-10-31T23:33:36.377+0000] {processor.py:157} INFO - Started process (PID=17525) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:36.378+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:33:36.379+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:33:36.379+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:39.064+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:33:39.062+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:33:39.065+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:33:39.081+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.706 seconds
+[2023-10-31T23:34:09.295+0000] {processor.py:157} INFO - Started process (PID=17683) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:09.296+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:34:09.296+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:34:09.296+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:12.199+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:34:12.197+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:34:12.201+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:12.226+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.933 seconds
+[2023-10-31T23:34:42.428+0000] {processor.py:157} INFO - Started process (PID=17844) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:42.429+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:34:42.429+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:34:42.429+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:45.032+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:34:45.030+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:34:45.034+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:34:45.052+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.626 seconds
+[2023-10-31T23:35:15.252+0000] {processor.py:157} INFO - Started process (PID=18003) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:15.253+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:35:15.254+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:35:15.253+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:17.922+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:35:17.920+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:35:17.924+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:17.940+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.690 seconds
+[2023-10-31T23:35:48.156+0000] {processor.py:157} INFO - Started process (PID=18162) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:48.157+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:35:48.158+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:35:48.158+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:50.908+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:35:50.906+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:35:50.910+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:35:50.935+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.781 seconds
+[2023-10-31T23:36:21.135+0000] {processor.py:157} INFO - Started process (PID=18322) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:21.136+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:36:21.137+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:36:21.137+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:24.065+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:36:24.064+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:36:24.067+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:24.084+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.952 seconds
+[2023-10-31T23:36:54.293+0000] {processor.py:157} INFO - Started process (PID=18483) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:54.294+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:36:54.295+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:36:54.294+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:56.966+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:36:56.964+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:36:56.967+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:36:56.984+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.693 seconds
+[2023-10-31T23:37:27.451+0000] {processor.py:157} INFO - Started process (PID=18642) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:37:27.452+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:37:27.453+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:37:27.452+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:37:30.072+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:37:30.070+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:37:30.074+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:37:30.091+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.643 seconds
+[2023-10-31T23:38:00.303+0000] {processor.py:157} INFO - Started process (PID=18801) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:00.304+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:38:00.305+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:38:00.305+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:03.027+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:38:03.025+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:38:03.028+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:03.045+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.744 seconds
+[2023-10-31T23:38:33.245+0000] {processor.py:157} INFO - Started process (PID=18960) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:33.246+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:38:33.247+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:38:33.247+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:35.969+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:38:35.967+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:38:35.971+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:38:35.987+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.744 seconds
+[2023-10-31T23:39:06.191+0000] {processor.py:157} INFO - Started process (PID=19120) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:06.192+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:39:06.193+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:39:06.192+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:08.944+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:39:08.942+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:39:08.945+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:08.961+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.772 seconds
+[2023-10-31T23:39:39.180+0000] {processor.py:157} INFO - Started process (PID=19281) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:39.181+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:39:39.182+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:39:39.182+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:42.044+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:39:42.041+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:39:42.045+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:39:42.063+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.886 seconds
+[2023-10-31T23:40:12.271+0000] {processor.py:157} INFO - Started process (PID=19441) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:12.272+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:40:12.273+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:40:12.273+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:15.107+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:40:15.105+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:40:15.109+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:15.136+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.867 seconds
+[2023-10-31T23:40:45.343+0000] {processor.py:157} INFO - Started process (PID=19601) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:45.344+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:40:45.344+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:40:45.344+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:48.265+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:40:48.263+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:40:48.267+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:40:48.294+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.953 seconds
+[2023-10-31T23:41:18.507+0000] {processor.py:157} INFO - Started process (PID=19762) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:18.508+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:41:18.509+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:41:18.509+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:21.316+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:41:21.314+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:41:21.317+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:21.342+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.837 seconds
+[2023-10-31T23:41:51.561+0000] {processor.py:157} INFO - Started process (PID=19921) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:51.562+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:41:51.563+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:41:51.563+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:54.485+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:41:54.483+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:41:54.487+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:41:54.511+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.954 seconds
+[2023-10-31T23:42:24.752+0000] {processor.py:157} INFO - Started process (PID=20081) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:42:24.753+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:42:24.754+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:42:24.754+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:42:27.527+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:42:27.525+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:42:27.529+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:42:27.564+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.815 seconds
+[2023-10-31T23:42:57.784+0000] {processor.py:157} INFO - Started process (PID=20240) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:42:57.785+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:42:57.786+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:42:57.786+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:43:00.400+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:43:00.398+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:43:00.402+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:43:00.426+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.645 seconds
+[2023-10-31T23:43:30.633+0000] {processor.py:157} INFO - Started process (PID=20399) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:43:30.634+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:43:30.635+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:43:30.635+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:43:33.430+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:43:33.427+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:43:33.431+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:43:33.449+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.818 seconds
+[2023-10-31T23:44:03.670+0000] {processor.py:157} INFO - Started process (PID=20558) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:03.671+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:44:03.672+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:44:03.672+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:06.639+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:44:06.638+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:44:06.641+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:06.658+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.991 seconds
+[2023-10-31T23:44:36.871+0000] {processor.py:157} INFO - Started process (PID=20718) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:36.872+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:44:36.872+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:44:36.872+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:39.470+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:44:39.468+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:44:39.471+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:44:39.495+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.626 seconds
+[2023-10-31T23:45:09.716+0000] {processor.py:157} INFO - Started process (PID=20877) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:09.717+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:45:09.718+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:45:09.718+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:12.309+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:45:12.307+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:45:12.311+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:12.333+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.619 seconds
+[2023-10-31T23:45:42.546+0000] {processor.py:157} INFO - Started process (PID=21035) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:42.547+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:45:42.547+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:45:42.547+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:45.217+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:45:45.215+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:45:45.219+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:45:45.242+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.699 seconds
+[2023-10-31T23:46:15.463+0000] {processor.py:157} INFO - Started process (PID=21193) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:15.464+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:46:15.465+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:46:15.465+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:18.044+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:46:18.042+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:46:18.046+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:18.062+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.601 seconds
+[2023-10-31T23:46:48.277+0000] {processor.py:157} INFO - Started process (PID=21352) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:48.278+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:46:48.279+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:46:48.278+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:50.963+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:46:50.961+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:46:50.964+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:46:50.980+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.705 seconds
+[2023-10-31T23:47:21.418+0000] {processor.py:157} INFO - Started process (PID=21511) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:21.420+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:47:21.421+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:47:21.421+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:24.111+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:47:24.109+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:47:24.112+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:24.136+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.720 seconds
