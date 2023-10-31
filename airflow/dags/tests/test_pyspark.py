@@ -204,6 +204,20 @@ def test_merge_and_transform_transportation(mock_environment_variables, mock_bot
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'transportation{current_date}',
    Body = expected_transportation, ContentType = 'application/json')
 
+def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
+   merge_and_transform_childcare(spark_session = pyspark_session)
+   expected_childcare = json.dumps([{"City": "Perth", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 1617.64}, 
+   {"City": "Perth", "Type": "International Primary School (1 Year)", "Annual Price": 13498.21}, 
+   {"City": "Auckland", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 829.42}, 
+   {"City": "Auckland", "Type": "International Primary School (1 Year)", "Annual Price": 13521.14},
+   {"City": "Hong Kong", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 783.72}, 
+   {"City": "Hong Kong", "Type": "International Primary School (1 Year)", "Annual Price": 20470.76}, 
+   {"City": "Asuncion", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 165.08}, 
+   {"City": "Asuncion", "Type": "International Primary School (1 Year)", "Annual Price": 3436.45}])
+   mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
+   mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'childcare{current_date}',
+   Body = expected_childcare, ContentType = 'application/json')
+
 def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
    ['Pair of Jeans', 'Summer Dress Chain Store', 'Mens Leather Business Shoes', 'Brand Sneakers'], output_file = 'apparel')
@@ -229,21 +243,6 @@ def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, 
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'apparel{current_date}',
    Body = expected_apparel, ContentType = 'application/json')
-   
-def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
-   items_to_filter_by = ['Daycare / Preschool (1 Month)', 'International Primary School (1 Year)'], output_file = 'childcare')
-   expected_childcare = json.dumps([{"City": "Perth", "Item": "Daycare / Preschool (1 Month)", "Price": 1617.64}, 
-   {"City": "Perth", "Item": "International Primary School (1 Year)", "Price": 13498.21}, 
-   {"City": "Auckland", "Item": "Daycare / Preschool (1 Month)", "Price": 829.42}, 
-   {"City": "Auckland", "Item": "International Primary School (1 Year)", "Price": 13521.14},
-   {"City": "Hong Kong", "Item": "Daycare / Preschool (1 Month)", "Price": 783.72}, 
-   {"City": "Hong Kong", "Item": "International Primary School (1 Year)", "Price": 20470.76}, 
-   {"City": "Asuncion", "Item": "Daycare / Preschool (1 Month)", "Price": 165.08}, 
-   {"City": "Asuncion", "Item": "International Primary School (1 Year)", "Price": 3436.45}])
-   mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
-   mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'childcare{current_date}',
-   Body = expected_childcare, ContentType = 'application/json')
 
 def test_merge_and_transform_leisure(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 

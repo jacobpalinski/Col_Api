@@ -218,7 +218,7 @@ def merge_and_transform_transportation(spark_session: SparkSession):
    livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
    livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
 
-   # Rename 'Item' column to 'Utility'
+   # Rename 'Item' column to 'Type'
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Type')
    livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumnRenamed('Item', 'Type')
 
@@ -230,6 +230,27 @@ def merge_and_transform_transportation(spark_session: SparkSession):
 
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'transportation', data = combined_price_info, bucket_type = 'transformed')
+
+def merge_and_transform_childcare(spark_session: SparkSession):
+   # Create base dataframe
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Daycare / Preschool (1 Month)', 'International Primary School (1 Year)'])
+
+   # Format 'Price' column in each dataframe and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Rename 'Price' column to 'Annual Price'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Price', 'Annual Price')
+
+   # Rename 'Item' column to 'Type'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Type')
+
+   # Convert to list of dictionaries
+   numbeo_price_info = [{**row.asDict(), 'Annual Price': round(row['Annual Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
+
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'childcare', data = numbeo_price_info, bucket_type = 'transformed')
 
 
 
