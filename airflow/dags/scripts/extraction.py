@@ -4,6 +4,7 @@ import os
 import boto3
 import datetime
 import re
+import time
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from utils.aws_utils import *
@@ -125,9 +126,34 @@ def extract_numbeo_prices_from_city():
         city_name = location['City'].split()
         capitalised_city_name = [word.capitalize() for word in city_name]
         formatted_city_name = '-'.join(capitalised_city_name)
+        print(formatted_city_name)
+        country_name = location['Country'].split()
+        capitalised_country_name = [word.capitalize() for word in country_name]
+        formatted_country_name = '-'.join(capitalised_country_name)
 
         # Request
-        response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}?displayCurrency=USD')
+        if formatted_city_name in ['Vaduz', 'Aarhus', 'Crete', 'San-Marino', 'Kawasaki', 'Malacca', 'Sochi', 'Donetsk', 'Mar-Del-Plata']:
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}-{formatted_country_name}?displayCurrency=USD')
+        elif formatted_city_name == 'Seville':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Sevilla?displayCurrency=USD')
+        elif formatted_city_name == 'Zaragoza':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Zaragoza-Saragossa?displayCurrency=USD')
+        elif formatted_city_name == 'Macau':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Macao?displayCurrency=USD')
+        elif formatted_city_name == 'Jeddah':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Jeddah-Jiddah?displayCurrency=USD')
+        elif formatted_city_name == 'Kyiv':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Kiev?displayCurrency=USD')
+        elif formatted_city_name == 'Tel-Aviv':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Tel-Aviv-Yafo?displayCurrency=USD')
+        elif formatted_city_name == 'Playa del Carmen':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Playa-del-Carmen?displayCurrency=USD')
+        elif formatted_city_name == 'New York':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/New-York?displayCurrency=USD')
+        else:
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}?displayCurrency=USD')
+        
+        time.sleep(4)
         
         # Extract price information from relevant items
         numbeo_prices_city_html = BeautifulSoup(response.text, 'html.parser')
@@ -183,8 +209,13 @@ def extract_numbeo_prices_from_city():
         apartment_one_bedroom_outside_city = prices_table[56].find('td', {'style': 'text-align: right'}).find('span').text
         apartment_three_bedroom_city = prices_table[57].find('td', {'style': 'text-align: right'}).find('span').text
         apartment_three_bedroom_outside_city = prices_table[58].find('td', {'style': 'text-align: right'}).find('span').text
+
+        # Prices from buy apartment price
         price_per_sqm_apartment_city_centre = prices_table[60].find('td', {'style': 'text-align: right'}).find('span').text
         price_per_sqm_apartment_outside_city_centre = prices_table[61].find('td', {'style': 'text-align: right'}).find('span').text
+
+        # Mortgage interest rate
+        mortgage_interest_rate = prices_table[64].find('td', {'style': 'text-align: right'}).find('span').text
 
         numbeo_price_info.extend([{'City': location['City'], 'Item': 'Dinner (2 People Mid Range Restaurant)', 'Price': meal_two_people_mid_range},
         {'City': location['City'], 'Item': 'Domestic Draught (0.5L)', 'Price': domestic_draught},
@@ -222,7 +253,8 @@ def extract_numbeo_prices_from_city():
         {'City': location['City'], 'Item': 'Rent 3 Bedroom Apartment City Centre', 'Price': apartment_three_bedroom_city},
         {'City': location['City'], 'Item': 'Rent 3 Bedroom Apartment Outside City Centre', 'Price': apartment_three_bedroom_outside_city},
         {'City': location['City'], 'Item': 'Price per Square Meter to Buy Apartment in City Centre', 'Price': price_per_sqm_apartment_city_centre},
-        {'City': location['City'], 'Item': 'Price per Square Meter to Buy Apartment Outside of Centre', 'Price': price_per_sqm_apartment_outside_city_centre}])
+        {'City': location['City'], 'Item': 'Price per Square Meter to Buy Apartment Outside of Centre', 'Price': price_per_sqm_apartment_outside_city_centre},
+        {'City': location['City'], 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': mortgage_interest_rate}])
     
     # Load data to S3 raw bucket
     put_data(file_prefix = 'numbeo_price_info', data = numbeo_price_info, bucket_type = 'raw')

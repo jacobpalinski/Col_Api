@@ -30,7 +30,7 @@ def test_extract_currency_conversion_rates(requests_mock, mock_boto3_s3, mock_cu
 
     # Test function
     extract_currency_conversion_rates()
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_currency_conversion_rates_json)
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_currency_conversion_rates_json, ContentType = 'application/json')
 
 def test_extract_livingcost_prices_from_city(requests_mock, mock_environment_variables, mock_boto3_s3, mock_livingcost_australia_html, mock_livingcost_new_zealand_html,
 mock_livingcost_china_html, mock_livingcost_paraguay_html, mock_livingcost_prices_perth_html, mock_livingcost_prices_auckland_html, mock_livingcost_prices_hong_kong_html,
@@ -84,7 +84,7 @@ mock_livingcost_prices_asuncion_html, current_date):
     # Test function
     extract_livingcost_prices_from_city()
     mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'locations.json')
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_livingcost_price_info_json)
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_livingcost_price_info_json, ContentType = 'application/json')
 
 def test_extract_numbeo_prices_from_city(requests_mock, mock_environment_variables, mock_boto3_s3, mock_numbeo_prices_perth_html, 
 mock_numbeo_prices_auckland_html, mock_numbeo_prices_hong_kong_html, mock_numbeo_prices_asuncion_html, current_date):
@@ -133,6 +133,7 @@ mock_numbeo_prices_auckland_html, mock_numbeo_prices_hong_kong_html, mock_numbeo
     {"City": "Perth", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "1,763.16\u00a0$"},
     {"City": "Perth", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "6,741.52\u00a0$"},
     {"City": "Perth", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "5,395.77\u00a0$"},
+    {'City': "Perth", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "5.99"},
     {"City": "Auckland", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "70.01\u00a0$"},
     {"City": "Auckland", "Item": "Domestic Draught (0.5L)", "Price": "7.00\u00a0$"},
     {"City": "Auckland", "Item": "Cappuccino (Regular)", "Price": "3.56\u00a0$"},
@@ -170,6 +171,7 @@ mock_numbeo_prices_auckland_html, mock_numbeo_prices_hong_kong_html, mock_numbeo
     {"City": "Auckland", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "1,926.70\u00a0$"},
     {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "9,155.42\u00a0$"},
     {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "8,089.96\u00a0$"},
+    {'City': "Auckland", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "6.81"},
     {"City": "Hong Kong", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "63.90\u00a0$"},
     {"City": "Hong Kong", "Item": "Domestic Draught (0.5L)", "Price": "6.39\u00a0$"},
     {"City": "Hong Kong", "Item": "Cappuccino (Regular)", "Price": "5.05\u00a0$"},
@@ -207,6 +209,7 @@ mock_numbeo_prices_auckland_html, mock_numbeo_prices_hong_kong_html, mock_numbeo
     {"City": "Hong Kong", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "2,953.79\u00a0$"},
     {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "30,603.04\u00a0$"},
     {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "20,253.04\u00a0$"},
+    {'City': "Hong Kong", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "3.22"},
     {"City": "Asuncion", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": "22.91\u00a0$"},
     {"City": "Asuncion", "Item": "Domestic Draught (0.5L)", "Price": "1.35\u00a0$"},
     {"City": "Asuncion", "Item": "Cappuccino (Regular)", "Price": "2.28\u00a0$"},
@@ -243,9 +246,10 @@ mock_numbeo_prices_auckland_html, mock_numbeo_prices_hong_kong_html, mock_numbeo
     {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment City Centre", "Price": "685.78\u00a0$"},
     {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": "610.63\u00a0$"},
     {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": "1,118.53\u00a0$"},
-    {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "933.23\u00a0$"}])
+    {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": "933.23\u00a0$"},
+    {'City': "Asuncion", 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': "9.67"}])
     
     # Test function
     extract_numbeo_prices_from_city()
     mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'locations.json')
-    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_numbeo_price_info_json)
+    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = expected_object_name, Body = expected_numbeo_price_info_json, ContentType = 'application/json')

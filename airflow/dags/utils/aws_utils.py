@@ -22,9 +22,11 @@ def put_data(file_prefix: str, data: list, bucket_type: str):
     boto3_s3 = boto3.client('s3', aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY'))
     current_date = datetime.date.today().strftime('%Y%m%d')
     if bucket_type == 'raw':
-        boto3_s3.put_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = file_prefix + current_date, Body = data_json)
+        boto3_s3.put_object(Bucket = os.environ.get('S3_BUCKET_RAW'), Key = file_prefix + current_date, Body = data_json, 
+        ContentType = 'application/json')
     elif bucket_type == 'transformed':
-        boto3_s3.put_object(Bucket = os.environ.get('S3_BUCKET_TRANSFORMED'), Key = file_prefix + current_date, Body = data_json)
+        boto3_s3.put_object(Bucket = os.environ.get('S3_BUCKET_TRANSFORMED'), Key = file_prefix + current_date, Body = data_json,
+        ContentType = 'application/json')
     else:
         raise Exception('bucket_type must be either "raw" or "transformed"')
     

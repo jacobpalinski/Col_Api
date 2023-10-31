@@ -29,8 +29,8 @@ def merge_locations_with_currencies(spark_session: SparkSession, country_abbrevi
    currency_conversion_rates_rows = [Row(**row) for row in currency_conversion_rates]
 
    # Create dataframes from row objects
-   locations_df = pyspark.createDataFrame(locations_rows)
-   currency_conversion_rates_df = pyspark.createDataFrame(currency_conversion_rates_rows)
+   locations_df = spark_session.createDataFrame(locations_rows)
+   currency_conversion_rates_df = spark_session.createDataFrame(currency_conversion_rates_rows)
 
    # Create map based on country_abbreviation_combinations
    country_abbreviation_combinations_map = functions.create_map(*[functions.lit(combination) for combination in chain(*country_abbreviation_combinations.items())])
@@ -60,7 +60,7 @@ def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, i
    numbeo_price_info_rows = [Row(**row) for row in numbeo_price_info]
 
    # Create dataframe from Row objects
-   numbeo_price_info_df = pyspark.createDataFrame(numbeo_price_info_rows)
+   numbeo_price_info_df = spark_session.createDataFrame(numbeo_price_info_rows)
 
    # Filter items
    numbeo_price_info_df_filtered = numbeo_price_info_df.filter(functions.col('Item').isin(items_to_filter_by))

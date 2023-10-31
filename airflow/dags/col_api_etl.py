@@ -18,13 +18,13 @@ with DAG(dag_id = 'col_api_etl', default_args = default_args, schedule_interval 
     extract_currency_conversion_rates = PythonOperator(
         task_id = 'extract_currency_conversion_rates',
         python_callable = extract_currency_conversion_rates)
-    extract_livingcost_prices_from_city = PythonOperator(
-        task_id = 'extract_livingcost_prices_from_city',
-        python_callable = extract_livingcost_prices_from_city
-    )
     extract_numbeo_prices_from_city = PythonOperator(
         task_id = 'extract_numbeo_prices_from_city',
         python_callable = extract_numbeo_prices_from_city
+    )
+    extract_livingcost_prices_from_city = PythonOperator(
+        task_id = 'extract_livingcost_prices_from_city',
+        python_callable = extract_livingcost_prices_from_city
     )
     # Pyspark merge + transformation functions
     merge_locations_with_currencies = PythonOperator(
@@ -86,7 +86,7 @@ with DAG(dag_id = 'col_api_etl', default_args = default_args, schedule_interval 
         op_kwargs = {'spark_session': pyspark, 'include_livingcost': False, 
         'items_to_filter_by': ['Gym Membership (Monthly)', 'Tennis Court Rent (1hr)', 'Cinema International Release'], 'output_file': 'leisure'}
     )
-    extract_currency_conversion_rates >> extract_livingcost_prices_from_city >> extract_numbeo_prices_from_city \
+    extract_currency_conversion_rates >> extract_numbeo_prices_from_city >> extract_livingcost_prices_from_city \
     >> [merge_locations_with_currencies, merge_and_transform_homepurchase, merge_and_transform_foodbeverage,
     merge_and_transform_utilities, merge_and_transform_rent, merge_and_transform_transportation, merge_and_transform_apparel,
     merge_and_transform_childcare, merge_and_transform_leisure]

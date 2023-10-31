@@ -19,22 +19,23 @@ def test_merge_locations_and_currencies(mock_environment_variables, mock_boto3_s
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}',
-   Body = expected_locations_with_currencies)
+   Body = expected_locations_with_currencies, ContentType = 'application/json')
 
 def test_merge_and_transform_homepurchase(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, items_to_filter_by =
-   ['Price per Square Meter to Buy Apartment in City Centre', 'Price per Square Meter to Buy Apartment Outside of Centre'], output_file = 'homepurchase')
-   expected_homepurchase = json.dumps([{"City": "Perth", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": 6741.52},
-   {"City": "Perth", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": 5395.77},
-   {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": 9155.42},
-   {"City": "Auckland", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": 8089.96},
-   {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": 30603.04},
-   {"City": "Hong Kong", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": 20253.04},
-   {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment in City Centre", "Price": 1118.53},
-   {"City": "Asuncion", "Item": "Price per Square Meter to Buy Apartment Outside of Centre", "Price": 933.23}])
+   ['Price per Square Meter to Buy Apartment in City Centre', 'Price per Square Meter to Buy Apartment Outside of Centre', 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)'], 
+   output_file = 'homepurchase')
+   expected_homepurchase = json.dumps([{"City": "Perth", "Property Location": "City Centre", "Price per Square Meter": 6741.52, "Mortgage Interest": 5.99},
+   {"City": "Perth", "Property Location": "Outside of Centre", "Price per Square Meter": 5395.77, "Mortgage Interest": 5.99},
+   {"City": "Auckland", "Property Location": "City Centre", "Price per Square Meter": 9155.42, "Mortgage Interest": 6.81},
+   {"City": "Auckland", "Property Location": "Outside of Centre", "Price per Square Meter": 8089.96, "Mortgage Interest": 6.81},
+   {"City": "Hong Kong", "Property Location": "City Centre", "Price per Square Meter": 30603.04, "Mortgage Interest": 3.22},
+   {"City": "Hong Kong", "Property Location": "Outside of Centre", "Price per Square Meter": 20253.04, "Mortgage Interest": 3.22},
+   {"City": "Asuncion", "Property Location": "City Centre", "Price per Square Meter": 1118.53, "Mortgage Interest": 9.67},
+   {"City": "Asuncion", "Property Location": "Outside of Centre", "Price per Square Meter": 933.23, "Mortgage Interest": 9.67}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'homepurchase{current_date}',
-   Body = expected_homepurchase)
+   Body = expected_homepurchase, ContentType = 'application/json')
 
 def test_merge_and_transform_foodbeverage(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
@@ -135,7 +136,7 @@ def test_merge_and_transform_foodbeverage(mock_environment_variables, mock_boto3
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'foodbeverage{current_date}',
-   Body = expected_foodbeverage)
+   Body = expected_foodbeverage, ContentType = 'application/json')
 
 def test_merge_and_transform_utilities(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, 
@@ -162,7 +163,7 @@ def test_merge_and_transform_utilities(mock_environment_variables, mock_boto3_s3
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'utilities{current_date}',
-   Body = expected_utilities)
+   Body = expected_utilities, ContentType = 'application/json')
 
 def test_merge_and_transform_rent(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
@@ -186,7 +187,7 @@ def test_merge_and_transform_rent(mock_environment_variables, mock_boto3_s3, pys
    {"City": "Asuncion", "Item": "Rent 3 Bedroom Apartment Outside City Centre", "Price": 610.63}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'rent{current_date}',
-   Body = expected_rent)
+   Body = expected_rent, ContentType = 'application/json')
 
 def test_merge_and_transform_transportation(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
@@ -212,7 +213,7 @@ def test_merge_and_transform_transportation(mock_environment_variables, mock_bot
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'transportation{current_date}',
-   Body = expected_transportation)
+   Body = expected_transportation, ContentType = 'application/json')
 
 def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
@@ -238,7 +239,7 @@ def test_merge_and_transform_apparel(mock_environment_variables, mock_boto3_s3, 
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'apparel{current_date}',
-   Body = expected_apparel)
+   Body = expected_apparel, ContentType = 'application/json')
    
 def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
@@ -253,7 +254,7 @@ def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3
    {"City": "Asuncion", "Item": "International Primary School (1 Year)", "Price": 3436.45}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'childcare{current_date}',
-   Body = expected_childcare)
+   Body = expected_childcare, ContentType = 'application/json')
 
 def test_merge_and_transform_leisure(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform(spark_session = pyspark_session, include_livingcost = False, 
@@ -272,7 +273,7 @@ def test_merge_and_transform_leisure(mock_environment_variables, mock_boto3_s3, 
    {"City": "Asuncion", "Item": "Cinema International Release", "Price": 6.06}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'leisure{current_date}',
-   Body = expected_leisure)
+   Body = expected_leisure, ContentType = 'application/json')
 
 
 
