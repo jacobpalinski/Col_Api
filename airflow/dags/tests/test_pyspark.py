@@ -58,11 +58,7 @@ def test_merge_and_transform_rent(mock_environment_variables, mock_boto3_s3, pys
    Body = expected_rent, ContentType = 'application/json')
 
 def test_merge_and_transform_foodbeverage(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
-   ['Milk (1L)', 'Bread (500g)', 'Rice (1kg)', 'Eggs (x12)', 'Cheese (1kg)', 'Chicken Fillets (1kg)', 'Beef Round (1kg)', 'Apples (1kg)', 'Banana (1kg)',
-   'Oranges (1kg)', 'Tomato (1kg)', 'Potato (1kg)', 'Onion (1kg)', 'Lettuce (1 Head)', 'Water (1L)', 'Wine (750ml Bottle Mid Range)',
-   'Domestic Beer (0.5L Bottle)', 'Cigarettes (20 Pack Malboro)', 'Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)',
-   'Cappuccino (Regular)', 'Coke (0.5L)'], output_file = 'foodbeverage')
+   merge_and_transform_foodbeverage(spark_session = pyspark_session)
    expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}'),
    call(Bucket = 'test-bucket-raw', Key = f'livingcost_price_info{current_date}')]
    expected_foodbeverage = json.dumps([{"City": "Perth", "Item": "Dinner (2 People Mid Range Restaurant)", "Price": 96.31, "Purchase Point": "Restaurant", "Item Category": "Food"}, 
@@ -159,53 +155,50 @@ def test_merge_and_transform_foodbeverage(mock_environment_variables, mock_boto3
    Body = expected_foodbeverage, ContentType = 'application/json')
 
 def test_merge_and_transform_utilities(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = True, 
-   items_to_filter_by = ['Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Electricity, Heating, Cooling, Water and Garbage (Family)',
-   'Internet (60 Mbps, Unlimited Data, Monthly)', 'Mobile Plan (10GB+ Data, Monthly)'], output_file = 'utilities')
+   merge_and_transform_utilities(spark_session = pyspark_session)
    expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}'),
    call(Bucket = 'test-bucket-raw', Key = f'livingcost_price_info{current_date}')]
-   expected_utilities = json.dumps([{"City": "Perth", "Item": "Mobile Plan (10GB+ Data, Monthly)", "Price": 35.83}, 
-   {"City": "Perth", "Item": "Internet (60 Mbps, Unlimited Data, Monthly)", "Price": 62.23}, 
-   {"City": "Auckland", "Item": "Mobile Plan (10GB+ Data, Monthly)", "Price": 40.35}, 
-   {"City": "Auckland", "Item": "Internet (60 Mbps, Unlimited Data, Monthly)", "Price": 52.52},
-   {"City": "Hong Kong", "Item": "Mobile Plan (10GB+ Data, Monthly)", "Price": 19.08}, 
-   {"City": "Hong Kong", "Item": "Internet (60 Mbps, Unlimited Data, Monthly)", "Price": 23.51}, 
-   {"City": "Asuncion", "Item": "Mobile Plan (10GB+ Data, Monthly)", "Price": 15.59}, 
-   {"City": "Asuncion", "Item": "Internet (60 Mbps, Unlimited Data, Monthly)", "Price": 18.57}, 
-   {"City": "Perth", "Item": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Price": 124.0}, 
-   {"City": "Perth", "Item": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Price": 216.0}, 
-   {"City": "Auckland", "Item": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Price": 96.1}, 
-   {"City": "Auckland", "Item": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Price": 148.0}, 
-   {"City": "Hong Kong", "Item": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Price": 146.0}, 
-   {"City": "Hong Kong", "Item": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Price": 223.0}, 
-   {"City": "Asuncion", "Item": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Price": 39.3}, 
-   {"City": "Asuncion", "Item": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Price": 61.3}])
+   expected_utilities = json.dumps([{"City": "Perth", "Utility": "Mobile Plan (10GB+ Data, Monthly)", "Monthly Price": 35.83}, 
+   {"City": "Perth", "Utility": "Internet (60 Mbps, Unlimited Data, Monthly)", "Monthly Price": 62.23}, 
+   {"City": "Auckland", "Utility": "Mobile Plan (10GB+ Data, Monthly)", "Monthly Price": 40.35}, 
+   {"City": "Auckland", "Utility": "Internet (60 Mbps, Unlimited Data, Monthly)", "Monthly Price": 52.52},
+   {"City": "Hong Kong", "Utility": "Mobile Plan (10GB+ Data, Monthly)", "Monthly Price": 19.08}, 
+   {"City": "Hong Kong", "Utility": "Internet (60 Mbps, Unlimited Data, Monthly)", "Monthly Price": 23.51}, 
+   {"City": "Asuncion", "Utility": "Mobile Plan (10GB+ Data, Monthly)", "Monthly Price": 15.59}, 
+   {"City": "Asuncion", "Utility": "Internet (60 Mbps, Unlimited Data, Monthly)", "Monthly Price": 18.57}, 
+   {"City": "Perth", "Utility": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Monthly Price": 124.0}, 
+   {"City": "Perth", "Utility": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Monthly Price": 216.0}, 
+   {"City": "Auckland", "Utility": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Monthly Price": 96.1}, 
+   {"City": "Auckland", "Utility": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Monthly Price": 148.0}, 
+   {"City": "Hong Kong", "Utility": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Monthly Price": 146.0}, 
+   {"City": "Hong Kong", "Utility": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Monthly Price": 223.0}, 
+   {"City": "Asuncion", "Utility": "Electricity, Heating, Cooling, Water and Garbage (1 Person)", "Monthly Price": 39.3}, 
+   {"City": "Asuncion", "Utility": "Electricity, Heating, Cooling, Water and Garbage (Family)", "Monthly Price": 61.3}])
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'utilities{current_date}',
    Body = expected_utilities, ContentType = 'application/json')
 
 def test_merge_and_transform_transportation(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_and_transform(spark_session = pyspark_session, include_livingcost = True, items_to_filter_by =
-   ['Public Transport (One Way Ticket)', 'Public Transport (Monthly)', 'Petrol (1L)', 'Taxi (8km)'], output_file = 'transportation')
+   merge_and_transform_transportation(spark_session = pyspark_session)
    expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}'),
    call(Bucket = 'test-bucket-raw', Key = f'livingcost_price_info{current_date}')]
-   expected_transportation = json.dumps([{"City": "Perth", "Item": "Public Transport (One Way Ticket)", "Price": 2.90}, 
-   {"City": "Perth", "Item": "Public Transport (Monthly)", "Price": 112.90}, 
-   {"City": "Perth", "Item": "Petrol (1L)", "Price": 1.26}, 
-   {"City": "Auckland", "Item": "Public Transport (One Way Ticket)", "Price": 2.33}, 
-   {"City": "Auckland", "Item": "Public Transport (Monthly)", "Price": 125.43}, 
-   {"City": "Auckland", "Item": "Petrol (1L)", "Price": 1.67}, 
-   {"City": "Hong Kong", "Item": "Public Transport (One Way Ticket)", "Price": 1.53}, 
-   {"City": "Hong Kong", "Item": "Public Transport (Monthly)", "Price": 63.90}, 
-   {"City": "Hong Kong", "Item": "Petrol (1L)", "Price": 2.88}, 
-   {"City": "Asuncion", "Item": "Public Transport (One Way Ticket)", "Price": 0.49}, 
-   {"City": "Asuncion", "Item": "Public Transport (Monthly)", "Price": 21.57}, 
-   {"City": "Asuncion", "Item": "Petrol (1L)", "Price": 1.12}, 
-   {"City": "Perth", "Item": "Taxi (8km)", "Price": 17.4},
-   {"City": "Auckland", "Item": "Taxi (8km)", "Price": 19.7}, 
-   {"City": "Hong Kong", "Item": "Taxi (8km)", "Price": 13.0},
-   {"City": "Asuncion", "Item": "Taxi (8km)", "Price": 9.43}])
+   expected_transportation = json.dumps([{"City": "Perth", "Type": "Public Transport (One Way Ticket)", "Price": 2.90}, 
+   {"City": "Perth", "Type": "Public Transport (Monthly)", "Price": 112.90}, 
+   {"City": "Perth", "Type": "Petrol (1L)", "Price": 1.26}, 
+   {"City": "Auckland", "Type": "Public Transport (One Way Ticket)", "Price": 2.33}, 
+   {"City": "Auckland", "Type": "Public Transport (Monthly)", "Price": 125.43}, 
+   {"City": "Auckland", "Type": "Petrol (1L)", "Price": 1.67}, 
+   {"City": "Hong Kong", "Type": "Public Transport (One Way Ticket)", "Price": 1.53}, 
+   {"City": "Hong Kong", "Type": "Public Transport (Monthly)", "Price": 63.90}, 
+   {"City": "Hong Kong", "Type": "Petrol (1L)", "Price": 2.88}, 
+   {"City": "Asuncion", "Type": "Public Transport (One Way Ticket)", "Price": 0.49}, 
+   {"City": "Asuncion", "Type": "Public Transport (Monthly)", "Price": 21.57}, 
+   {"City": "Asuncion", "Type": "Petrol (1L)", "Price": 1.12}, 
+   {"City": "Perth", "Type": "Taxi (8km)", "Price": 17.4},
+   {"City": "Auckland", "Type": "Taxi (8km)", "Price": 19.7}, 
+   {"City": "Hong Kong", "Type": "Taxi (8km)", "Price": 13.0},
+   {"City": "Asuncion", "Type": "Taxi (8km)", "Price": 9.43}])
    assert mock_boto3_s3.get_object.call_count == 2
    assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'transportation{current_date}',

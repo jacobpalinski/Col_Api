@@ -131,70 +131,109 @@ def merge_and_transform_rent(spark_session: SparkSession):
    # Put in S3 bucket
    put_data(file_prefix = 'rent', data = numbeo_price_info, bucket_type = 'transformed')
 
-def merge_and_transform(spark_session: SparkSession, include_livingcost: bool, items_to_filter_by: list, output_file: str):
-   '''Only numbeo_price_info will be used if livingcost_price_info is not specified in files'''
-   # Retrieve numbeo_price_info from S3 bucket
-   numbeo_price_info = get_data(file_prefix = 'numbeo_price_info')
+def merge_and_transform_foodbeverage(spark_session: SparkSession):
+   # Create base dataframes
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Milk (1L)', 'Bread (500g)', 'Rice (1kg)', 'Eggs (x12)', 'Cheese (1kg)', 'Chicken Fillets (1kg)', 'Beef Round (1kg)', 'Apples (1kg)', 'Banana (1kg)',
+   'Oranges (1kg)', 'Tomato (1kg)', 'Potato (1kg)', 'Onion (1kg)', 'Lettuce (1 Head)', 'Water (1L)', 'Wine (750ml Bottle Mid Range)',
+   'Domestic Beer (0.5L Bottle)', 'Cigarettes (20 Pack Malboro)', 'Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)',
+   'Cappuccino (Regular)', 'Coke (0.5L)'])
+   livingcost_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'livingcost_price_info',
+   items_to_filter_by = ['Milk (1L)', 'Bread (500g)', 'Rice (1kg)', 'Eggs (x12)', 'Cheese (1kg)', 'Chicken Fillets (1kg)', 'Beef Round (1kg)', 'Apples (1kg)', 'Banana (1kg)',
+   'Oranges (1kg)', 'Tomato (1kg)', 'Potato (1kg)', 'Onion (1kg)', 'Lettuce (1 Head)', 'Water (1L)', 'Wine (750ml Bottle Mid Range)',
+   'Domestic Beer (0.5L Bottle)', 'Cigarettes (20 Pack Malboro)', 'Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)',
+   'Cappuccino (Regular)', 'Coke (0.5L)'])
 
-   # Convert data into list of Row objects
-   numbeo_price_info_rows = [Row(**row) for row in numbeo_price_info]
-
-   # Create dataframe from Row objects
-   numbeo_price_info_df = spark_session.createDataFrame(numbeo_price_info_rows)
-
-   # Filter items
-   numbeo_price_info_df_filtered = numbeo_price_info_df.filter(functions.col('Item').isin(items_to_filter_by))
-
-   # Format price string and convert to float
+   # Format 'Price' column in each dataframe and convert to float
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
 
-   # Additional transformations if include_livingcost == True
-   if include_livingcost == True:
-      livingcost_price_info = get_data(file_prefix = 'livingcost_price_info')
+   # Filter restuarant and beverage items
+   restaurant_items = ['Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)', 'Cappuccino (Regular)', 'Coke (0.5L)']
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Purchase Point', 
+   functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Purchase Point', 
+   functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
 
-      # Convert data into list of Row objects
-      livingcost_price_info_rows = [Row(**row) for row in livingcost_price_info]
+   beverage_items = ['Milk(1L)', 'Water(1L)', 'Wine (750ml Bottle Mid Range)', 'Domestic Beer (0.5L Bottle)', 'Cappuccino (Regular)',
+   'Coke (0.5L)']
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Item Category', 
+   functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Item Category', 
+   functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
 
-      # Create dataframe from Row objects
-      livingcost_price_info_df = pyspark.createDataFrame(livingcost_price_info_rows)
+   # Combine dataframes into single dataframe
+   combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
 
-      # Filter items
-      livingcost_price_info_df_filtered = livingcost_price_info_df.filter(functions.col('Item').isin(items_to_filter_by))
+   # Convert to list of dictionaries
+   combined_price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in combined_price_info_df.collect()]
 
-      # Format price string and convert to float
-      livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
-      livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'foodbeverage', data = combined_price_info, bucket_type = 'transformed')
 
-      # Additional transformations required for foodbeverage output file
-      if output_file == 'foodbeverage':
-         restaurant_items = ['Dinner (2 People Mid Range Restaurant)', 'Lunch', 'Domestic Draught (0.5L)', 'Cappuccino (Regular)', 'Coke (0.5L)']
-         beverage_items = ['Milk(1L)', 'Water(1L)', 'Wine (750ml Bottle Mid Range)', 'Domestic Beer (0.5L Bottle)', 'Cappuccino (Regular)',
-         'Coke (0.5L)']
-         numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Purchase Point', 
-         functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
-         numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Item Category', 
-         functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
-         livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Purchase Point', 
-         functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
-         livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Item Category', 
-         functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
+def merge_and_transform_utilities(spark_session: SparkSession):
+   # Create base dataframes
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Electricity, Heating, Cooling, Water and Garbage (Family)',
+   'Internet (60 Mbps, Unlimited Data, Monthly)', 'Mobile Plan (10GB+ Data, Monthly)'])
+   livingcost_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'livingcost_price_info',
+   items_to_filter_by = ['Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Electricity, Heating, Cooling, Water and Garbage (Family)',
+   'Internet (60 Mbps, Unlimited Data, Monthly)', 'Mobile Plan (10GB+ Data, Monthly)'])
 
-      # Join dataframes
-      combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+   # Format 'Price' column in each dataframe and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
 
-      # Convert to list of dictionaries
-      combined_price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in combined_price_info_df.collect()]
+   # Rename 'Price' column to 'Monthly Price'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Price', 'Monthly Price')
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumnRenamed('Price', 'Monthly Price')
 
-      # Load data to S3 transformed bucket
-      put_data(file_prefix = output_file, data = combined_price_info, bucket_type = 'transformed')
-   
-   else:
-      # Convert to list of dictionaries
-      price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in numbeo_price_info_df_filtered.collect()]
+   # Rename 'Item' column to 'Utility'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Utility')
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumnRenamed('Item', 'Utility')
 
-      # Load data to S3 transformed bucket
-      put_data(file_prefix = output_file, data = price_info, bucket_type = 'transformed')
+   # Combine dataframes into single dataframe
+   combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+
+   # Convert to list of dictionaries
+   combined_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in combined_price_info_df.collect()]
+
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'utilities', data = combined_price_info, bucket_type = 'transformed')
+
+def merge_and_transform_transportation(spark_session: SparkSession):
+   # Create base dataframes
+   numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
+   items_to_filter_by = ['Public Transport (One Way Ticket)', 'Public Transport (Monthly)', 'Petrol (1L)', 'Taxi (8km)'])
+   livingcost_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'livingcost_price_info',
+   items_to_filter_by = ['Public Transport (One Way Ticket)', 'Public Transport (Monthly)', 'Petrol (1L)', 'Taxi (8km)'])
+
+   # Format 'Price' column in each dataframe and convert to float
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
+
+   # Rename 'Item' column to 'Utility'
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Type')
+   livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumnRenamed('Item', 'Type')
+
+   # Combine dataframes into single dataframe
+   combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+
+   # Convert to list of dictionaries
+   combined_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in combined_price_info_df.collect()]
+
+   # Load data to S3 transformed bucket
+   put_data(file_prefix = 'transportation', data = combined_price_info, bucket_type = 'transformed')
+
+
+
+
 
    
 
