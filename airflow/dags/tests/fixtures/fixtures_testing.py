@@ -19,7 +19,7 @@ def mock_environment_variables(mocker):
         'S3_BUCKET_TRANSFORMED': 'test-bucket-transformed'
     })
 
-@ pytest.fixture
+@pytest.fixture
 def mock_boto3_s3(mocker, monkeypatch, current_date):
     mock_s3 = mocker.Mock()
     monkeypatch.setattr(boto3, 'client', lambda *args, **kwargs: mock_s3)
