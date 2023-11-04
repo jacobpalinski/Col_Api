@@ -11,12 +11,6 @@ def current_date():
     return datetime.date.today().strftime('%Y%m%d')
 
 @pytest.fixture
-def mock_currency_conversion_rates_html():
-    with open('mock_html/numbeo_currency_conversion.html', encoding = 'utf-8') as html_content:
-        html = html_content.read()
-        yield html
-
-@pytest.fixture
 def mock_environment_variables(mocker):
     mocker.patch.dict(os.environ, {
         'AWS_ACCESS_KEY_ID': 'access-key',
@@ -26,12 +20,9 @@ def mock_environment_variables(mocker):
     })
 
 @ pytest.fixture
-def mock_boto3_s3(mocker, monkeypatch):
+def mock_boto3_s3(mocker, monkeypatch, current_date):
     mock_s3 = mocker.Mock()
     monkeypatch.setattr(boto3, 'client', lambda *args, **kwargs: mock_s3)
-
-    # Current date for return_value prefixes
-    current_date = datetime.date.today().strftime('%Y%m%d')
 
     return_values = {
         'locations.json': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Country': 'Australia', 'City': 'Perth'},
@@ -234,6 +225,12 @@ def mock_boto3_s3(mocker, monkeypatch):
 
     mock_s3.get_object.side_effect = mock_get_object
     return mock_s3
+
+@pytest.fixture
+def mock_currency_conversion_rates_html():
+    with open('mock_html/numbeo_currency_conversion.html', encoding = 'utf-8') as html_content:
+        html = html_content.read()
+        yield html
 
 @pytest.fixture
 def mock_locations_with_cities_html():

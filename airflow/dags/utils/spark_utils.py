@@ -1,10 +1,12 @@
 from pyspark.sql import SparkSession, Row, functions
 from utils.aws_utils import *
 
+# Creates spark session
 def create_spark_session(app_name):
     spark = SparkSession.builder.appName(app_name).getOrCreate()
     return spark
 
+# Creates dataframe
 def create_dataframe(spark_session : SparkSession, extract_source: str, items_to_filter_by: list):
     '''extract_source must be either "numbeo_price_info" or "livingcost_price_info"'''
     if extract_source == 'numbeo_price_info' or extract_source == 'livingcost_price_info':

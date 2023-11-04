@@ -12585,3 +12585,178 @@ Traceback (most recent call last):
 NameError: name 'merge_and_transform' is not defined
 [2023-10-31T23:47:24.112+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
 [2023-10-31T23:47:24.136+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.720 seconds
+[2023-10-31T23:47:54.347+0000] {processor.py:157} INFO - Started process (PID=21669) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:54.348+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:47:54.349+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:47:54.348+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:57.253+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:47:57.251+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:47:57.255+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:47:57.285+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.940 seconds
+[2023-10-31T23:48:27.511+0000] {processor.py:157} INFO - Started process (PID=21830) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:48:27.512+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:48:27.514+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:48:27.513+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:48:30.385+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:48:30.383+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:48:30.387+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:48:30.405+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.896 seconds
+[2023-10-31T23:49:00.640+0000] {processor.py:157} INFO - Started process (PID=21990) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:49:00.641+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:49:00.642+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:49:00.642+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:49:03.688+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:49:03.686+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:49:03.690+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:49:03.708+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.072 seconds
+[2023-10-31T23:51:58.904+0000] {processor.py:157} INFO - Started process (PID=171) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:51:58.905+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:51:58.906+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:51:58.905+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:52:02.926+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:52:02.924+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:52:02.928+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:52:02.947+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 4.046 seconds
+[2023-10-31T23:52:33.148+0000] {processor.py:157} INFO - Started process (PID=328) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:52:33.149+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:52:33.150+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:52:33.150+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:52:37.097+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:52:37.095+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:52:37.099+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:52:37.126+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.981 seconds
+[2023-10-31T23:53:07.358+0000] {processor.py:157} INFO - Started process (PID=485) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:07.361+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:53:07.363+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:53:07.362+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:10.772+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:53:10.770+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:53:10.774+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:10.802+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.453 seconds
+[2023-10-31T23:53:41.009+0000] {processor.py:157} INFO - Started process (PID=642) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:41.010+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:53:41.011+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:53:41.011+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:43.998+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:53:43.995+0000] {dagbag.py:347} ERROR - Failed to import: /opt/airflow/dags/col_api_etl.py
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/models/dagbag.py", line 343, in parse
+    loader.exec_module(new_module)
+  File "<frozen importlib._bootstrap_external>", line 843, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/opt/airflow/dags/col_api_etl.py", line 37, in <module>
+    python_callable = merge_and_transform,
+NameError: name 'merge_and_transform' is not defined
+[2023-10-31T23:53:44.000+0000] {processor.py:841} WARNING - No viable dags retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:53:44.030+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.025 seconds
+[2023-10-31T23:54:03.139+0000] {processor.py:157} INFO - Started process (PID=799) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:03.140+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:54:03.141+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:03.141+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:06.975+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:07.183+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:07.183+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:54:07.206+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:07.206+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:54:07.238+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 4.102 seconds
+[2023-10-31T23:54:27.296+0000] {processor.py:157} INFO - Started process (PID=956) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:27.297+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:54:27.298+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:27.298+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:30.610+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:54:30.622+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:30.622+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:54:30.642+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:54:30.641+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:54:30.678+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.384 seconds
+[2023-10-31T23:55:00.888+0000] {processor.py:157} INFO - Started process (PID=1113) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:00.889+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:55:00.890+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:00.890+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:04.154+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:04.268+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:04.268+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:55:04.289+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:04.289+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:55:04.310+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.426 seconds
+[2023-10-31T23:55:34.516+0000] {processor.py:157} INFO - Started process (PID=1270) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:34.517+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:55:34.518+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:34.518+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:37.590+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:55:37.721+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:37.720+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:55:37.743+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:55:37.742+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:55:37.766+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.253 seconds
+[2023-10-31T23:56:07.966+0000] {processor.py:157} INFO - Started process (PID=1427) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:07.967+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:56:07.967+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:07.967+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:11.156+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:11.270+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:11.269+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:56:11.291+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:11.290+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:56:11.310+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.347 seconds
+[2023-10-31T23:56:41.507+0000] {processor.py:157} INFO - Started process (PID=1584) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:41.508+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:56:41.509+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:41.509+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:44.299+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:56:44.412+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:44.411+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:56:44.429+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:56:44.429+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:56:44.447+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.943 seconds
+[2023-10-31T23:57:15.210+0000] {processor.py:157} INFO - Started process (PID=1741) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:15.211+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:57:15.212+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:15.211+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:18.058+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:18.161+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:18.161+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:57:18.178+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:18.178+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:57:18.195+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 2.988 seconds
+[2023-10-31T23:57:48.413+0000] {processor.py:157} INFO - Started process (PID=1898) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:48.414+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:57:48.415+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:48.414+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:51.577+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:57:51.679+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:51.679+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:57:51.697+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:57:51.697+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:57:51.714+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.304 seconds
+[2023-10-31T23:58:21.908+0000] {processor.py:157} INFO - Started process (PID=2055) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:21.909+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:58:21.909+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:21.909+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:25.173+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:25.303+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:25.302+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:58:25.328+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:25.328+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:58:25.356+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.451 seconds
+[2023-10-31T23:58:55.691+0000] {processor.py:157} INFO - Started process (PID=2212) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:55.692+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:58:55.693+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:55.693+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:58.572+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:58:58.694+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:58.694+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:58:58.719+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:58:58.719+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:58:58.738+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.049 seconds
+[2023-10-31T23:59:28.892+0000] {processor.py:157} INFO - Started process (PID=2369) to work on /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:59:28.893+0000] {processor.py:829} INFO - Processing file /opt/airflow/dags/col_api_etl.py for tasks to queue
+[2023-10-31T23:59:28.894+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:59:28.894+0000] {dagbag.py:539} INFO - Filling up the DagBag from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:59:31.882+0000] {processor.py:839} INFO - DAG(s) dict_keys(['col_api_etl']) retrieved from /opt/airflow/dags/col_api_etl.py
+[2023-10-31T23:59:32.023+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:59:32.023+0000] {dag.py:2907} INFO - Sync 1 DAGs
+[2023-10-31T23:59:32.051+0000] {logging_mixin.py:151} INFO - [2023-10-31T23:59:32.051+0000] {dag.py:3677} INFO - Setting next_dagrun for col_api_etl to 2023-10-31T00:00:00+00:00, run_after=2023-11-01T00:00:00+00:00
+[2023-10-31T23:59:32.074+0000] {processor.py:179} INFO - Processing /opt/airflow/dags/col_api_etl.py took 3.185 seconds

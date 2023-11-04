@@ -5,21 +5,23 @@ from itertools import chain
 from utils.spark_utils import *
 from utils.aws_utils import *
 
-country_abbreviation_combinations = {'United Arab Emirates': 'AED', 'Australia': 'AUD', 'Bosnia and Herzegovina': 'BAM', 'Bahrain': 'BHD', 
-'Bulgaria': 'BGN', 'Brazil': 'BYN', 'Canada': 'CAD', 'Switzerland': 'CHF','Liechtenstein': 'CHF', 'Chile': 'CLP', 'China': 'CNY', 'Colombia': 'COP', 
-'Costa Rica': 'CRC', 'Czech Republic': 'CZK', 'Denmark': 'DKK', 'Andorra': 'EUR', 'Austria': 'EUR', 'Belgium': 'EUR', 'Croatia': 'EUR', 'Cyprus': 'EUR', 
-'Estonia': 'EUR', 'Finland': 'EUR', 'France': 'EUR','Germany': 'EUR', 'Greece': 'EUR', 'Ireland': 'EUR', 'Italy': 'EUR', 'Latvia': 'EUR', 
-'Lithuania': 'EUR', 'Luxembourg': 'EUR', 'Malta': 'EUR', 'Montenegro': 'EUR', 'Monaco': 'EUR', 'Netherlands': 'EUR', 'Portugal': 'EUR', 'San Marino': 'EUR', 
-'Slovakia': 'EUR', 'Slovenia': 'EUR', 'Spain': 'EUR', 'Georgia': 'GEL', 'Hong Kong': 'HKD', 'Hungary': 'HUF', 'Israel': 'ILS', 'Iceland': 'ISK', 
-'Japan': 'JPY', 'South Korea': 'KRW', 'Kuwait': 'KWD', 'Macau': 'MOP', 'Malaysia': 'MYR', 'Mexico': 'MXN', 'New Zealand': 'NZD', 'Norway': 'NOK', 'Oman': 'OMR',
-'Poland': 'PLN', 'Qatar': 'QAR', 'Romania': 'RON', 'Russia': 'RUB', 'Saudi Arabia': 'SAR', 'Serbia': 'RSD', 'Singapore': 'SGD', 'Sweden': 'SEK',
-'Taiwan': 'TWD', 'Thailand': 'THB', 'Turkey': 'TRY', 'Ukraine': 'UAH', 'United Kingdom': 'GBP','Uruguay': 'UYU', 'United States': 'USD', 'Ecuador': 'USD', 
-'Paraguay': 'PYG', 'Panama': 'USD', 'Argentina': 'USD'}
-
 # Pyspark session to be used by each transformation function
 pyspark = create_spark_session('col_api_etl')
 
-def merge_locations_with_currencies(spark_session: SparkSession, country_abbreviation_combinations : list):
+# Merge locations.json with currency_conversion_rates file
+def merge_locations_with_currencies(spark_session: SparkSession):
+   # Dictionary to match currency abbreviation with relevant country
+   country_abbreviation_combinations = {'United Arab Emirates': 'AED', 'Australia': 'AUD', 'Bosnia and Herzegovina': 'BAM', 'Bahrain': 'BHD', 
+   'Bulgaria': 'BGN', 'Brazil': 'BYN', 'Canada': 'CAD', 'Switzerland': 'CHF','Liechtenstein': 'CHF', 'Chile': 'CLP', 'China': 'CNY', 'Colombia': 'COP', 
+   'Costa Rica': 'CRC', 'Czech Republic': 'CZK', 'Denmark': 'DKK', 'Andorra': 'EUR', 'Austria': 'EUR', 'Belgium': 'EUR', 'Croatia': 'EUR', 'Cyprus': 'EUR', 
+   'Estonia': 'EUR', 'Finland': 'EUR', 'France': 'EUR','Germany': 'EUR', 'Greece': 'EUR', 'Ireland': 'EUR', 'Italy': 'EUR', 'Latvia': 'EUR', 
+   'Lithuania': 'EUR', 'Luxembourg': 'EUR', 'Malta': 'EUR', 'Montenegro': 'EUR', 'Monaco': 'EUR', 'Netherlands': 'EUR', 'Portugal': 'EUR', 'San Marino': 'EUR', 
+   'Slovakia': 'EUR', 'Slovenia': 'EUR', 'Spain': 'EUR', 'Georgia': 'GEL', 'Hong Kong': 'HKD', 'Hungary': 'HUF', 'Israel': 'ILS', 'Iceland': 'ISK', 
+   'Japan': 'JPY', 'South Korea': 'KRW', 'Kuwait': 'KWD', 'Macau': 'MOP', 'Malaysia': 'MYR', 'Mexico': 'MXN', 'New Zealand': 'NZD', 'Norway': 'NOK', 'Oman': 'OMR',
+   'Poland': 'PLN', 'Qatar': 'QAR', 'Romania': 'RON', 'Russia': 'RUB', 'Saudi Arabia': 'SAR', 'Serbia': 'RSD', 'Singapore': 'SGD', 'Sweden': 'SEK',
+   'Taiwan': 'TWD', 'Thailand': 'THB', 'Turkey': 'TRY', 'Ukraine': 'UAH', 'United Kingdom': 'GBP','Uruguay': 'UYU', 'United States': 'USD', 'Ecuador': 'USD', 
+   'Paraguay': 'PYG', 'Panama': 'USD', 'Argentina': 'USD'}
+
    # Retrieve locations and currency_conversion_rates from S3 bucket
    locations = get_data(file_prefix = 'locations.json')
    currency_conversion_rates = get_data(file_prefix = 'currency_conversion_rates')
@@ -51,6 +53,7 @@ def merge_locations_with_currencies(spark_session: SparkSession, country_abbrevi
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'locations_with_currencies', data = locations_with_currencies, bucket_type = 'transformed')
 
+# Merge and transform home purchase items
 def merge_and_transform_homepurchase(spark_session : SparkSession):
    # Create base filtered dataframe
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -99,6 +102,7 @@ def merge_and_transform_homepurchase(spark_session : SparkSession):
    # Put in S3 bucket
    put_data(file_prefix = 'homepurchase', data = joined_dict, bucket_type = 'transformed')
 
+# Merge and transfrom rent items
 def merge_and_transform_rent(spark_session: SparkSession):
    # Create base filtered dataframe
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -131,6 +135,7 @@ def merge_and_transform_rent(spark_session: SparkSession):
    # Put in S3 bucket
    put_data(file_prefix = 'rent', data = numbeo_price_info, bucket_type = 'transformed')
 
+# Merge and transfrom foodbeverage items
 def merge_and_transform_foodbeverage(spark_session: SparkSession):
    # Create base dataframes
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -173,6 +178,7 @@ def merge_and_transform_foodbeverage(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'foodbeverage', data = combined_price_info, bucket_type = 'transformed')
 
+# Merge and transfrom utilities items
 def merge_and_transform_utilities(spark_session: SparkSession):
    # Create base dataframes
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -205,6 +211,7 @@ def merge_and_transform_utilities(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'utilities', data = combined_price_info, bucket_type = 'transformed')
 
+# Merge and transfrom transportation items
 def merge_and_transform_transportation(spark_session: SparkSession):
    # Create base dataframes
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -231,6 +238,7 @@ def merge_and_transform_transportation(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'transportation', data = combined_price_info, bucket_type = 'transformed')
 
+# Merge and transform childcare items
 def merge_and_transform_childcare(spark_session: SparkSession):
    # Create base dataframe
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -252,6 +260,7 @@ def merge_and_transform_childcare(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'childcare', data = numbeo_price_info, bucket_type = 'transformed')
 
+# Merge and transfrom apparel items
 def merge_and_transform_apparel(spark_session: SparkSession):
    # Create base dataframes
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',
@@ -274,6 +283,7 @@ def merge_and_transform_apparel(spark_session: SparkSession):
    # Load data to S3 transformed bucket
    put_data(file_prefix = 'apparel', data = combined_price_info, bucket_type = 'transformed')
 
+# Merge and transfrom leisure items
 def merge_and_transform_leisure(spark_session: SparkSession):
    # Create base dataframe
    numbeo_price_info_df_filtered = create_dataframe(spark_session = spark_session, extract_source = 'numbeo_price_info',

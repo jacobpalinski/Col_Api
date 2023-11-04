@@ -1,0 +1,23 @@
+[2023-11-04T03:24:46.766+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509
+[2023-11-04T03:24:46.767+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase'
+[2023-11-04T03:24:46.796+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509
+[2023-11-04T03:24:46.797+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase'
+[2023-11-04T03:24:46.829+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_homepurchase manual__2023-11-04T03:16:58.704133+00:00 [queued]>
+[2023-11-04T03:24:46.836+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_homepurchase manual__2023-11-04T03:16:58.704133+00:00 [queued]>
+[2023-11-04T03:24:46.836+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 1
+[2023-11-04T03:24:46.852+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): merge_and_transform_homepurchase> on 2023-11-04 03:16:58.704133+00:00
+[2023-11-04T03:24:46.857+0000] {standard_task_runner.py:57} INFO - Started process 37272 to run task
+[2023-11-04T03:24:46.857+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-04T03:24:46.861+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'col_api_etl', 'merge_and_transform_homepurchase', 'manual__2023-11-04T03:16:58.704133+00:00', '--job-id', '1303', '--raw', '--subdir', 'DAGS_FOLDER/col_api_etl.py', '--cfg-path', '/tmp/tmpml9q_jvh']
+[2023-11-04T03:24:46.863+0000] {standard_task_runner.py:85} INFO - Job 1303: Subtask merge_and_transform_homepurchase
+[2023-11-04T03:24:46.899+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509
+[2023-11-04T03:24:46.899+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-04T03:16:58.704133+00:00/task_id=merge_and_transform_homepurchase'
+[2023-11-04T03:24:46.901+0000] {task_command.py:415} INFO - Running <TaskInstance: col_api_etl.merge_and_transform_homepurchase manual__2023-11-04T03:16:58.704133+00:00 [running]> on host 0bcf85c4b011
+[2023-11-04T03:24:47.100+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='col_api_etl' AIRFLOW_CTX_TASK_ID='merge_and_transform_homepurchase' AIRFLOW_CTX_EXECUTION_DATE='2023-11-04T03:16:58.704133+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2023-11-04T03:16:58.704133+00:00'
+[2023-11-04T03:24:53.841+0000] {logging_mixin.py:151} INFO - +----+-----------------+----------------------+-----------------+
+|City|Property Location|Price per Square Meter|Mortgage Interest|
++----+-----------------+----------------------+-----------------+
++----+-----------------+----------------------+-----------------+
+[2023-11-04T03:24:56.225+0000] {python.py:194} INFO - Done. Returned value was: None
+[2023-11-04T03:24:56.237+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=col_api_etl, task_id=merge_and_transform_homepurchase, execution_date=20231104T031658, start_date=20231104T032446, end_date=20231104T032456
+[2023-11-04T03:24:56.304+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0

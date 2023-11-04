@@ -1,0 +1,27 @@
+[2023-11-02T00:08:47.203+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509
+[2023-11-02T00:08:47.204+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies'
+[2023-11-02T00:08:47.298+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509
+[2023-11-02T00:08:47.302+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies'
+[2023-11-02T00:08:47.426+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: col_api_etl.merge_locations_with_currencies manual__2023-11-01T23:53:20.755582+00:00 [queued]>
+[2023-11-02T00:08:47.454+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: col_api_etl.merge_locations_with_currencies manual__2023-11-01T23:53:20.755582+00:00 [queued]>
+[2023-11-02T00:08:47.455+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 1
+[2023-11-02T00:08:47.491+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): merge_locations_with_currencies> on 2023-11-01 23:53:20.755582+00:00
+[2023-11-02T00:08:47.507+0000] {standard_task_runner.py:57} INFO - Started process 20996 to run task
+[2023-11-02T00:08:47.517+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-02T00:08:47.534+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'col_api_etl', 'merge_locations_with_currencies', 'manual__2023-11-01T23:53:20.755582+00:00', '--job-id', '1169', '--raw', '--subdir', 'DAGS_FOLDER/col_api_etl.py', '--cfg-path', '/tmp/tmp7qo_594b']
+[2023-11-02T00:08:47.544+0000] {standard_task_runner.py:85} INFO - Job 1169: Subtask merge_locations_with_currencies
+[2023-11-02T00:08:47.765+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509
+[2023-11-02T00:08:47.767+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=manual__2023-11-01T23:53:20.755582+00:00/task_id=merge_locations_with_currencies'
+[2023-11-02T00:08:47.773+0000] {task_command.py:415} INFO - Running <TaskInstance: col_api_etl.merge_locations_with_currencies manual__2023-11-01T23:53:20.755582+00:00 [running]> on host 65ec58942685
+[2023-11-02T00:08:48.117+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='col_api_etl' AIRFLOW_CTX_TASK_ID='merge_locations_with_currencies' AIRFLOW_CTX_EXECUTION_DATE='2023-11-01T23:53:20.755582+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2023-11-01T23:53:20.755582+00:00'
+[2023-11-02T00:08:48.125+0000] {taskinstance.py:1943} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 192, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 209, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+TypeError: merge_locations_with_currencies() missing 1 required positional argument: 'country_abbreviation_combinations'
+[2023-11-02T00:08:48.146+0000] {taskinstance.py:1400} INFO - Marking task as FAILED. dag_id=col_api_etl, task_id=merge_locations_with_currencies, execution_date=20231101T235320, start_date=20231102T000847, end_date=20231102T000848
+[2023-11-02T00:08:50.503+0000] {standard_task_runner.py:104} ERROR - Failed to execute job 1169 for task merge_locations_with_currencies (merge_locations_with_currencies() missing 1 required positional argument: 'country_abbreviation_combinations'; 20996)
+[2023-11-02T00:08:50.552+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 1
+[2023-11-02T00:08:50.642+0000] {taskinstance.py:2784} INFO - 0 downstream tasks scheduled from follow-on schedule check

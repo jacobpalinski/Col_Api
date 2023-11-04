@@ -12,6 +12,7 @@ from utils.aws_utils import *
 # Load S3 environment variables
 load_dotenv()
 
+# Extract relevant currencies with conversion rates
 def extract_currency_conversion_rates():
     # Scraped conversion rates USD -> local
     currency_conversion_rates = []
@@ -37,11 +38,13 @@ def extract_currency_conversion_rates():
     # Load data to S3 raw bucket
     put_data(file_prefix = 'currency_conversion_rates', data = currency_conversion_rates, bucket_type = 'raw')
 
+# Extract livingcost prices from city
 def extract_livingcost_prices_from_city():
 
     # Retrieve latest cities file
     locations = get_data(file_prefix = 'locations.json')
 
+    # Store livingcost price info for each city
     livingcost_price_info = []
 
     for location in locations:
@@ -72,6 +75,7 @@ def extract_livingcost_prices_from_city():
                 if re.search(pattern, url, re.IGNORECASE):
                     url_to_extract = url
                     break
+        # Special case for Hong Kong and Macau
         else:
             url_to_extract = f'https://livingcost.org/cost/china/{formatted_city_name}'
         
@@ -102,6 +106,7 @@ def extract_livingcost_prices_from_city():
         other_table = livingcost_city_page_html.find_all('table', {'class': 'table table-sm table-striped table-hover'})[4].find('tbody').find_all('tr')
         brand_sneakers = other_table[5].find('div', {'class': 'bar-table text-center'}).find('span').text
         
+        # Add scraped data to list
         livingcost_price_info.extend([{'City': location['City'], 'Item': 'Lunch', 'Price': lunch},
         {'City': location['City'], 'Item': 'Coke (0.5L)', 'Price': coke},
         {'City': location['City'], 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': utilities_one_person},
@@ -114,11 +119,13 @@ def extract_livingcost_prices_from_city():
     # Load data to S3 raw bucket
     put_data(file_prefix = 'livingcost_price_info', data = livingcost_price_info, bucket_type = 'raw')
 
+# Extract numbeo prices
 def extract_numbeo_prices_from_city():
 
     # Retrieve latest cities file
     locations = get_data(file_prefix = 'locations.json')
 
+    # Store numbeo price info for each city
     numbeo_price_info = []
 
     for location in locations:
@@ -126,12 +133,11 @@ def extract_numbeo_prices_from_city():
         city_name = location['City'].split()
         capitalised_city_name = [word.capitalize() for word in city_name]
         formatted_city_name = '-'.join(capitalised_city_name)
-        print(formatted_city_name)
         country_name = location['Country'].split()
         capitalised_country_name = [word.capitalize() for word in country_name]
         formatted_country_name = '-'.join(capitalised_country_name)
 
-        # Request
+        # Request + special cases to deal with when scraping
         if formatted_city_name in ['Vaduz', 'Aarhus', 'Crete', 'San-Marino', 'Kawasaki', 'Malacca', 'Sochi', 'Donetsk', 'Mar-Del-Plata']:
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}-{formatted_country_name}?displayCurrency=USD')
         elif formatted_city_name == 'Seville':
@@ -146,14 +152,16 @@ def extract_numbeo_prices_from_city():
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Kiev?displayCurrency=USD')
         elif formatted_city_name == 'Tel-Aviv':
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Tel-Aviv-Yafo?displayCurrency=USD')
-        elif formatted_city_name == 'Playa del Carmen':
+        elif formatted_city_name == 'Playa-Del-Carmen':
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Playa-del-Carmen?displayCurrency=USD')
-        elif formatted_city_name == 'New York':
+        elif formatted_city_name == 'Krakow':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Krakow-Cracow?displayCurrency=USD')
+        elif formatted_city_name == 'New-York-City':
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/New-York?displayCurrency=USD')
+        elif formatted_city_name == 'Kansas':
+            response = requests.get(f'https://www.numbeo.com/cost-of-living/in/Kansas-City?displayCurrency=USD')
         else:
             response = requests.get(f'https://www.numbeo.com/cost-of-living/in/{formatted_city_name}?displayCurrency=USD')
-        
-        time.sleep(4)
         
         # Extract price information from relevant items
         numbeo_prices_city_html = BeautifulSoup(response.text, 'html.parser')
@@ -217,6 +225,7 @@ def extract_numbeo_prices_from_city():
         # Mortgage interest rate
         mortgage_interest_rate = prices_table[64].find('td', {'style': 'text-align: right'}).find('span').text
 
+        # Add scraped data to list
         numbeo_price_info.extend([{'City': location['City'], 'Item': 'Dinner (2 People Mid Range Restaurant)', 'Price': meal_two_people_mid_range},
         {'City': location['City'], 'Item': 'Domestic Draught (0.5L)', 'Price': domestic_draught},
         {'City': location['City'], 'Item': 'Cappuccino (Regular)', 'Price': cappuccino},

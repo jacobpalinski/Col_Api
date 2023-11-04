@@ -9,34 +9,7 @@ Transportation,TransportationSchema,FoodBeverage, FoodBeverageSchema,
 Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema)
 from datetime import datetime, date
 from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-TEST_EMAIL = 'test@gmail.com'
-TEST_PASSWORD = 'X4nmasXII!'
-
-@pytest.fixture
-def create_user(client):
-    new_user = client.post('/v1/auth/user',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
-        'email' : TEST_EMAIL,
-        'password': TEST_PASSWORD,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return new_user
-
-@pytest.fixture
-def login(client, create_user):
-    login = client.post('/v1/auth/login',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
-        'email' : TEST_EMAIL,
-        'password': TEST_PASSWORD
-        }))
-    login_data = json.loads(login.get_data(as_text = True))
-    return login_data
+from fixtures import *
 
 class TestUserResource:
     def test_user_post_no_user_no_admin(self,client):
@@ -77,7 +50,7 @@ class TestUserResource:
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email': TEST_EMAIL,
-            'password': 'X4nmasXII!'
+            'password': TEST_PASSWORD
             }))
         second_post_response_data = json.loads(second_post_response.get_data(as_text = True))
         assert second_post_response_data['message'] == 'User already exists. Please log in'
@@ -255,16 +228,6 @@ class TestResetPasswordResource:
         assert response_data['message'] == 'User does not exist'
         assert response.status_code == HttpStatus.unauthorized_401.value
 
-def create_currency(client, abbreviation, usd_to_local_exchange_rate):
-        response = client.post('/v1/currencies',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'abbreviation': abbreviation,
-            'usd_to_local_exchange_rate': usd_to_local_exchange_rate,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        return response
-
 class TestCurrencyResource:
     def test_currency_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -401,17 +364,6 @@ class TestCurrencyListResource:
         assert response.status_code == HttpStatus.created_201.value
         assert Currency.query.count() == 1
 
-def create_location(client, country, city, abbreviation):
-    response = client.post('/v1/locations',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'country': country,
-        'city': city,
-        'abbreviation': abbreviation,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestLocationResource:
     def test_location_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -524,18 +476,6 @@ class TestLocationListResource:
         assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/locations?page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
-
-def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
-    response = client.post('/v1/homepurchase',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': property_location,
-        'price_per_sqm': price_per_sqm,
-        'mortgage_interest': mortgage_interest,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
 
 class TestHomePurchaseResource:
     def test_home_purchase_get_with_id(self,client,create_user,login):
@@ -981,18 +921,6 @@ class TestHomePurchaseListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def create_rent(client,property_location,bedrooms,monthly_price,city):
-    response = client.post('/v1/rent',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': property_location,
-        'bedrooms': bedrooms,
-        'monthly_price': monthly_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestRentResource:
     def test_rent_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -1434,17 +1362,6 @@ class TestRentListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def create_utilities(client,utility,monthly_price,city):
-    response = client.post('/v1/utilities',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'utility': utility,
-        'monthly_price': monthly_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestUtilitiesResource:
     def test_utilities_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -1862,17 +1779,6 @@ class TestUtilitiesListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def create_transportation(client,type,price,city):
-    response = client.post('/v1/transportation',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': type,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestTransportationResource:
     def test_transportation_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -2288,19 +2194,6 @@ class TestTransportationListResource:
         assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/transportation?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
-
-def create_foodbeverage(client,item_category,purchase_point,item,price,city):
-    response = client.post('/v1/foodbeverage',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': item_category,
-        'purchase_point': purchase_point,
-        'item': item,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
 
 class TestFoodBeverageResource:
     def test_foodbeverage_get_with_id(self,client,create_user,login):
@@ -2768,17 +2661,6 @@ class TestFoodBeverageListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def create_childcare(client,type,annual_price,city):
-    response = client.post('/v1/childcare',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': type,
-        'annual_price': annual_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestChildcareResource:
     def test_childcare_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -3197,17 +3079,6 @@ class TestChildcareListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-def create_apparel(client,item,price,city):
-    response = client.post('/v1/apparel',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': item,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
 class TestApparelResource:
     def test_apparel_get_with_id(self,client,create_user,login):
         create_currency(client,'AUD',1.45)
@@ -3623,17 +3494,6 @@ class TestApparelListResource:
         assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/apparel?abbreviation=AUD&page=1'
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
-
-def create_leisure(client,activity,price,city):
-    response = client.post('/v1/leisure',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'activity': activity,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
 
 class TestLesiureResource:
     def test_leisure_get_with_id(self,client,create_user,login):

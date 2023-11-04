@@ -1,0 +1,317 @@
+[2023-11-03T00:00:16.271+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509
+[2023-11-03T00:00:16.272+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city'
+[2023-11-03T00:00:16.303+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509
+[2023-11-03T00:00:16.304+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city'
+[2023-11-03T00:00:16.337+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: col_api_etl.extract_numbeo_prices_from_city scheduled__2023-11-02T00:00:00+00:00 [queued]>
+[2023-11-03T00:00:16.346+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: col_api_etl.extract_numbeo_prices_from_city scheduled__2023-11-02T00:00:00+00:00 [queued]>
+[2023-11-03T00:00:16.347+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 1
+[2023-11-03T00:00:16.359+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): extract_numbeo_prices_from_city> on 2023-11-02 00:00:00+00:00
+[2023-11-03T00:00:16.365+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-03T00:00:16.365+0000] {standard_task_runner.py:57} INFO - Started process 17122 to run task
+[2023-11-03T00:00:16.370+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'col_api_etl', 'extract_numbeo_prices_from_city', 'scheduled__2023-11-02T00:00:00+00:00', '--job-id', '1179', '--raw', '--subdir', 'DAGS_FOLDER/col_api_etl.py', '--cfg-path', '/tmp/tmpw22vcch4']
+[2023-11-03T00:00:16.372+0000] {standard_task_runner.py:85} INFO - Job 1179: Subtask extract_numbeo_prices_from_city
+[2023-11-03T00:00:16.412+0000] {logging_mixin.py:151} INFO - Changing /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509
+[2023-11-03T00:00:16.413+0000] {logging_mixin.py:151} INFO - Failed to change /opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city permission to 509: [Errno 1] Operation not permitted: '/opt/***/logs/dag_id=col_api_etl/run_id=scheduled__2023-11-02T00:00:00+00:00/task_id=extract_numbeo_prices_from_city'
+[2023-11-03T00:00:16.415+0000] {task_command.py:415} INFO - Running <TaskInstance: col_api_etl.extract_numbeo_prices_from_city scheduled__2023-11-02T00:00:00+00:00 [running]> on host 65ec58942685
+[2023-11-03T00:00:16.492+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='col_api_etl' AIRFLOW_CTX_TASK_ID='extract_numbeo_prices_from_city' AIRFLOW_CTX_EXECUTION_DATE='2023-11-02T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2023-11-02T00:00:00+00:00'
+[2023-11-03T00:00:16.788+0000] {clientserver.py:505} INFO - Error while sending or receiving.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+[2023-11-03T00:00:16.790+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-03T00:00:16.791+0000] {java_gateway.py:1052} INFO - Exception while sending command.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 506, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending
+[2023-11-03T00:00:16.794+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-03T00:00:18.079+0000] {logging_mixin.py:151} INFO - Dubai
+[2023-11-03T00:00:19.952+0000] {logging_mixin.py:151} INFO - Abu-Dhabi
+[2023-11-03T00:00:21.718+0000] {logging_mixin.py:151} INFO - Sharjah
+[2023-11-03T00:00:23.404+0000] {logging_mixin.py:151} INFO - Perth
+[2023-11-03T00:00:25.123+0000] {logging_mixin.py:151} INFO - Melbourne
+[2023-11-03T00:00:26.905+0000] {logging_mixin.py:151} INFO - Sydney
+[2023-11-03T00:00:28.728+0000] {logging_mixin.py:151} INFO - Brisbane
+[2023-11-03T00:00:30.447+0000] {logging_mixin.py:151} INFO - Hobart
+[2023-11-03T00:00:31.804+0000] {logging_mixin.py:151} INFO - Adelaide
+[2023-11-03T00:00:33.475+0000] {logging_mixin.py:151} INFO - Canberra
+[2023-11-03T00:00:35.226+0000] {logging_mixin.py:151} INFO - Darwin
+[2023-11-03T00:00:36.648+0000] {logging_mixin.py:151} INFO - Sarajevo
+[2023-11-03T00:00:38.437+0000] {logging_mixin.py:151} INFO - Manama
+[2023-11-03T00:00:39.873+0000] {logging_mixin.py:151} INFO - Sofia
+[2023-11-03T00:00:41.606+0000] {logging_mixin.py:151} INFO - Sao-Paulo
+[2023-11-03T00:00:43.816+0000] {logging_mixin.py:151} INFO - Rio-De-Janeiro
+[2023-11-03T00:00:45.493+0000] {logging_mixin.py:151} INFO - Brasilia
+[2023-11-03T00:00:46.850+0000] {logging_mixin.py:151} INFO - Toronto
+[2023-11-03T00:00:48.663+0000] {logging_mixin.py:151} INFO - Montreal
+[2023-11-03T00:00:50.497+0000] {logging_mixin.py:151} INFO - Vancouver
+[2023-11-03T00:00:52.274+0000] {logging_mixin.py:151} INFO - Ottawa
+[2023-11-03T00:00:54.137+0000] {logging_mixin.py:151} INFO - Calgary
+[2023-11-03T00:00:55.947+0000] {logging_mixin.py:151} INFO - Edmonton
+[2023-11-03T00:00:57.840+0000] {logging_mixin.py:151} INFO - Halifax
+[2023-11-03T00:00:59.484+0000] {logging_mixin.py:151} INFO - Quebec-City
+[2023-11-03T00:01:01.151+0000] {logging_mixin.py:151} INFO - Zurich
+[2023-11-03T00:01:02.800+0000] {logging_mixin.py:151} INFO - Geneva
+[2023-11-03T00:01:04.263+0000] {logging_mixin.py:151} INFO - Zug
+[2023-11-03T00:01:05.771+0000] {logging_mixin.py:151} INFO - Basel
+[2023-11-03T00:01:07.621+0000] {logging_mixin.py:151} INFO - Bern
+[2023-11-03T00:01:09.158+0000] {logging_mixin.py:151} INFO - Lausanne
+[2023-11-03T00:01:11.024+0000] {logging_mixin.py:151} INFO - Lugano
+[2023-11-03T00:01:12.650+0000] {logging_mixin.py:151} INFO - Vaduz
+[2023-11-03T00:01:14.207+0000] {logging_mixin.py:151} INFO - Santiago
+[2023-11-03T00:01:16.034+0000] {logging_mixin.py:151} INFO - Chongqing
+[2023-11-03T00:01:17.438+0000] {logging_mixin.py:151} INFO - Shanghai
+[2023-11-03T00:01:19.161+0000] {logging_mixin.py:151} INFO - Beijing
+[2023-11-03T00:01:20.857+0000] {logging_mixin.py:151} INFO - Chengdu
+[2023-11-03T00:01:22.558+0000] {logging_mixin.py:151} INFO - Guangzhou
+[2023-11-03T00:01:24.224+0000] {logging_mixin.py:151} INFO - Shenzhen
+[2023-11-03T00:01:25.939+0000] {logging_mixin.py:151} INFO - Bogota
+[2023-11-03T00:01:27.756+0000] {logging_mixin.py:151} INFO - Medellin
+[2023-11-03T00:01:29.418+0000] {logging_mixin.py:151} INFO - Cali
+[2023-11-03T00:01:31.201+0000] {logging_mixin.py:151} INFO - Cartagena
+[2023-11-03T00:01:32.924+0000] {logging_mixin.py:151} INFO - San-Jose
+[2023-11-03T00:01:34.603+0000] {logging_mixin.py:151} INFO - Prague
+[2023-11-03T00:01:36.298+0000] {logging_mixin.py:151} INFO - Brno
+[2023-11-03T00:01:37.961+0000] {logging_mixin.py:151} INFO - Ostrava
+[2023-11-03T00:01:39.600+0000] {logging_mixin.py:151} INFO - Copenhagen
+[2023-11-03T00:01:41.259+0000] {logging_mixin.py:151} INFO - Aarhus
+[2023-11-03T00:01:43.272+0000] {logging_mixin.py:151} INFO - Aalborg
+[2023-11-03T00:01:45.090+0000] {logging_mixin.py:151} INFO - Andorra-La-Vella
+[2023-11-03T00:01:46.550+0000] {logging_mixin.py:151} INFO - Vienna
+[2023-11-03T00:01:48.399+0000] {logging_mixin.py:151} INFO - Salzburg
+[2023-11-03T00:01:49.806+0000] {logging_mixin.py:151} INFO - Graz
+[2023-11-03T00:01:51.480+0000] {logging_mixin.py:151} INFO - Linz
+[2023-11-03T00:01:53.281+0000] {logging_mixin.py:151} INFO - Innsbruck
+[2023-11-03T00:01:54.708+0000] {logging_mixin.py:151} INFO - Brussels
+[2023-11-03T00:01:56.441+0000] {logging_mixin.py:151} INFO - Antwerp
+[2023-11-03T00:01:58.392+0000] {logging_mixin.py:151} INFO - Gent
+[2023-11-03T00:02:00.061+0000] {logging_mixin.py:151} INFO - Liege
+[2023-11-03T00:02:01.696+0000] {logging_mixin.py:151} INFO - Brugge
+[2023-11-03T00:02:03.056+0000] {logging_mixin.py:151} INFO - Zagreb
+[2023-11-03T00:02:04.704+0000] {logging_mixin.py:151} INFO - Split
+[2023-11-03T00:02:06.094+0000] {logging_mixin.py:151} INFO - Dubrovnik
+[2023-11-03T00:02:07.531+0000] {logging_mixin.py:151} INFO - Nicosia
+[2023-11-03T00:02:09.562+0000] {logging_mixin.py:151} INFO - Tallinn
+[2023-11-03T00:02:11.322+0000] {logging_mixin.py:151} INFO - Tartu
+[2023-11-03T00:02:12.838+0000] {logging_mixin.py:151} INFO - Helsinki
+[2023-11-03T00:02:14.589+0000] {logging_mixin.py:151} INFO - Turku
+[2023-11-03T00:02:16.035+0000] {logging_mixin.py:151} INFO - Tampere
+[2023-11-03T00:02:17.444+0000] {logging_mixin.py:151} INFO - Oulu
+[2023-11-03T00:02:19.317+0000] {logging_mixin.py:151} INFO - Paris
+[2023-11-03T00:02:21.140+0000] {logging_mixin.py:151} INFO - Marseille
+[2023-11-03T00:02:22.473+0000] {logging_mixin.py:151} INFO - Lyon
+[2023-11-03T00:02:24.221+0000] {logging_mixin.py:151} INFO - Toulouse
+[2023-11-03T00:02:25.649+0000] {logging_mixin.py:151} INFO - Nice
+[2023-11-03T00:02:27.949+0000] {logging_mixin.py:151} INFO - Nantes
+[2023-11-03T00:02:29.539+0000] {logging_mixin.py:151} INFO - Montpellier
+[2023-11-03T00:02:30.966+0000] {logging_mixin.py:151} INFO - Berlin
+[2023-11-03T00:02:32.714+0000] {logging_mixin.py:151} INFO - Hamburg
+[2023-11-03T00:02:34.366+0000] {logging_mixin.py:151} INFO - Munich
+[2023-11-03T00:02:36.114+0000] {logging_mixin.py:151} INFO - Stuttgart
+[2023-11-03T00:02:37.468+0000] {logging_mixin.py:151} INFO - Frankfurt
+[2023-11-03T00:02:39.262+0000] {logging_mixin.py:151} INFO - Cologne
+[2023-11-03T00:02:40.921+0000] {logging_mixin.py:151} INFO - Dusseldorf
+[2023-11-03T00:02:42.500+0000] {logging_mixin.py:151} INFO - Hanover
+[2023-11-03T00:02:44.165+0000] {logging_mixin.py:151} INFO - Dresden
+[2023-11-03T00:02:46.033+0000] {logging_mixin.py:151} INFO - Leipzig
+[2023-11-03T00:02:47.773+0000] {logging_mixin.py:151} INFO - Athens
+[2023-11-03T00:02:49.462+0000] {logging_mixin.py:151} INFO - Crete
+[2023-11-03T00:02:50.782+0000] {logging_mixin.py:151} INFO - Thessaloniki
+[2023-11-03T00:02:52.581+0000] {logging_mixin.py:151} INFO - Dublin
+[2023-11-03T00:02:54.458+0000] {logging_mixin.py:151} INFO - Cork
+[2023-11-03T00:02:56.264+0000] {logging_mixin.py:151} INFO - Galway
+[2023-11-03T00:02:58.154+0000] {logging_mixin.py:151} INFO - Limerick
+[2023-11-03T00:02:59.837+0000] {logging_mixin.py:151} INFO - Rome
+[2023-11-03T00:03:01.694+0000] {logging_mixin.py:151} INFO - Milan
+[2023-11-03T00:03:03.348+0000] {logging_mixin.py:151} INFO - Naples
+[2023-11-03T00:03:05.068+0000] {logging_mixin.py:151} INFO - Turin
+[2023-11-03T00:03:06.504+0000] {logging_mixin.py:151} INFO - Palermo
+[2023-11-03T00:03:08.037+0000] {logging_mixin.py:151} INFO - Genoa
+[2023-11-03T00:03:09.396+0000] {logging_mixin.py:151} INFO - Bologna
+[2023-11-03T00:03:11.209+0000] {logging_mixin.py:151} INFO - Florence
+[2023-11-03T00:03:12.797+0000] {logging_mixin.py:151} INFO - Venice
+[2023-11-03T00:03:14.130+0000] {logging_mixin.py:151} INFO - Riga
+[2023-11-03T00:03:15.857+0000] {logging_mixin.py:151} INFO - Vilnius
+[2023-11-03T00:03:17.672+0000] {logging_mixin.py:151} INFO - Luxembourg
+[2023-11-03T00:03:19.504+0000] {logging_mixin.py:151} INFO - Valletta
+[2023-11-03T00:03:21.388+0000] {logging_mixin.py:151} INFO - Podgorica
+[2023-11-03T00:03:22.797+0000] {logging_mixin.py:151} INFO - Monaco
+[2023-11-03T00:03:24.138+0000] {logging_mixin.py:151} INFO - Amsterdam
+[2023-11-03T00:03:27.919+0000] {logging_mixin.py:151} INFO - Rotterdam
+[2023-11-03T00:03:29.916+0000] {logging_mixin.py:151} INFO - Eindhoven
+[2023-11-03T00:03:31.588+0000] {logging_mixin.py:151} INFO - The-Hague
+[2023-11-03T00:03:33.462+0000] {logging_mixin.py:151} INFO - Groningen
+[2023-11-03T00:03:35.160+0000] {logging_mixin.py:151} INFO - Tilburg
+[2023-11-03T00:03:36.834+0000] {logging_mixin.py:151} INFO - Lisbon
+[2023-11-03T00:03:38.575+0000] {logging_mixin.py:151} INFO - Porto
+[2023-11-03T00:03:40.319+0000] {logging_mixin.py:151} INFO - Braga
+[2023-11-03T00:03:42.051+0000] {logging_mixin.py:151} INFO - Funchal
+[2023-11-03T00:03:43.440+0000] {logging_mixin.py:151} INFO - San-Marino
+[2023-11-03T00:03:45.127+0000] {logging_mixin.py:151} INFO - Bratislava
+[2023-11-03T00:03:46.973+0000] {logging_mixin.py:151} INFO - Ljubljana
+[2023-11-03T00:03:48.731+0000] {logging_mixin.py:151} INFO - Madrid
+[2023-11-03T00:03:50.441+0000] {logging_mixin.py:151} INFO - Barcelona
+[2023-11-03T00:03:53.470+0000] {logging_mixin.py:151} INFO - Santa-Cruz-De-Tenerife
+[2023-11-03T00:03:55.348+0000] {logging_mixin.py:151} INFO - Valencia
+[2023-11-03T00:03:57.097+0000] {logging_mixin.py:151} INFO - Seville
+[2023-11-03T00:03:58.530+0000] {logging_mixin.py:151} INFO - Zaragoza
+[2023-11-03T00:04:00.098+0000] {logging_mixin.py:151} INFO - Malaga
+[2023-11-03T00:04:01.777+0000] {logging_mixin.py:151} INFO - Bilbao
+[2023-11-03T00:04:03.425+0000] {logging_mixin.py:151} INFO - Alicante
+[2023-11-03T00:04:05.074+0000] {logging_mixin.py:151} INFO - Las-Palmas
+[2023-11-03T00:04:06.397+0000] {logging_mixin.py:151} INFO - Tbilisi
+[2023-11-03T00:04:08.655+0000] {logging_mixin.py:151} INFO - Hong-Kong
+[2023-11-03T00:04:10.391+0000] {logging_mixin.py:151} INFO - Budapest
+[2023-11-03T00:04:12.181+0000] {logging_mixin.py:151} INFO - Reykjavik
+[2023-11-03T00:04:13.585+0000] {logging_mixin.py:151} INFO - Tel-Aviv
+[2023-11-03T00:04:15.238+0000] {logging_mixin.py:151} INFO - Jerusalem
+[2023-11-03T00:04:17.252+0000] {logging_mixin.py:151} INFO - Tokyo
+[2023-11-03T00:04:18.904+0000] {logging_mixin.py:151} INFO - Osaka
+[2023-11-03T00:04:20.668+0000] {logging_mixin.py:151} INFO - Sapporo
+[2023-11-03T00:04:22.164+0000] {logging_mixin.py:151} INFO - Yokohama
+[2023-11-03T00:04:23.605+0000] {logging_mixin.py:151} INFO - Nagoya
+[2023-11-03T00:04:25.460+0000] {logging_mixin.py:151} INFO - Kobe
+[2023-11-03T00:04:26.803+0000] {logging_mixin.py:151} INFO - Fukuoka
+[2023-11-03T00:04:28.320+0000] {logging_mixin.py:151} INFO - Kawasaki
+[2023-11-03T00:04:29.755+0000] {logging_mixin.py:151} INFO - Seoul
+[2023-11-03T00:04:31.582+0000] {logging_mixin.py:151} INFO - Busan
+[2023-11-03T00:04:32.953+0000] {logging_mixin.py:151} INFO - Incheon
+[2023-11-03T00:04:34.388+0000] {logging_mixin.py:151} INFO - Daegu
+[2023-11-03T00:04:35.830+0000] {logging_mixin.py:151} INFO - Kuwait-City
+[2023-11-03T00:04:37.486+0000] {logging_mixin.py:151} INFO - Macau
+[2023-11-03T00:04:39.122+0000] {logging_mixin.py:151} INFO - Kuala-Lumpur
+[2023-11-03T00:04:41.017+0000] {logging_mixin.py:151} INFO - Johor-Bahru
+[2023-11-03T00:04:42.458+0000] {logging_mixin.py:151} INFO - George-Town
+[2023-11-03T00:04:43.903+0000] {logging_mixin.py:151} INFO - Malacca
+[2023-11-03T00:04:45.436+0000] {logging_mixin.py:151} INFO - Kota-Kinabalu
+[2023-11-03T00:04:47.072+0000] {logging_mixin.py:151} INFO - Ipoh
+[2023-11-03T00:04:48.407+0000] {logging_mixin.py:151} INFO - Mexico-City
+[2023-11-03T00:04:50.234+0000] {logging_mixin.py:151} INFO - Tijuana
+[2023-11-03T00:04:52.097+0000] {logging_mixin.py:151} INFO - Guadalajara
+[2023-11-03T00:04:53.914+0000] {logging_mixin.py:151} INFO - Cancun
+[2023-11-03T00:04:55.651+0000] {logging_mixin.py:151} INFO - Playa-Del-Carmen
+[2023-11-03T00:04:57.095+0000] {logging_mixin.py:151} INFO - Monterrey
+[2023-11-03T00:04:58.966+0000] {logging_mixin.py:151} INFO - Auckland
+[2023-11-03T00:05:00.779+0000] {logging_mixin.py:151} INFO - Wellington
+[2023-11-03T00:05:02.616+0000] {logging_mixin.py:151} INFO - Christchurch
+[2023-11-03T00:05:04.293+0000] {logging_mixin.py:151} INFO - Hamilton
+[2023-11-03T00:05:05.653+0000] {logging_mixin.py:151} INFO - Oslo
+[2023-11-03T00:05:07.546+0000] {logging_mixin.py:151} INFO - Bergen
+[2023-11-03T00:05:09.209+0000] {logging_mixin.py:151} INFO - Trondheim
+[2023-11-03T00:05:11.117+0000] {logging_mixin.py:151} INFO - Stavanger
+[2023-11-03T00:05:12.573+0000] {logging_mixin.py:151} INFO - Tromso
+[2023-11-03T00:05:14.104+0000] {logging_mixin.py:151} INFO - Muscat
+[2023-11-03T00:05:16.041+0000] {logging_mixin.py:151} INFO - Warsaw
+[2023-11-03T00:05:17.941+0000] {logging_mixin.py:151} INFO - Krakow
+[2023-11-03T00:05:19.729+0000] {logging_mixin.py:151} INFO - Gdansk
+[2023-11-03T00:05:21.174+0000] {logging_mixin.py:151} INFO - Lodz
+[2023-11-03T00:05:22.608+0000] {logging_mixin.py:151} INFO - Katowice
+[2023-11-03T00:05:24.347+0000] {logging_mixin.py:151} INFO - Wroclaw
+[2023-11-03T00:05:26.182+0000] {logging_mixin.py:151} INFO - Poznan
+[2023-11-03T00:05:27.918+0000] {logging_mixin.py:151} INFO - Szczecin
+[2023-11-03T00:05:29.366+0000] {logging_mixin.py:151} INFO - Bydgoszcz
+[2023-11-03T00:05:30.716+0000] {logging_mixin.py:151} INFO - Doha
+[2023-11-03T00:05:32.883+0000] {logging_mixin.py:151} INFO - Bucharest
+[2023-11-03T00:05:34.581+0000] {logging_mixin.py:151} INFO - Moscow
+[2023-11-03T00:05:36.856+0000] {logging_mixin.py:151} INFO - Kazan
+[2023-11-03T00:05:38.670+0000] {logging_mixin.py:151} INFO - Yekaterinburg
+[2023-11-03T00:05:40.625+0000] {logging_mixin.py:151} INFO - Sochi
+[2023-11-03T00:05:42.160+0000] {logging_mixin.py:151} INFO - Vladivostok
+[2023-11-03T00:05:44.010+0000] {logging_mixin.py:151} INFO - Riyadh
+[2023-11-03T00:05:45.774+0000] {logging_mixin.py:151} INFO - Jeddah
+[2023-11-03T00:05:47.276+0000] {logging_mixin.py:151} INFO - Mecca
+[2023-11-03T00:05:48.774+0000] {logging_mixin.py:151} INFO - Belgrade
+[2023-11-03T00:05:50.463+0000] {logging_mixin.py:151} INFO - Novi-Sad
+[2023-11-03T00:05:51.891+0000] {logging_mixin.py:151} INFO - Singapore
+[2023-11-03T00:05:53.651+0000] {logging_mixin.py:151} INFO - Stockholm
+[2023-11-03T00:05:55.576+0000] {logging_mixin.py:151} INFO - Malmo
+[2023-11-03T00:05:57.307+0000] {logging_mixin.py:151} INFO - Gothenburg
+[2023-11-03T00:05:59.247+0000] {logging_mixin.py:151} INFO - Uppsala
+[2023-11-03T00:06:01.094+0000] {logging_mixin.py:151} INFO - Taipei
+[2023-11-03T00:06:02.872+0000] {logging_mixin.py:151} INFO - Kaohsiung
+[2023-11-03T00:06:04.941+0000] {logging_mixin.py:151} INFO - Tainan
+[2023-11-03T00:06:06.302+0000] {logging_mixin.py:151} INFO - Taoyuan
+[2023-11-03T00:06:07.767+0000] {logging_mixin.py:151} INFO - Bangkok
+[2023-11-03T00:06:09.532+0000] {logging_mixin.py:151} INFO - Chiang-Mai
+[2023-11-03T00:06:11.360+0000] {logging_mixin.py:151} INFO - Phuket
+[2023-11-03T00:06:12.798+0000] {logging_mixin.py:151} INFO - Pattaya
+[2023-11-03T00:06:14.628+0000] {logging_mixin.py:151} INFO - Istanbul
+[2023-11-03T00:06:16.778+0000] {logging_mixin.py:151} INFO - Ankara
+[2023-11-03T00:06:18.575+0000] {logging_mixin.py:151} INFO - Antalya
+[2023-11-03T00:06:20.293+0000] {logging_mixin.py:151} INFO - Izmir
+[2023-11-03T00:06:22.098+0000] {logging_mixin.py:151} INFO - Bursa
+[2023-11-03T00:06:23.626+0000] {logging_mixin.py:151} INFO - Kyiv
+[2023-11-03T00:06:25.299+0000] {logging_mixin.py:151} INFO - Kharkiv
+[2023-11-03T00:06:26.670+0000] {logging_mixin.py:151} INFO - Lviv
+[2023-11-03T00:06:28.015+0000] {logging_mixin.py:151} INFO - Donetsk
+[2023-11-03T00:06:29.462+0000] {logging_mixin.py:151} INFO - London
+[2023-11-03T00:06:31.320+0000] {logging_mixin.py:151} INFO - Birmingham
+[2023-11-03T00:06:33.310+0000] {logging_mixin.py:151} INFO - Manchester
+[2023-11-03T00:06:34.949+0000] {logging_mixin.py:151} INFO - Edinburgh
+[2023-11-03T00:06:36.831+0000] {logging_mixin.py:151} INFO - Glasgow
+[2023-11-03T00:06:38.466+0000] {logging_mixin.py:151} INFO - Liverpool
+[2023-11-03T00:06:39.956+0000] {logging_mixin.py:151} INFO - Cardiff
+[2023-11-03T00:06:42.152+0000] {logging_mixin.py:151} INFO - Sheffield
+[2023-11-03T00:06:44.005+0000] {logging_mixin.py:151} INFO - Leeds
+[2023-11-03T00:06:45.667+0000] {logging_mixin.py:151} INFO - Leicester
+[2023-11-03T00:06:47.199+0000] {logging_mixin.py:151} INFO - Belfast
+[2023-11-03T00:06:49.197+0000] {logging_mixin.py:151} INFO - Newcastle-Upon-Tyne
+[2023-11-03T00:06:50.879+0000] {logging_mixin.py:151} INFO - Montevideo
+[2023-11-03T00:06:52.700+0000] {logging_mixin.py:151} INFO - New-York-City
+[2023-11-03T00:06:54.553+0000] {logging_mixin.py:151} INFO - Los-Angeles
+[2023-11-03T00:06:56.394+0000] {logging_mixin.py:151} INFO - Chicago
+[2023-11-03T00:06:58.245+0000] {logging_mixin.py:151} INFO - Houston
+[2023-11-03T00:07:00.077+0000] {logging_mixin.py:151} INFO - Phoenix
+[2023-11-03T00:07:01.706+0000] {logging_mixin.py:151} INFO - Dallas
+[2023-11-03T00:07:03.074+0000] {logging_mixin.py:151} INFO - Philadelphia
+[2023-11-03T00:07:05.050+0000] {logging_mixin.py:151} INFO - San-Antonio
+[2023-11-03T00:07:06.740+0000] {logging_mixin.py:151} INFO - San-Diego
+[2023-11-03T00:07:08.376+0000] {logging_mixin.py:151} INFO - Dallas
+[2023-11-03T00:07:09.914+0000] {logging_mixin.py:151} INFO - San-Jose
+[2023-11-03T00:07:11.752+0000] {logging_mixin.py:151} INFO - Austin
+[2023-11-03T00:07:13.114+0000] {logging_mixin.py:151} INFO - Jacksonville
+[2023-11-03T00:07:14.929+0000] {logging_mixin.py:151} INFO - Miami
+[2023-11-03T00:07:16.660+0000] {logging_mixin.py:151} INFO - Columbus
+[2023-11-03T00:07:18.491+0000] {logging_mixin.py:151} INFO - Indianapolis
+[2023-11-03T00:07:20.111+0000] {logging_mixin.py:151} INFO - Charlotte
+[2023-11-03T00:07:21.776+0000] {logging_mixin.py:151} INFO - San-Francisco
+[2023-11-03T00:07:23.612+0000] {logging_mixin.py:151} INFO - Seattle
+[2023-11-03T00:07:25.376+0000] {logging_mixin.py:151} INFO - Denver
+[2023-11-03T00:07:27.166+0000] {logging_mixin.py:151} INFO - Washington
+[2023-11-03T00:07:29.708+0000] {logging_mixin.py:151} INFO - Nashville
+[2023-11-03T00:07:31.062+0000] {logging_mixin.py:151} INFO - Boston
+[2023-11-03T00:07:32.757+0000] {logging_mixin.py:151} INFO - Portland
+[2023-11-03T00:07:34.702+0000] {logging_mixin.py:151} INFO - Las-Vegas
+[2023-11-03T00:07:36.671+0000] {logging_mixin.py:151} INFO - Detroit
+[2023-11-03T00:07:38.405+0000] {logging_mixin.py:151} INFO - Memphis
+[2023-11-03T00:07:40.224+0000] {logging_mixin.py:151} INFO - Louisville
+[2023-11-03T00:07:42.070+0000] {logging_mixin.py:151} INFO - Baltimore
+[2023-11-03T00:07:44.010+0000] {logging_mixin.py:151} INFO - Milwaukee
+[2023-11-03T00:07:45.452+0000] {logging_mixin.py:151} INFO - Kansas
+[2023-11-03T00:07:46.884+0000] {logging_mixin.py:151} INFO - Albuquerque
+[2023-11-03T00:07:48.612+0000] {logging_mixin.py:151} INFO - Sacramento
+[2023-11-03T00:07:50.459+0000] {logging_mixin.py:151} INFO - Atlanta
+[2023-11-03T00:07:52.282+0000] {logging_mixin.py:151} INFO - Omaha
+[2023-11-03T00:07:53.974+0000] {logging_mixin.py:151} INFO - Virginia-Beach
+[2023-11-03T00:07:55.422+0000] {logging_mixin.py:151} INFO - Minneapolis
+[2023-11-03T00:07:57.077+0000] {logging_mixin.py:151} INFO - Quito
+[2023-11-03T00:07:58.958+0000] {logging_mixin.py:151} INFO - Guayaquil
+[2023-11-03T00:08:00.403+0000] {logging_mixin.py:151} INFO - Asuncion
+[2023-11-03T00:08:01.847+0000] {logging_mixin.py:151} INFO - Panama-City
+[2023-11-03T00:08:03.667+0000] {logging_mixin.py:151} INFO - Buenos-Aires
+[2023-11-03T00:08:05.523+0000] {logging_mixin.py:151} INFO - Cordoba
+[2023-11-03T00:08:07.309+0000] {logging_mixin.py:151} INFO - Mar-Del-Plata
+[2023-11-03T00:08:08.788+0000] {logging_mixin.py:151} INFO - Rosario
+[2023-11-03T00:08:13.970+0000] {python.py:194} INFO - Done. Returned value was: None
+[2023-11-03T00:08:13.983+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=col_api_etl, task_id=extract_numbeo_prices_from_city, execution_date=20231102T000000, start_date=20231103T000016, end_date=20231103T000813
+[2023-11-03T00:08:14.024+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0
