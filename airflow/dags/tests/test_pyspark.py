@@ -9,7 +9,7 @@ from tests.fixtures.fixtures_testing import mock_environment_variables, mock_bot
 from scripts.pyspark import *
 
 def test_merge_locations_and_currencies(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
-   merge_locations_with_currencies(spark_session = pyspark_session, country_abbreviation_combinations = country_abbreviation_combinations)
+   merge_locations_with_currencies(spark_session = pyspark_session)
    expected_get_object_calls = [call(Bucket = 'test-bucket-raw', Key = 'locations.json'),
    call(Bucket = 'test-bucket-raw', Key = f'currency_conversion_rates{current_date}')]
    expected_locations_with_currencies = json.dumps([{"Abbreviation": "AUD", "Country": "Australia", "City": "Perth", "USD_to_local": 1.55},

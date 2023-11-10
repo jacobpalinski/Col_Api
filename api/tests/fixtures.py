@@ -7,147 +7,20 @@ import datetime
 from flask import json, url_for
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Mock environment variables
+@pytest.fixture
+def mock_environment_variables(mocker):
+    mocker.patch.dict(os.environ, {
+    'AWS_ACCESS_KEY_ID': 'access-key',
+    'AWS_SECRET_ACCESS_KEY': 'secret-key',
+    'S3_BUCKET_RAW': 'test-bucket-raw',
+    'S3_BUCKET_TRANSFORMED': 'test-bucket-transformed',
+    'ADMIN_KEY' : 'admin-key'
+    })
 
 # Mock email and password for testing purposes
 TEST_EMAIL = 'test@gmail.com'
 TEST_PASSWORD = 'X4nmasXII!'
-
-@pytest.fixture
-def create_user(client):
-    new_user = client.post('/v1/auth/user',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
-        'email' : TEST_EMAIL,
-        'password': TEST_PASSWORD,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return new_user
-
-@pytest.fixture
-def login(client, create_user):
-    login = client.post('/v1/auth/login',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
-        'email' : TEST_EMAIL,
-        'password': TEST_PASSWORD
-        }))
-    login_data = json.loads(login.get_data(as_text = True))
-    return login_data
-
-def create_currency(client, abbreviation, usd_to_local_exchange_rate):
-        response = client.post('/v1/currencies',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'abbreviation': abbreviation,
-            'usd_to_local_exchange_rate': usd_to_local_exchange_rate,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        return response
-
-def create_location(client, country, city, abbreviation):
-    response = client.post('/v1/locations',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'country': country,
-        'city': city,
-        'abbreviation': abbreviation,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city):
-    response = client.post('/v1/homepurchase',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': property_location,
-        'price_per_sqm': price_per_sqm,
-        'mortgage_interest': mortgage_interest,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_rent(client,property_location,bedrooms,monthly_price,city):
-    response = client.post('/v1/rent',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': property_location,
-        'bedrooms': bedrooms,
-        'monthly_price': monthly_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_utilities(client,utility,monthly_price,city):
-    response = client.post('/v1/utilities',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'utility': utility,
-        'monthly_price': monthly_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_transportation(client,type,price,city):
-    response = client.post('/v1/transportation',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': type,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_foodbeverage(client,item_category,purchase_point,item,price,city):
-    response = client.post('/v1/foodbeverage',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': item_category,
-        'purchase_point': purchase_point,
-        'item': item,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_childcare(client,type,annual_price,city):
-    response = client.post('/v1/childcare',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': type,
-        'annual_price': annual_price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_apparel(client,item,price,city):
-    response = client.post('/v1/apparel',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': item,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
-
-def create_leisure(client,activity,price,city):
-    response = client.post('/v1/leisure',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'activity': activity,
-        'price': price,
-        'city': city,
-        'admin': os.environ.get('ADMIN_KEY')
-        }))
-    return response
 
 @pytest.fixture
 def current_date():
@@ -572,3 +445,140 @@ def mock_boto3_s3_patch_modified(mocker, monkeypatch, current_date):
 
     mock_s3.get_object.side_effect = mock_get_object
     return mock_s3
+
+@pytest.fixture
+def create_user(client, mock_environment_variables):
+    new_user = client.post('/v1/auth/user',
+        headers = {'Content-Type' : 'application/json'},
+        data = json.dumps({
+        'email' : TEST_EMAIL,
+        'password': TEST_PASSWORD,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return new_user
+
+@pytest.fixture
+def login(client, create_user, mock_environment_variables):
+    login = client.post('/v1/auth/login',
+        headers = {'Content-Type' : 'application/json'},
+        data = json.dumps({
+        'email' : TEST_EMAIL,
+        'password': TEST_PASSWORD
+        }))
+    login_data = json.loads(login.get_data(as_text = True))
+    return login_data
+
+def create_currency(client, mock_environment_variables):
+    response = client.post('/v1/currencies',
+    headers = {'Content-Type': 'application/json'},
+    data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}
+    ))
+    return response
+
+def currency_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/currencies',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_location(client, mock_environment_variables):
+    response = client.post('/v1/locations',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_home_purchase(client,property_location,price_per_sqm,mortgage_interest,city, mock_environment_variables):
+    response = client.post('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': property_location,
+        'price_per_sqm': price_per_sqm,
+        'mortgage_interest': mortgage_interest,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_rent(client,property_location,bedrooms,monthly_price,city, mock_environment_variables):
+    response = client.post('/v1/rent',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'property_location': property_location,
+        'bedrooms': bedrooms,
+        'monthly_price': monthly_price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_utilities(client,utility,monthly_price,city, mock_environment_variables):
+    response = client.post('/v1/utilities',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'utility': utility,
+        'monthly_price': monthly_price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_transportation(client,type,price,city, mock_environment_variables):
+    response = client.post('/v1/transportation',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': type,
+        'price': price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_foodbeverage(client,item_category,purchase_point,item,price,city, mock_environment_variables):
+    response = client.post('/v1/foodbeverage',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item_category': item_category,
+        'purchase_point': purchase_point,
+        'item': item,
+        'price': price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_childcare(client,type,annual_price,city, mock_environment_variables):
+    response = client.post('/v1/childcare',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'type': type,
+        'annual_price': annual_price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_apparel(client,item,price,city, mock_environment_variables):
+    response = client.post('/v1/apparel',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'item': item,
+        'price': price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def create_leisure(client,activity,price,city, mock_environment_variables):
+    response = client.post('/v1/leisure',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'activity': activity,
+        'price': price,
+        'city': city,
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response

@@ -1,3 +1,7 @@
+import boto3
+import datetime
+import os
+import json
 from httpstatus import *
 from models import orm, User
 from flask import make_response, request
@@ -86,3 +90,11 @@ class PaginationHelper():
             'next' : next_page_url,
             'count': paginated_objects.total
         }
+
+# Gets data for relevant endpoint from S3 transformed bucket 
+def get_data(file_prefix: str):
+    boto3_s3 = boto3.client('s3', aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY'))
+    current_date = datetime.date.today().strftime('%Y%m%d')
+    file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_TRANSFORMED'), Key = file_prefix + current_date)
+    contents = file['Body'].read().decode('utf-8')
+    return json.loads(contents)

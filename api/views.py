@@ -1,5 +1,7 @@
 import json
 import os
+import boto3
+import botocore
 from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from httpstatus import HttpStatus
@@ -90,7 +92,7 @@ class UserResource(Resource):
         
         elif not user and user_register_dict['admin'] == os.environ.get('ADMIN_KEY'):
             try:
-                user = User(email = user_register_dict['email'],admin = True)
+                user = User(email = user_register_dict['email'], admin = True)
                 user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
                 response = {'message': 'Successfully registered with admin privileges'}
@@ -199,38 +201,6 @@ class CurrencyResource(Resource):
             dumped_currency = currency_schema.dump(currency)
             return dumped_currency
     
-    # Updates abbreviation and exchange rate for specific id
-    def patch(self, id):
-        currency = Currency.query.get_or_404(id)
-        
-        currency_dict = request.get_json(force = True)
-        try:
-            currency_schema.load(currency_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'abbreviation' in currency_dict and currency_dict['abbreviation'] != None:
-                    currency.abbreviation = currency_dict['abbreviation']
-                if 'usd_to_local_exchange_rate' in currency_dict and \
-                currency_dict['usd_to_local_exchange_rate'] != None:
-                    currency.usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate']
-                currency.last_updated = datetime.now()
-            
-                currency.update()
-                response = {'message': 'Currency id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
     def delete(self, id):
         admin_dict = request.get_json()
         currency = Currency.query.get_or_404(id)
@@ -264,32 +234,71 @@ class CurrencyListResource(Resource):
             paginated_currencies = pagination_helper.paginate_query()
             return paginated_currencies
     
-    # Creates a new currency
+    # Adds currencies from latest locations_with_currencies file from S3 transformed bucket to api endpoint
     def post(self):
         currency_dict = request.get_json()
-        try:
-            currency_schema.load(currency_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
         
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            if not Currency.is_abbreviation_unique(abbreviation = currency_dict['abbreviation']):
-                response = {'message': f"Error currency abbreviation {currency_dict['abbreviation']} already exists"}
-                return response, HttpStatus.bad_request_400.value
-
             try:
-                currency = Currency(abbreviation = currency_dict['abbreviation'],
-                usd_to_local_exchange_rate = currency_dict['usd_to_local_exchange_rate'])
-                currency.add(currency)
-                query = Currency.query.get(currency.id)
-                dump_result = currency_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
+                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new currencies added
+            currencies_added = 0
 
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            for data in locations_with_currencies_data:
+                if not Currency.is_abbreviation_unique(abbreviation = data['Abbreviation']):
+                    continue
+                try:
+                    currency = Currency(abbreviation = data['Abbreviation'],
+                    usd_to_local_exchange_rate = data['USD_to_local'])
+                    currency.add(currency)
+                    currencies_added += 1
+                    query = Currency.query.get(currency.id)
+                    dump_result = currency_schema.dump(query)
+                    print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+
+            response = {'message': f'Successfully added {currencies_added} currencies'}
+            return response, HttpStatus.created_201.value
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates abbreviation and exchange rate for abbreviation with modified exchange rates
+    def patch(self):
         
+        currency_dict = request.get_json(force = True)
+
+        if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track currencies updated
+            currencies_updated = 0
+
+            for data in locations_with_currencies_data:
+                try:
+                    currency = Currency.query.filter_by(abbreviation = data['Abbreviation']).first()
+                    if currency == None:
+                        continue
+                    elif data['USD_to_local'] != currency.usd_to_local_exchange_rate:
+                        currency.usd_to_local_exchange_rate = data['USD_to_local']
+                        currencies_updated += 1
+                    else:
+                        continue
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'usd_to_local_exchange_rate was successfully updated for {currencies_updated} currencies'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
