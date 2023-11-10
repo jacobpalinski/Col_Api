@@ -137,6 +137,14 @@ class Location(orm.Model,ResourceAddUpdateDelete):
     apparel = orm.relationship('Apparel',backref = orm.backref('location'))
     leisure = orm.relationship('Leisure',backref = orm.backref('location'))
 
+    @classmethod
+    def is_city_unique(cls, city):
+        existing_city = cls.query.filter_by(city = city).first()
+        if existing_city is None:
+            return True
+        else:
+            return False
+
     def __init__(self,country,city,currency):
         self.country = country
         self.city = city

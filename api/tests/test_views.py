@@ -299,7 +299,7 @@ class TestCurrencyListResource:
         assert response_data['message'] == 'Successfully added 4 currencies'
         assert Currency.query.count() == 4
 
-    def test_currency_post_currency_already_exist(self, client, mock_boto3_s3, mock_environment_variables, current_date):
+    def test_currency_post_currency_already_exists(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         expected_get_object_calls = [call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}'),
         call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}')]
         response = create_currency(client, mock_environment_variables)
@@ -418,24 +418,24 @@ class TestLocationResource:
         assert get_response_data['currency']['abbreviation'] == 'AUD'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_location_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        get_response = client.get('/v1/locations/2',
+    def test_location_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        get_response = client.get('/v1/locations/5',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
     
-    def test_location_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
+    def test_location_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
         delete_response = client.delete('/v1/locations/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Location id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Location.query.count() == 0
+        assert Location.query.count() == 3
 
     def test_location_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/locations/1',
@@ -444,9 +444,9 @@ class TestLocationResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Location.query.count() == 0
     
-    def test_location_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
+    def test_location_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
         delete_response = client.delete('/v1/locations/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -455,55 +455,70 @@ class TestLocationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestLocationListResource:
-    def test_location_post_new_location_currency_exist(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        post_response = create_location(client,'Australia','Perth','AUD')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['country'] == 'Australia'
-        assert post_response_data['city'] == 'Perth'
-        assert post_response_data['currency']['id'] == 1
-        assert post_response_data['currency']['abbreviation'] == 'AUD'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Location.query.count() == 1
-    
-    def test_location_post_new_location_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        post_response = client.post('/v1/locations',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'country': 'Australia',
-        'city': 'Perth',
-        'abbreviation': 'AUD',
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_location_post_new_location_currency_none(self,client):
-        response = create_location(client,'Australia','Perth','AUD')
+    def test_location_post_location_no_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
+        response = client.post('/v1/locations',
+        headers = {'Content-Type': 'application/json'})
         response_data = json.loads(response.get_data(as_text = True))
-        assert response_data['message'] == 'Specified currency doesnt exist in /currencies/ API endpoint'
-        assert response.status_code == HttpStatus.notfound_404.value
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Location.query.count() == 0
+    
+    def test_location_post_location_incorrect_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
+        response = client.post('/v1/locations',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
         assert Location.query.count() == 0
 
-    def test_location_get_without_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
+    def test_location_post_location_with_admin(self,client, create_user, login, mock_boto3_s3, mock_environment_variables, current_date):
+        create_currency(client, mock_environment_variables)
+        post_response = create_location(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == 'Successfully added 4 locations'
+        assert Location.query.count() == 4
+    
+    def test_location_post_location_already_exists(self, client, mock_boto3_s3, mock_environment_variables, current_date):
+        create_currency(client, mock_environment_variables)
+        expected_get_object_calls = [call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}'),
+        call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}'),
+        call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}')]
+        response = create_location(client, mock_environment_variables)
+        second_response = create_location(client, mock_environment_variables)
+        response_data = json.loads(second_response.get_data(as_text = True))
+        assert mock_boto3_s3.get_object.call_count == 3
+        assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
+        assert second_response.status_code == HttpStatus.created_201.value
+        assert response_data['message'] == 'Successfully added 0 locations'
+        assert Location.query.count() == 4
+
+    def test_location_get_without_id(self, client, create_user, login, mock_boto3_s3, mock_environment_variables, current_date):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/locations',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['locations']) == 2
+        assert len(get_first_page_response_data['locations']) == 4
         assert get_first_page_response_data['locations'][0]['country'] == 'Australia'
         assert get_first_page_response_data['locations'][0]['city'] == 'Perth'
         assert get_first_page_response_data['locations'][0]['currency']['id'] == 1
         assert get_first_page_response_data['locations'][0]['currency']['abbreviation'] == 'AUD'
-        assert get_first_page_response_data['locations'][1]['country'] == 'Australia'
-        assert get_first_page_response_data['locations'][1]['city'] == 'Melbourne'
-        assert get_first_page_response_data['locations'][1]['currency']['id'] == 1
-        assert get_first_page_response_data['locations'][1]['currency']['abbreviation'] == 'AUD'
-        assert get_first_page_response_data['count'] == 2
+        assert get_first_page_response_data['locations'][1]['country'] == 'Hong Kong'
+        assert get_first_page_response_data['locations'][1]['city'] == 'Hong Kong'
+        assert get_first_page_response_data['locations'][1]['currency']['id'] == 2
+        assert get_first_page_response_data['locations'][1]['currency']['abbreviation'] == 'HKD'
+        assert get_first_page_response_data['locations'][2]['country'] == 'New Zealand'
+        assert get_first_page_response_data['locations'][2]['city'] == 'Auckland'
+        assert get_first_page_response_data['locations'][2]['currency']['id'] == 3
+        assert get_first_page_response_data['locations'][2]['currency']['abbreviation'] == 'NZD'
+        assert get_first_page_response_data['locations'][3]['country'] == 'Paraguay'
+        assert get_first_page_response_data['locations'][3]['city'] == 'Asuncion'
+        assert get_first_page_response_data['locations'][3]['currency']['id'] == 4
+        assert get_first_page_response_data['locations'][3]['currency']['abbreviation'] == 'PYG'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value

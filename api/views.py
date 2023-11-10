@@ -349,30 +349,39 @@ class LocationListResource(Resource):
     # Creates a new location
     def post(self):
         location_dict = request.get_json()
-        try:
-            location_schema.load(location_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
         if location_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                currency_abbreviation = location_dict['abbreviation']
-                currency = Currency.query.filter_by(abbreviation = currency_abbreviation).first()
+                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new locations added
+            locations_added = 0
 
-                if currency is None:
-                    response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+            for data in locations_with_currencies_data:
+                if not Location.is_city_unique(city = data['City']):
+                    continue
+                try:
+                    abbreviation = data['Abbreviation']
+                    currency = Currency.query.filter_by(abbreviation = abbreviation).first()
+
+                    if currency is None:
+                        response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
+                        return response, HttpStatus.notfound_404.value
                 
-                location = Location(country = location_dict['country'], city = location_dict['city'], currency = currency)
-                location.add(location)
-                query = Location.query.get(location.id)
-                dump_result = location_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
+                    location = Location(country = data['Country'], city = data['City'], currency = currency)
+                    location.add(location)
+                    locations_added += 1
+                    query = Location.query.get(location.id)
+                    dump_result = location_schema.dump(query)
+                    print(f'{HttpStatus.created_201.value} {dump_result}')
 
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+
+            response = {'message': f'Successfully added {locations_added} locations'}
+            return response, HttpStatus.created_201.value
         
         else:
             response = {'message': 'Admin privileges needed'}
