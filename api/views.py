@@ -249,7 +249,7 @@ class CurrencyListResource(Resource):
             currencies_added = 0
 
             for data in locations_with_currencies_data:
-                if not Currency.is_abbreviation_unique(abbreviation = data['Abbreviation']):
+                if not Currency.is_unique(abbreviation = data['Abbreviation']):
                     continue
                 try:
                     currency = Currency(abbreviation = data['Abbreviation'],
@@ -360,7 +360,7 @@ class LocationListResource(Resource):
             locations_added = 0
 
             for data in locations_with_currencies_data:
-                if not Location.is_city_unique(city = data['City']):
+                if not Location.is_unique(country = data['Country'], city = data['City']):
                     continue
                 try:
                     abbreviation = data['Abbreviation']
@@ -395,40 +395,6 @@ class HomePurchaseResource(Resource):
             home_purchase = HomePurchase.query.get_or_404(id)
             dumped_home_purchase = home_purchase_schema.dump(home_purchase)
             return dumped_home_purchase
-    
-    # Updates property location, price per sqm and mortgage interest rate for specified record
-    def patch(self, id):
-        home_purchase = HomePurchase.query.get_or_404(id)
-        
-        home_purchase_dict = request.get_json(force = True)
-        try:
-            home_purchase_schema.load(home_purchase_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'property_location' in home_purchase_dict and home_purchase_dict['property_location'] != None:
-                    home_purchase.property_location = home_purchase_dict['property_location']
-                if 'price_per_sqm' in home_purchase_dict and \
-                home_purchase_dict['price_per_sqm'] != None:
-                    home_purchase.price_per_sqm = home_purchase_dict['price_per_sqm']
-                if 'mortgage_interest' in home_purchase_dict and \
-                home_purchase_dict['mortgage_interest'] != None:
-                    home_purchase.mortgage_interest = home_purchase_dict['mortgage_interest']
-            
-                home_purchase.update()
-                response = {'message': 'HomePurchase id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-            
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
     
     # Deletes HomePurchase record
     def delete(self, id):
@@ -510,37 +476,93 @@ class HomePurchaseListResource(Resource):
                 dumped_home_purchase = pagination_helper.paginate_query()
                 return dumped_home_purchase
     
-    # Creates an record for relevant purchasing costs of buying a property in a particular location
+    # Creates a record for relevant purchasing costs of buying a property in a particular location
     def post(self):
         home_purchase_dict = request.get_json()
-        try:
-            home_purchase_schema.load(home_purchase_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = home_purchase_dict['city']
+                homepurchase_data = get_data(file_prefix = 'homepurchase')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new homepurchase rows added
+            homepurchase_added = 0
+
+            for data in homepurchase_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not HomePurchase.is_unique(location_id = location.id, property_location = data['Property Location']):
+                        continue
+                    try:
+                        home_purchase = HomePurchase(property_location = data['Property Location'], 
+                        price_per_sqm = data['Price per Square Meter'], 
+                        mortgage_interest = data['Mortgage Interest'],
+                        location = location)
+                        home_purchase.add(home_purchase)
+                        homepurchase_added += 1
+                        query = HomePurchase.query.get(home_purchase.id)
+                        dump_result = home_purchase_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                home_purchase = HomePurchase(property_location = home_purchase_dict['property_location'], 
-                price_per_sqm = home_purchase_dict['price_per_sqm'], 
-                mortgage_interest = home_purchase_dict['mortgage_interest'],
-                location = location)
-                home_purchase.add(home_purchase)
-                query = HomePurchase.query.get(home_purchase.id)
-                dump_result = home_purchase_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {homepurchase_added} homepurchase records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates property location, price per sqm and mortgage interest rate for specified record
+    def patch(self):
+        
+        homepurchase_dict = request.get_json(force = True)
+
+        if homepurchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                homepurchase_data = get_data(file_prefix = 'homepurchase')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track currencies updated
+            homepurchase_updated = 0
+
+            for data in homepurchase_data:
+                # Check if homepurchase has been updated
+                has_been_updated = False
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    homepurchase = HomePurchase.query.filter_by(location_id = location.id, property_location = data['Property Location']).first()
+                    if homepurchase == None:
+                        continue
+                    if data['Price per Square Meter'] != homepurchase.price_per_sqm:
+                        homepurchase.price_per_sqm = data['Price per Square Meter']
+                        has_been_updated = True
+                    if data['Mortgage Interest'] != homepurchase.mortgage_interest:
+                        homepurchase.mortgage_interest = data['Mortgage Interest']
+                        has_been_updated = True
+                    else:
+                        continue
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+                
+                if has_been_updated == True:
+                    homepurchase_updated += 1
+            
+            response = {'message': f'Successfully updated {homepurchase_updated} homepurchase records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value

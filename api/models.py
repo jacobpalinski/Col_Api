@@ -112,9 +112,9 @@ class Currency(orm.Model,ResourceAddUpdateDelete):
     location = orm.relationship('Location',backref = orm.backref('currency'))
 
     @classmethod
-    def is_abbreviation_unique(cls, abbreviation):
-        existing_abbreviation = cls.query.filter_by(abbreviation = abbreviation).first()
-        if existing_abbreviation is None:
+    def is_unique(cls, abbreviation):
+        existing_row = cls.query.filter_by(abbreviation = abbreviation).first()
+        if existing_row is None:
             return True
         else:
             return False
@@ -138,9 +138,9 @@ class Location(orm.Model,ResourceAddUpdateDelete):
     leisure = orm.relationship('Leisure',backref = orm.backref('location'))
 
     @classmethod
-    def is_city_unique(cls, city):
-        existing_city = cls.query.filter_by(city = city).first()
-        if existing_city is None:
+    def is_unique(cls, country, city):
+        existing_row = cls.query.filter_by(country = country, city = city).first()
+        if existing_row is None:
             return True
         else:
             return False
@@ -155,8 +155,16 @@ class HomePurchase(orm.Model,ResourceAddUpdateDelete):
     property_location = orm.Column(orm.String(30),nullable = False)
     price_per_sqm = orm.Column(orm.Float,nullable = False)
     mortgage_interest = orm.Column(orm.Float,nullable = False)
-    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
-    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
+    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'), nullable = False)
+    last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(), nullable = False)
+
+    @classmethod
+    def is_unique(cls, location_id, property_location):
+        existing_row = cls.query.filter_by(location_id = location_id, property_location = property_location).first()
+        if existing_row is None:
+            return True
+        else:
+            return False
 
     def __init__(self,property_location,price_per_sqm,mortgage_interest,location):
         self.property_location = property_location

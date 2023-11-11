@@ -362,7 +362,6 @@ class TestCurrencyListResource:
         patch_response = client.patch('/v1/currencies',
         headers = {'Content-Type': 'application/json'})
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        print(patch_response_data)
         assert patch_response.status_code == HttpStatus.bad_request_400.value
         assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
     
@@ -455,6 +454,13 @@ class TestLocationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestLocationListResource:
+    def test_location_post_location_currency_notexist(self, client, mock_environment_variables, mock_boto3_s3):
+        response = create_location(client, mock_environment_variables)
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response_data['message'] == 'Specified currency doesnt exist in /currencies/ API endpoint'
+        assert response.status_code == HttpStatus.notfound_404.value
+        assert Location.query.count() == 0
+
     def test_location_post_location_no_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = client.post('/v1/locations',
         headers = {'Content-Type': 'application/json'})
@@ -533,54 +539,54 @@ class TestLocationListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestHomePurchaseResource:
-    def test_home_purchase_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    def test_homepurchase_get_with_id(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_response = client.get('/v1/homepurchase/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data['property_location'] == 'City Centre'
-        assert get_response_data['price_per_sqm'] == 6339
-        assert get_response_data['mortgage_interest'] == 5.09
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert get_response_data['price_per_sqm'] == 30603.04
+        assert get_response_data['mortgage_interest'] == 3.22
+        assert get_response_data['location']['id'] == 2
+        assert get_response_data['location']['country'] == 'Hong Kong'
+        assert get_response_data['location']['city'] == 'Hong Kong'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        get_response = client.get('/v1/homepurchase/2',
+    def test_homepurchase_get_notexist_id(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
+        get_response = client.get('/v1/homepurchase/5',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_home_purchase_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    def test_homepurchase_delete(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         delete_response = client.delete('/v1/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'HomePurchase id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert HomePurchase.query.count() == 0
+        assert HomePurchase.query.count() == 3
 
-    def test_home_purchase_delete_no_id_exist(self,client):
+    def test_homepurchase_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert HomePurchase.query.count() == 0
     
-    def test_home_purchase_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    def test_homepurchase_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         delete_response = client.delete('/v1/homepurchase/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -589,179 +595,204 @@ class TestHomePurchaseResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestHomePurchaseListResource:
-    def test_home_purchase_post_home_purchase_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['property_location'] == 'City Centre'
-        assert post_response_data['price_per_sqm'] == 6339
-        assert post_response_data['mortgage_interest'] == 5.09
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert HomePurchase.query.count() == 1
-    
-    def test_home_purchase_post_home_purchase_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/homepurchase',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'City Centre',
-        'price_per_sqm': 6339,
-        'mortgage_interest': 5.09,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_home_purchase_post_home_purchase_location_notexist(self,client):
-        response = create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
+    def test_homepurchase_post_homepurchase_location_notexist(self, client, mock_environment_variables, mock_boto3_s3):
+        response = create_homepurchase(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert HomePurchase.query.count() == 0
     
-    def test_home_purchase_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
-        patch_response = client.patch('/v1/homepurchase/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'property_location': 'Outside City Centre',
-            'price_per_sqm': 7000,
-            'mortgage_interest': 6.01,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/homepurchase/1',
-            headers = {'Content-Type': 'application/json',
-            "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['property_location'] == 'Outside City Centre'
-        assert get_response_data['price_per_sqm'] == 7000
-        assert get_response_data['mortgage_interest'] == 6.01
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
-        assert get_response.status_code == HttpStatus.ok_200.value
-
-    def test_home_purchase_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/homepurchase/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'property_location': 'Outside City Centre',
-            'price_per_sqm': 7000,
-            'mortgage_interest': 6.01,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
+    def test_homepurchase_post_homepurchase_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
         assert HomePurchase.query.count() == 0
     
-    def test_home_purchase_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_home_purchase(client,'City Centre', 6339.73, 5.09, 'Perth')
-        patch_response = client.patch('/v1/homepurchase/1',
+    def test_homepurchase_post_homepurchase_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/homepurchase',
         headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'Outside City Centre',
-        'price_per_sqm': 7000,
-        'mortgage_interest': 6.01
-        }))
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert HomePurchase.query.count() == 0
+
+    def test_homepurchase_post_homepurchase_with_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_homepurchase(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 4 homepurchase records'
+        assert HomePurchase.query.count() == 4
+    
+    def test_homepurchase_patch_updated_data(self, client, create_user, login, mock_boto3_s3, mock_boto3_s3_patch_modified, mock_environment_variables, current_date):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
+        patch_response = homepurchase_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 2 homepurchase records'
+        get_response = client.get('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert get_response.status_code == HttpStatus.ok_200.value
+        assert len(get_response_data['home purchase data']) == 4
+        assert get_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_response_data['home purchase data'][0]['price_per_sqm'] == 30603.04
+        assert get_response_data['home purchase data'][0]['mortgage_interest'] == 3.22
+        assert get_response_data['home purchase data'][0]['location']['id'] == 2
+        assert get_response_data['home purchase data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][1]['property_location'] == 'Outside of Centre'
+        assert get_response_data['home purchase data'][1]['price_per_sqm'] == 20253.04
+        assert get_response_data['home purchase data'][1]['mortgage_interest'] == 3.22
+        assert get_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_response_data['home purchase data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][2]['property_location'] == 'Outside of Centre'
+        assert get_response_data['home purchase data'][2]['price_per_sqm'] == 7120.84
+        assert get_response_data['home purchase data'][2]['mortgage_interest'] == 5.99
+        assert get_response_data['home purchase data'][2]['location']['id'] == 1
+        assert get_response_data['home purchase data'][2]['location']['country'] == 'Perth'
+        assert get_response_data['home purchase data'][2]['location']['city'] == 'Australia'
+        assert get_response_data['home purchase data'][3]['property_location'] == 'Outside of Centre'
+        assert get_response_data['home purchase data'][3]['price_per_sqm'] == 5824.95
+        assert get_response_data['home purchase data'][3]['mortgage_interest'] == 5.99
+        assert get_response_data['home purchase data'][3]['location']['id'] == 1
+        assert get_response_data['home purchase data'][3]['location']['country'] == 'Perth'
+        assert get_response_data['home purchase data'][3]['location']['city'] == 'Australia'
+    
+    def test_homepurchase_patch_no_updated_data(self, client, create_user, login, mock_boto3_s3, mock_environment_variables, current_date):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
+        patch_response = homepurchase_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 homepurchase records'
+        get_response = client.get('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json',
+        "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert get_response.status_code == HttpStatus.ok_200.value
+        assert len(get_response_data['home purchase data']) == 4
+        assert get_response_data['home purchase data'][0]['property_location'] == 'City Centre'
+        assert get_response_data['home purchase data'][0]['price_per_sqm'] == 6741.52
+        assert get_response_data['home purchase data'][0]['mortgage_interest'] == 5.99
+        assert get_response_data['home purchase data'][0]['location']['id'] == 1
+        assert get_response_data['home purchase data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['home purchase data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['home purchase data'][1]['property_location'] == 'City Centre'
+        assert get_response_data['home purchase data'][1]['price_per_sqm'] == 30603.04
+        assert get_response_data['home purchase data'][1]['mortgage_interest'] == 3.22
+        assert get_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_response_data['home purchase data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][2]['property_location'] == 'Outside of Centre'
+        assert get_response_data['home purchase data'][2]['price_per_sqm'] == 5395.77
+        assert get_response_data['home purchase data'][2]['mortgage_interest'] == 5.99
+        assert get_response_data['home purchase data'][2]['location']['id'] == 1
+        assert get_response_data['home purchase data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['home purchase data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['home purchase data'][3]['property_location'] == 'Outside of Centre'
+        assert get_response_data['home purchase data'][3]['price_per_sqm'] == 20253.04
+        assert get_response_data['home purchase data'][3]['mortgage_interest'] == 3.22
+        assert get_response_data['home purchase data'][3]['location']['id'] == 2
+        assert get_response_data['home purchase data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['home purchase data'][3]['location']['city'] == 'Hong Kong'
+    
+    def test_homepurchase_patch_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
+        patch_response = client.patch('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_homepurchase_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
+        response = client.patch('/v1/homepurchase',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_home_purchase_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_country_city_abbreviation(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_response = client.get('/v1/homepurchase?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data[0]['property_location'] == 'City Centre'
-        assert get_response_data[0]['price_per_sqm'] == 9191.55
-        assert get_response_data[0]['mortgage_interest'] == 5.09
+        assert get_response_data[0]['price_per_sqm'] == 10449.36
+        assert get_response_data[0]['mortgage_interest'] == 5.99
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'Outside of Centre'
+        assert get_response_data[1]['price_per_sqm'] == 8363.44
+        assert get_response_data[1]['mortgage_interest'] == 5.99
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_response = client.get('/v1/homepurchase?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data[0]['property_location'] == 'City Centre'
-        assert get_response_data[0]['price_per_sqm'] == 6339
-        assert get_response_data[0]['mortgage_interest'] == 5.09
+        assert get_response_data[0]['price_per_sqm'] == 6741.52
+        assert get_response_data[0]['mortgage_interest'] == 5.99
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'Outside of Centre'
+        assert get_response_data[1]['price_per_sqm'] == 5395.77
+        assert get_response_data[1]['mortgage_interest'] == 5.99
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
-        get_first_page_response = client.get('/v1/currencies',
-            headers = {"Content-Type": "application/json",
-            "Authorization": f"Bearer {login['auth_token']}"})
-        get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+    def test_homepurchase_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/homepurchase?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['home purchase data']) == 3
+        assert len(get_first_page_response_data['home purchase data']) == 2
         assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6339
-        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6741.52
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.99
         assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 7252
-        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 5395.77
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 5.99
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 14619
-        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
-        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 2
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -775,41 +806,28 @@ class TestHomePurchaseListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/homepurchase?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['home purchase data']) == 3
+        assert len(get_first_page_response_data['home purchase data']) == 2
         assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 9191.55
-        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 10449.36
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.99
         assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 10515.4
-        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
-        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 8363.44
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 5.99
+        assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 21197.55
-        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
-        assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 2
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -823,69 +841,61 @@ class TestHomePurchaseListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_response = client.get('/v1/homepurchase?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data[0]['property_location'] == 'City Centre'
-        assert get_response_data[0]['price_per_sqm'] == 9191.55
-        assert get_response_data[0]['mortgage_interest'] == 5.09
+        assert get_response_data[0]['price_per_sqm'] == 10449.36
+        assert get_response_data[0]['mortgage_interest'] == 5.99
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'Outside of Centre'
+        assert get_response_data[1]['price_per_sqm'] == 8363.44
+        assert get_response_data[1]['mortgage_interest'] == 5.99
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_country_none_city_none_abbreviation_none(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/homepurchase',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['home purchase data']) == 4
         assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6339
-        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 6741.52
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.99
         assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 7252
-        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 30603.04
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 3.22
         assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
-        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 14619
-        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 5395.77
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 5.99
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['home purchase data'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 20775
-        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 1.92
-        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][3]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 20253.04
+        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 3.22
+        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -900,68 +910,61 @@ class TestHomePurchaseListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_response = client.get('/v1/homepurchase?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data[0]['property_location'] == 'City Centre'
-        assert get_response_data[0]['price_per_sqm'] == 6339
-        assert get_response_data[0]['mortgage_interest'] == 5.09
+        assert get_response_data[0]['price_per_sqm'] == 6741.52
+        assert get_response_data[0]['mortgage_interest'] == 5.99
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'Outside of Centre'
+        assert get_response_data[1]['price_per_sqm'] == 5395.77
+        assert get_response_data[1]['mortgage_interest'] == 5.99
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_home_purchase_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_home_purchase(client,'City Centre', 6339, 5.09, 'Perth')
-        create_home_purchase(client,'City Centre', 7252, 4.26, 'Melbourne')
-        create_home_purchase(client,'City Centre', 14619, 4.25, 'Sydney')
-        create_home_purchase(client,'City Centre', 20775, 1.92, 'Zurich')
+    def test_homepurchase_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_homepurchase(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/homepurchase?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['home purchase data']) == 4
         assert get_first_page_response_data['home purchase data'][0]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 9191.55
-        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.09
+        assert get_first_page_response_data['home purchase data'][0]['price_per_sqm'] == 10449.36
+        assert get_first_page_response_data['home purchase data'][0]['mortgage_interest'] == 5.99
         assert get_first_page_response_data['home purchase data'][0]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['home purchase data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['home purchase data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 10515.4
-        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 4.26
+        assert get_first_page_response_data['home purchase data'][1]['price_per_sqm'] == 47434.71
+        assert get_first_page_response_data['home purchase data'][1]['mortgage_interest'] == 3.22
         assert get_first_page_response_data['home purchase data'][1]['location']['id'] == 2
-        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 21197.55
-        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 4.25
-        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['home purchase data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][2]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][2]['price_per_sqm'] == 8363.44
+        assert get_first_page_response_data['home purchase data'][2]['mortgage_interest'] == 5.99
+        assert get_first_page_response_data['home purchase data'][2]['location']['id'] == 1
         assert get_first_page_response_data['home purchase data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 30123.75
-        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 1.92
-        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['home purchase data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['home purchase data'][3]['property_location'] == 'Outside of Centre'
+        assert get_first_page_response_data['home purchase data'][3]['price_per_sqm'] == 31392.21
+        assert get_first_page_response_data['home purchase data'][3]['mortgage_interest'] == 3.22
+        assert get_first_page_response_data['home purchase data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['home purchase data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['home purchase data'][3]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
