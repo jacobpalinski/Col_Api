@@ -735,6 +735,7 @@ class TestHomePurchaseListResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['home purchase data']) == 2
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['price_per_sqm'] == 10449.36
         assert get_response_data[0]['mortgage_interest'] == 5.99
@@ -757,6 +758,7 @@ class TestHomePurchaseListResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['home purchase data']) == 2
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['price_per_sqm'] == 6741.52
         assert get_response_data[0]['mortgage_interest'] == 5.99
@@ -849,6 +851,7 @@ class TestHomePurchaseListResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['home purchase data']) == 1
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['price_per_sqm'] == 10449.36
         assert get_response_data[0]['mortgage_interest'] == 5.99
@@ -980,42 +983,42 @@ class TestHomePurchaseListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestRentResource:
-    def test_rent_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
+    def test_rent_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_response = client.get('/v1/rent/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
         assert get_response_data['property_location'] == 'City Centre'
         assert get_response_data['bedrooms'] == 1
-        assert get_response_data['monthly_price'] == 1642
+        assert get_response_data['monthly_price'] == 1635.1
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        get_response = client.get('/v1/rent/2',
+    def test_rent_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
+        get_response = client.get('/v1/rent/9',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_rent_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642.43, 'Perth')
+    def test_rent_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         delete_response = client.delete('/v1/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Rent id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Rent.query.count() == 0
+        assert Rent.query.count() == 7
 
     def test_rent_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/rent/1',
@@ -1024,10 +1027,10 @@ class TestRentResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Rent.query.count() == 0
     
-    def test_rent_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642.43, 'Perth')
+    def test_rent_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         delete_response = client.delete('/v1/rent/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -1036,175 +1039,298 @@ class TestRentResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestRentListResource:
-    def test_rent_post_new_rent_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_rent(client,'City Centre', 1, 1642 , 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['property_location'] == 'City Centre'
-        assert post_response_data['bedrooms'] == 1
-        assert post_response_data['monthly_price'] == 1642
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Rent.query.count() == 1
-    
-    def test_rent_post_new_rent_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/rent',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'City Centre',
-        'bedrooms': 1,
-        'monthly_price': 1642,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_rent_post_new_rent_location_notexist(self,client):
-        response = create_rent(client,'City Centre', 1, 1642, 'Perth')
+    def test_rent_post_rent_location_notexist(self, client, mock_environment_variables, mock_boto3_s3):
+        response = create_rent(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Rent.query.count() == 0
     
-    def test_rent_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        patch_response = client.patch('/v1/rent/1',
+    def test_rent_post_rent_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/rent',
+        headers = {'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Rent.query.count() == 0
+    
+    def test_rent_post_rent_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/rent',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Rent.query.count() == 0
+
+    def test_rent_post_rent_with_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_rent(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 8 rent records'
+        assert Rent.query.count() == 8
+    
+    def test_rent_patch_updated_data(self, client, create_user, login, mock_environment_variables, mock_boto3_s3, mock_boto3_s3_patch_modified, current_date):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
+        patch_response = client.patch('/v1/rent',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
-            'property_location': 'Outside City Centre',
-            'bedrooms': 3,
-            'monthly_price': 2526,
             'admin': os.environ.get('ADMIN_KEY')
             }))
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/rent/1',
+        assert patch_response_data['message'] == 'Successfully updated 4 rent records'
+        get_response = client.get('/v1/rent',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['property_location'] == 'Outside City Centre'
-        assert get_response_data['bedrooms'] == 3
-        assert get_response_data['monthly_price'] == 2526
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert len(get_response_data['rental data']) == 8
+        assert get_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][0]['monthly_price'] == 1756.41
+        assert get_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_response_data['rental data'][0]['location']['id'] == 1
+        assert get_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][1]['monthly_price'] == 2315.7
+        assert get_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_response_data['rental data'][1]['location']['id'] == 2
+        assert get_response_data['rental data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][2]['monthly_price'] == 2588.74
+        assert get_response_data['rental data'][2]['bedrooms'] == 3
+        assert get_response_data['rental data'][2]['location']['id'] == 1
+        assert get_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][3]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][3]['monthly_price'] == 4608.27
+        assert get_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_response_data['rental data'][3]['location']['id'] == 2
+        assert get_response_data['rental data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][4]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][4]['monthly_price'] == 1285.83
+        assert get_response_data['rental data'][4]['bedrooms'] == 1
+        assert get_response_data['rental data'][4]['location']['id'] == 1
+        assert get_response_data['rental data'][4]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][4]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][5]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][5]['monthly_price'] == 1663.1
+        assert get_response_data['rental data'][5]['bedrooms'] == 1
+        assert get_response_data['rental data'][5]['location']['id'] == 2
+        assert get_response_data['rental data'][5]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][5]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][6]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][6]['monthly_price'] == 1885.67
+        assert get_response_data['rental data'][6]['bedrooms'] == 3
+        assert get_response_data['rental data'][6]['location']['id'] == 1
+        assert get_response_data['rental data'][6]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][6]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][7]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][7]['monthly_price'] == 2953.79
+        assert get_response_data['rental data'][7]['bedrooms'] == 3
+        assert get_response_data['rental data'][7]['location']['id'] == 2
+        assert get_response_data['rental data'][7]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][7]['location']['city'] == 'Hong Kong'
         assert get_response.status_code == HttpStatus.ok_200.value
-
-    def test_rent_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/rent/1',
+    
+    def test_rent_patch_no_updated_data(self, client, create_user, login, mock_environment_variables, mock_boto3_s3, current_date):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
+        patch_response = client.patch('/v1/rent',
             headers = {'Content-Type': 'application/json'},
             data = json.dumps({
-            'property_location': 'Outside City Centre',
-            'bedrooms': 3,
-            'monthly_price': 2526.62,
             'admin': os.environ.get('ADMIN_KEY')
             }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Rent.query.count() == 0
-    
-    def test_rent_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        patch_response = client.patch('/v1/rent/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'Outside City Centre',
-        'price_per_sqm': 7000,
-        'mortgage_interest': 6.01
-        }))
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 rent records'
+        get_response = client.get('/v1/rent',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['rental data']) == 8
+        assert get_response_data['rental data'][0]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][0]['monthly_price'] == 1635.1
+        assert get_response_data['rental data'][0]['bedrooms'] == 1
+        assert get_response_data['rental data'][0]['location']['id'] == 1
+        assert get_response_data['rental data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][1]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][1]['monthly_price'] == 2315.7
+        assert get_response_data['rental data'][1]['bedrooms'] == 1
+        assert get_response_data['rental data'][1]['location']['id'] == 2
+        assert get_response_data['rental data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][2]['monthly_price'] == 2454.62
+        assert get_response_data['rental data'][2]['bedrooms'] == 3
+        assert get_response_data['rental data'][2]['location']['id'] == 1
+        assert get_response_data['rental data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][3]['property_location'] == 'City Centre'
+        assert get_response_data['rental data'][3]['monthly_price'] == 4608.27
+        assert get_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_response_data['rental data'][3]['location']['id'] == 2
+        assert get_response_data['rental data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][4]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][4]['monthly_price'] == 1191.26
+        assert get_response_data['rental data'][4]['bedrooms'] == 1
+        assert get_response_data['rental data'][4]['location']['id'] == 1
+        assert get_response_data['rental data'][4]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][4]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][5]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][5]['monthly_price'] == 1663.1
+        assert get_response_data['rental data'][5]['bedrooms'] == 1
+        assert get_response_data['rental data'][5]['location']['id'] == 2
+        assert get_response_data['rental data'][5]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][5]['location']['city'] == 'Hong Kong'
+        assert get_response_data['rental data'][6]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][6]['monthly_price'] == 1763.16
+        assert get_response_data['rental data'][6]['bedrooms'] == 3
+        assert get_response_data['rental data'][6]['location']['id'] == 1
+        assert get_response_data['rental data'][6]['location']['country'] == 'Australia'
+        assert get_response_data['rental data'][6]['location']['city'] == 'Perth'
+        assert get_response_data['rental data'][7]['property_location'] == 'Outside City Centre'
+        assert get_response_data['rental data'][7]['monthly_price'] == 2953.79
+        assert get_response_data['rental data'][7]['bedrooms'] == 3
+        assert get_response_data['rental data'][7]['location']['id'] == 2
+        assert get_response_data['rental data'][7]['location']['country'] == 'Hong Kong'
+        assert get_response_data['rental data'][7]['location']['city'] == 'Hong Kong'
+        assert get_response.status_code == HttpStatus.ok_200.value
+    
+    def test_rent_update_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
+        patch_response = client.patch('/v1/rent',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_rent_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
+        response = client.patch('/v1/rent',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_rent_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_country_city_abbreviation(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_response = client.get('/v1/rent?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['rental data']) == 4
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['bedrooms'] == 1
-        assert get_response_data[0]['monthly_price'] == 2380.9
+        assert get_response_data[0]['monthly_price'] == 2534.4
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'City Centre'
+        assert get_response_data[1]['bedrooms'] == 3
+        assert get_response_data[1]['monthly_price'] == 3804.66
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['property_location'] == 'Outside City Centre'
+        assert get_response_data[2]['bedrooms'] == 1
+        assert get_response_data[2]['monthly_price'] == 1846.45
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['property_location'] == 'Outside City Centre'
+        assert get_response_data[3]['bedrooms'] == 3
+        assert get_response_data[3]['monthly_price'] == 2732.9
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_response = client.get('/v1/rent?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['rental data']) == 4
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['bedrooms'] == 1
-        assert get_response_data[0]['monthly_price'] == 1642
+        assert get_response_data[0]['monthly_price'] == 1635.1
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'City Centre'
+        assert get_response_data[1]['bedrooms'] == 3
+        assert get_response_data[1]['monthly_price'] == 2454.62
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['property_location'] == 'Outside City Centre'
+        assert get_response_data[2]['bedrooms'] == 1
+        assert get_response_data[2]['monthly_price'] == 1191.26
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['property_location'] == 'Outside City Centre'
+        assert get_response_data[3]['bedrooms'] == 3
+        assert get_response_data[3]['monthly_price'] == 1763.16
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_country_city_none_abbreviation_none(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/rent?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['rental data']) == 3
+        assert len(get_first_page_response_data['rental data']) == 4
         assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1408
-        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1635.1
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 1642
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2454.62
         assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
         assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'Outside City Centre'
         assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1999
-        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1191.26
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][3]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 1763.16
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1218,41 +1344,40 @@ class TestRentListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_country_abbreviation_city_none(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/rent?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['rental data']) == 3
+        assert len(get_first_page_response_data['rental data']) == 4
         assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2041.6
-        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2534.4
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2380.9
+        assert get_first_page_response_data['rental data'][1]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 3804.66
         assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
         assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
+        assert get_first_page_response_data['rental data'][2]['property_location'] == 'Outside City Centre'
         assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 2898.55
-        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1846.45
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][3]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 2732.9
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1266,70 +1391,99 @@ class TestRentListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_response = client.get('/v1/rent?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['rental data']) == 4
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['bedrooms'] == 1
-        assert get_response_data[0]['monthly_price'] == 2380.9
+        assert get_response_data[0]['monthly_price'] == 2534.4
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'City Centre'
+        assert get_response_data[1]['bedrooms'] == 3
+        assert get_response_data[1]['monthly_price'] == 3804.66
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['property_location'] == 'Outside City Centre'
+        assert get_response_data[2]['bedrooms'] == 1
+        assert get_response_data[2]['monthly_price'] == 1846.45
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['property_location'] == 'Outside City Centre'
+        assert get_response_data[3]['bedrooms'] == 3
+        assert get_response_data[3]['monthly_price'] == 2732.9
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/rent',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['rental data']) == 4
+        assert len(get_first_page_response_data['rental data']) == 8
         assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1408
-        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 1635.1
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 1642
-        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
-        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2315.70
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 1999
-        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 2454.62
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 2263
-        assert get_first_page_response_data['rental data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 4608.27
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][4]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][4]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][4]['monthly_price'] == 1191.26
+        assert get_first_page_response_data['rental data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][5]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][5]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][5]['monthly_price'] == 1663.1
+        assert get_first_page_response_data['rental data'][5]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][5]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][5]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][6]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][6]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][6]['monthly_price'] == 1763.16
+        assert get_first_page_response_data['rental data'][6]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][6]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][6]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][7]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][7]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][7]['monthly_price'] == 2953.79
+        assert get_first_page_response_data['rental data'][7]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][7]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][7]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1343,70 +1497,99 @@ class TestRentListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_response = client.get('/v1/rent?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data) == 4
         assert get_response_data[0]['property_location'] == 'City Centre'
         assert get_response_data[0]['bedrooms'] == 1
-        assert get_response_data[0]['monthly_price'] == 1642
+        assert get_response_data[0]['monthly_price'] == 1635.1
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['property_location'] == 'City Centre'
+        assert get_response_data[1]['bedrooms'] == 3
+        assert get_response_data[1]['monthly_price'] == 2454.62
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['property_location'] == 'Outside City Centre'
+        assert get_response_data[2]['bedrooms'] == 1
+        assert get_response_data[2]['monthly_price'] == 1191.26
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['property_location'] == 'Outside City Centre'
+        assert get_response_data[3]['bedrooms'] == 3
+        assert get_response_data[3]['monthly_price'] == 1763.16
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_rent_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_rent(client,'City Centre', 1, 1642, 'Perth')
-        create_rent(client,'City Centre', 1, 1408, 'Melbourne')
-        create_rent(client,'City Centre', 1, 1999, 'Sydney')
-        create_rent(client,'City Centre', 1, 2263, 'Zurich')
+    def test_rent_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_rent(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/rent?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['rental data']) == 4
+        assert len(get_first_page_response_data['rental data']) == 8
         assert get_first_page_response_data['rental data'][0]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][0]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2041.6
-        assert get_first_page_response_data['rental data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][0]['monthly_price'] == 2534.4
+        assert get_first_page_response_data['rental data'][0]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['rental data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][1]['property_location'] == 'City Centre'
         assert get_first_page_response_data['rental data'][1]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 2380.9
-        assert get_first_page_response_data['rental data'][1]['location']['id'] == 1
-        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][1]['monthly_price'] == 3589.34
+        assert get_first_page_response_data['rental data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][1]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['rental data'][2]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 2898.55
-        assert get_first_page_response_data['rental data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['rental data'][2]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][2]['monthly_price'] == 3804.66
+        assert get_first_page_response_data['rental data'][2]['location']['id'] == 1
         assert get_first_page_response_data['rental data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['rental data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['rental data'][3]['property_location'] == 'City Centre'
-        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 1
-        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 3281.35
-        assert get_first_page_response_data['rental data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['rental data'][3]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][3]['monthly_price'] == 7142.82
+        assert get_first_page_response_data['rental data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][4]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][4]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][4]['monthly_price'] == 1846.45
+        assert get_first_page_response_data['rental data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][5]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][5]['bedrooms'] == 1
+        assert get_first_page_response_data['rental data'][5]['monthly_price'] == 2577.8
+        assert get_first_page_response_data['rental data'][5]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][5]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][5]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][6]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][6]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][6]['monthly_price'] == 2732.9
+        assert get_first_page_response_data['rental data'][6]['location']['id'] == 1
+        assert get_first_page_response_data['rental data'][6]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['rental data'][6]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['rental data'][7]['property_location'] == 'Outside City Centre'
+        assert get_first_page_response_data['rental data'][7]['bedrooms'] == 3
+        assert get_first_page_response_data['rental data'][7]['monthly_price'] == 4578.37
+        assert get_first_page_response_data['rental data'][7]['location']['id'] == 2
+        assert get_first_page_response_data['rental data'][7]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['rental data'][7]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value

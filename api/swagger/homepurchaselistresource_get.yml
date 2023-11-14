@@ -7,7 +7,7 @@ description: |
 
  Property Locations:
   - City Centre
-  - Outside of Centre
+  - Outside City Centre
 
 parameters:
  - name: country

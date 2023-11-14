@@ -68,7 +68,7 @@ def merge_and_transform_homepurchase(spark_session : SparkSession):
 
    # Create 'Property Location' column
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Property Location', 
-   functions.when(functions.col('Item').contains('City Centre'), 'City Centre').otherwise('Outside of Centre'))
+   functions.when(functions.col('Item').contains('City Centre'), 'City Centre').otherwise('Outside City Centre'))
    
    # Create 'Price per Square Meter' column
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price per Square Meter', functions.col('Price'))

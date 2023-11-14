@@ -39,9 +39,9 @@ def mock_boto3_s3(mocker, monkeypatch, current_date):
     {"Abbreviation": "PYG", "Country": "Paraguay", "City": "Asuncion", "USD_to_local": 7258.93}]).encode('utf-8')))},
     f'homepurchase{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([ 
     {"City": "Hong Kong", "Property Location": "City Centre", "Price per Square Meter": 30603.04, "Mortgage Interest": 3.22}, 
-    {"City": "Hong Kong", "Property Location": "Outside of Centre", "Price per Square Meter": 20253.04, "Mortgage Interest": 3.22},
+    {"City": "Hong Kong", "Property Location": "Outside City Centre", "Price per Square Meter": 20253.04, "Mortgage Interest": 3.22},
     {"City": "Perth", "Property Location": "City Centre", "Price per Square Meter": 6741.52, "Mortgage Interest": 5.99}, 
-    {"City": "Perth", "Property Location": "Outside of Centre", "Price per Square Meter": 5395.77, "Mortgage Interest": 5.99}]).encode('utf-8')))},
+    {"City": "Perth", "Property Location": "Outside City Centre", "Price per Square Meter": 5395.77, "Mortgage Interest": 5.99}]).encode('utf-8')))},
     f'rent{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
     {"City": "Perth", "Monthly Price": 1635.1, "Property Location": "City Centre", "Bedrooms": 1}, 
     {"City": "Perth", "Monthly Price": 1191.26, "Property Location": "Outside City Centre", "Bedrooms": 1}, 
@@ -159,9 +159,9 @@ def mock_boto3_s3_patch_modified(mocker, monkeypatch, current_date):
     {"Abbreviation": "PYG", "Country": "Paraguay", "City": "Asuncion", "USD_to_local": 7258.93}]).encode('utf-8')))},
     f'homepurchase{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([ 
     {"City": "Hong Kong", "Property Location": "City Centre", "Price per Square Meter": 30603.04, "Mortgage Interest": 3.22}, 
-    {"City": "Hong Kong", "Property Location": "Outside of Centre", "Price per Square Meter": 20253.04, "Mortgage Interest": 3.22}, 
+    {"City": "Hong Kong", "Property Location": "Outside City Centre", "Price per Square Meter": 20253.04, "Mortgage Interest": 3.22}, 
     {"City": "Perth", "Property Location": "City Centre", "Price per Square Meter": 7120.84, "Mortgage Interest": 5.99}, 
-    {"City": "Perth", "Property Location": "Outside of Centre", "Price per Square Meter": 5824.95, "Mortgage Interest": 5.99}]).encode('utf-8')))},
+    {"City": "Perth", "Property Location": "Outside City Centre", "Price per Square Meter": 5824.95, "Mortgage Interest": 5.99}]).encode('utf-8')))},
     f'rent{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
     {"City": "Perth", "Monthly Price": 1756.41, "Property Location": "City Centre", "Bedrooms": 1}, 
     {"City": "Perth", "Monthly Price": 1285.83, "Property Location": "Outside City Centre", "Bedrooms": 1}, 

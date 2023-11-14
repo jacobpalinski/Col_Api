@@ -522,7 +522,7 @@ class HomePurchaseListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates property location, price per sqm and mortgage interest rate for specified record
+    # Updates price per sqm and mortgage interest rate for specified record
     def patch(self):
         
         homepurchase_dict = request.get_json(force = True)
@@ -534,7 +534,7 @@ class HomePurchaseListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
 
-            # Track currencies updated
+            # Track homepurchase updated
             homepurchase_updated = 0
 
             for data in homepurchase_data:
@@ -555,6 +555,7 @@ class HomePurchaseListResource(Resource):
                         has_been_updated = True
                     else:
                         continue
+                
                 except SQLAlchemyError as e:
                     sql_alchemy_error_response(e)
                 
@@ -575,40 +576,6 @@ class RentResource(Resource):
             rent = Rent.query.get_or_404(id)
             dumped_rent = rent_schema.dump(rent)
             return dumped_rent
-    
-    # Updates property location, number of bedrooms and monthly price for a particular rental record
-    def patch(self, id):
-        rent = Rent.query.get_or_404(id)
-        
-        rent_dict = request.get_json(force = True)
-        try:
-            rent_schema.load(rent_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'property_location' in rent_dict and rent_dict['property_location'] != None:
-                    rent.property_location = rent_dict['property_location']
-                if 'bedrooms' in rent_dict and \
-                rent_dict['bedrooms'] != None:
-                    rent.bedrooms = rent_dict['bedrooms']
-                if 'monthly_price' in rent_dict and \
-                rent_dict['monthly_price'] != None:
-                    rent.monthly_price = rent_dict['monthly_price']
-            
-                rent.update()
-                response = {'message': 'Rent id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
     
     # Deletes Rent record
     def delete(self, id):
@@ -693,33 +660,82 @@ class RentListResource(Resource):
     # Creates a record of rental costs for a particular location
     def post(self):
         rent_dict = request.get_json()
-        try:
-            rent_schema.load(rent_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = rent_dict['city']
+                rent_data = get_data(file_prefix = 'rent')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new homepurchase rows added
+            rent_added = 0
+
+            for data in rent_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Rent.is_unique(location_id = location.id, property_location = data['Property Location'], bedrooms = data['Bedrooms']):
+                        continue
+                    try:
+                        rent = Rent(property_location = data['Property Location'], 
+                        bedrooms = data['Bedrooms'], 
+                        monthly_price = data['Monthly Price'],
+                        location = location)
+                        rent.add(rent)
+                        rent_added += 1
+                        query = Rent.query.get(rent.id)
+                        dump_result = home_purchase_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                rent = Rent(property_location = rent_dict['property_location'], 
-                bedrooms = rent_dict['bedrooms'], monthly_price = rent_dict['monthly_price'],
-                location = location)
-                rent.add(rent)
-                query = Rent.query.get(rent.id)
-                dump_result = rent_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {rent_added} rent records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates price per sqm and mortgage interest rate for specified record
+    def patch(self):
+        
+        rent_dict = request.get_json(force = True)
+
+        if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                rent_data = get_data(file_prefix = 'rent')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track rent updated
+            rent_updated = 0
+
+            for data in rent_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    rent = Rent.query.filter_by(location_id = location.id, property_location = data['Property Location'], bedrooms = data['Bedrooms']).first()
+                    if rent == None:
+                        continue
+                    elif data['Monthly Price'] != rent.monthly_price:
+                        rent.monthly_price = data['Monthly Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {rent_updated} rent records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
