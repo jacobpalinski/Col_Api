@@ -198,8 +198,16 @@ class Utilities(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
     utility = orm.Column(orm.String(80),nullable = False)
     monthly_price = orm.Column(orm.Float,nullable = False)
-    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
+    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
+
+    @classmethod
+    def is_unique(cls, location_id, utility):
+        existing_row = cls.query.filter_by(location_id = location_id, utility = utility).first()
+        if existing_row is None:
+            return True
+        else:
+            return False
 
     def __init__(self,utility,monthly_price,location):
         self.utility = utility

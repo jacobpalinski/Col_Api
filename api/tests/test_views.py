@@ -1604,90 +1604,42 @@ class TestRentListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestUtilitiesResource:
-    def test_utilities_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+    def test_utilities_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_response = client.get('/v1/utilities/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_response_data['monthly_price'] == 210
+        print(get_response_data)
+        assert get_response_data['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data['monthly_price'] == 35.83
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        get_response = client.get('/v1/utilities/2',
+    def test_utilities_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
+        get_response = client.get('/v1/utilities/9',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
-    
-    def test_utilities_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/v1/utilities/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'utility': 'Internet',
-            'monthly_price': 55,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/utilities/1',
-            headers = {'Content-Type': 'application/json',
-            "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['utility'] == 'Internet'
-        assert get_response_data['monthly_price'] == 55
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
-        assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/utilities/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'utility': 'Internet',
-            'monthly_price': 55,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Utilities.query.count() == 0
-    
-    def test_utilities_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/v1/utilities/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'Outside City Centre',
-        'price_per_sqm': 7000,
-        'mortgage_interest': 6.01
-        }))
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
-        assert patch_response_data['message'] == 'Admin privileges needed'
-
-    def test_utilities_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+    def test_utilities_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         delete_response = client.delete('/v1/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Utilities id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Utilities.query.count() == 0
+        assert Utilities.query.count() == 7
 
     def test_utilities_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/utilities/1',
@@ -1696,10 +1648,10 @@ class TestUtilitiesResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Utilities.query.count() == 0
     
-    def test_utilities_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+    def test_utilities_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         delete_response = client.delete('/v1/utilities/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -1708,165 +1660,261 @@ class TestUtilitiesResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestUtilitiesListResource:
-    def test_utilities_post_utilities_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert post_response_data['monthly_price'] == 210
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Utilities.query.count() == 1
-    
-    def test_utilities_post_utilities_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/utilities',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'utility': 'Electricity, Heating, Cooling, Water and Garbage',
-        'monthly_price': 210,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_utilities_post_utilities_location_notexist(self,client):
-        response = create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
+    def test_utilities_post_utilities_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_utilities(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Utilities.query.count() == 0
     
-    def test_utilities_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/v1/utilities/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'utility': 'Internet',
-            'monthly_price': 55,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_utilities_post_utilities_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/utilities',
+        headers = {'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_400.value
+        assert response_data['message'] == 'Admin privileges needed'
+    
+    def test_utilities_post_utilities_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/utilities',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Utilities.query.count() == 0
+
+    def test_utilities_post_utilities_with_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_utilities(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 8 utilities records'
+        assert Utilities.query.count() == 8
+    
+    def test_utilities_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
+        patch_response = utilities_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/utilities/1',
+        assert patch_response_data['message'] == 'Successfully updated 2 utilities records'
+        get_response = client.get('/v1/utilities',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['utility'] == 'Internet'
-        assert get_response_data['monthly_price'] == 55
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert len(get_response_data['utilities']) == 8
+        assert get_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data['utilities'][0]['monthly_price'] == 125
+        assert get_response_data['utilities'][0]['location']['id'] == 1
+        assert get_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data['utilities'][1]['monthly_price'] == 146
+        assert get_response_data['utilities'][1]['location']['id'] == 2
+        assert get_response_data['utilities'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data['utilities'][2]['monthly_price'] == 217
+        assert get_response_data['utilities'][2]['location']['id'] == 1
+        assert get_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][2]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data['utilities'][3]['monthly_price'] == 223
+        assert get_response_data['utilities'][3]['location']['id'] == 2
+        assert get_response_data['utilities'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][4]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data['utilities'][4]['monthly_price'] == 23.51
+        assert get_response_data['utilities'][4]['location']['id'] == 2
+        assert get_response_data['utilities'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][5]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data['utilities'][5]['monthly_price'] == 62.97
+        assert get_response_data['utilities'][5]['location']['id'] == 1
+        assert get_response_data['utilities'][5]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][5]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][6]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data['utilities'][6]['monthly_price'] == 19.08
+        assert get_response_data['utilities'][6]['location']['id'] == 2
+        assert get_response_data['utilities'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][7]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data['utilities'][7]['monthly_price'] == 36.14
+        assert get_response_data['utilities'][7]['location']['id'] == 1
+        assert get_response_data['utilities'][7]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][7]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
-
-    def test_utilities_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/utilities/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'utility': 'Internet',
-            'monthly_price': 55,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Utilities.query.count() == 0
     
-    def test_utilities_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        patch_response = client.patch('/v1/utilities/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'property_location': 'Outside City Centre',
-        'price_per_sqm': 7000,
-        'mortgage_interest': 6.01
-        }))
+    def test_utilities_patch_no_updated_data(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
+        patch_response = utilities_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 utilities records'
+        get_response = client.get('/v1/utilities',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['utilities']) == 8
+        assert get_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data['utilities'][0]['monthly_price'] == 124
+        assert get_response_data['utilities'][0]['location']['id'] == 1
+        assert get_response_data['utilities'][0]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data['utilities'][1]['monthly_price'] == 146
+        assert get_response_data['utilities'][1]['location']['id'] == 2
+        assert get_response_data['utilities'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data['utilities'][2]['monthly_price'] == 216
+        assert get_response_data['utilities'][2]['location']['id'] == 1
+        assert get_response_data['utilities'][2]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][2]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data['utilities'][3]['monthly_price'] == 223
+        assert get_response_data['utilities'][3]['location']['id'] == 2
+        assert get_response_data['utilities'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][4]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data['utilities'][4]['monthly_price'] == 23.51
+        assert get_response_data['utilities'][4]['location']['id'] == 2
+        assert get_response_data['utilities'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][5]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data['utilities'][5]['monthly_price'] == 62.23
+        assert get_response_data['utilities'][5]['location']['id'] == 1
+        assert get_response_data['utilities'][5]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][5]['location']['city'] == 'Perth'
+        assert get_response_data['utilities'][6]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data['utilities'][6]['monthly_price'] == 19.08
+        assert get_response_data['utilities'][6]['location']['id'] == 2
+        assert get_response_data['utilities'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['utilities'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['utilities'][7]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data['utilities'][7]['monthly_price'] == 35.83
+        assert get_response_data['utilities'][7]['location']['id'] == 1
+        assert get_response_data['utilities'][7]['location']['country'] == 'Australia'
+        assert get_response_data['utilities'][7]['location']['city'] == 'Perth'
+        assert get_response.status_code == HttpStatus.ok_200.value
+    
+    def test_utilities_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
+        patch_response = client.patch('/v1/utilities',
+        headers = {'Content-Type': 'application/json'})
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
+    
+    def test_utilities_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
+        response = client.patch('/v1/utilities',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_utilities_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_country_city_abbreviation(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_response = client.get('/v1/utilities?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_response_data[0]['monthly_price'] == 304.5
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data[0]['monthly_price'] == 192.2
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data[1]['monthly_price'] == 334.8
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data[2]['monthly_price'] == 96.46
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data[3]['monthly_price'] == 55.54
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_response = client.get('/v1/utilities?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_response_data[0]['monthly_price'] == 210
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data[0]['monthly_price'] == 124
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data[1]['monthly_price'] == 216
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data[2]['monthly_price'] == 62.23
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data[3]['monthly_price'] == 35.83
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/utilities?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['utilities']) == 3
-        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 172
-        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert len(get_first_page_response_data['utilities']) == 4
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 124
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 174
-        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 216
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 210
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 62.23
         assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 35.83
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1880,38 +1928,36 @@ class TestUtilitiesListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/utilities?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['utilities']) == 3
-        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 249.4
-        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert len(get_first_page_response_data['utilities']) == 4
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 192.2
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 252.3
-        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 334.8
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 304.5
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 96.46
         assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 55.54
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1925,65 +1971,87 @@ class TestUtilitiesListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_response = client.get('/v1/utilities?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_response_data[0]['monthly_price'] == 304.5
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data[0]['monthly_price'] == 192.2
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data[1]['monthly_price'] == 334.8
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data[2]['monthly_price'] == 96.46
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data[3]['monthly_price'] == 55.54
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/utilities',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['utilities']) == 4
-        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 172
-        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        assert len(get_first_page_response_data['utilities']) == 8
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 124
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 174
-        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
-        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 210
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 146
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 216
         assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 273
-        assert get_first_page_response_data['utilities'][3]['location']['id'] == 4
-        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 223
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][4]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][4]['monthly_price'] == 23.51
+        assert get_first_page_response_data['utilities'][4]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][5]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][5]['monthly_price'] == 62.23
+        assert get_first_page_response_data['utilities'][5]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][6]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][6]['monthly_price'] == 19.08
+        assert get_first_page_response_data['utilities'][6]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][7]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][7]['monthly_price'] == 35.83
+        assert get_first_page_response_data['utilities'][7]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -1997,65 +2065,88 @@ class TestUtilitiesListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_response = client.get('/v1/utilities?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_response_data[0]['monthly_price'] == 210
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_response_data[0]['monthly_price'] == 124
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_response_data[1]['monthly_price'] == 216
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_response_data[2]['monthly_price'] == 62.23
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_response_data[3]['monthly_price'] == 35.83
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_utilities_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 210, 'Perth')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 172, 'Melbourne')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 174, 'Sydney')
-        create_utilities(client,'Electricity, Heating, Cooling, Water and Garbage', 273, 'Zurich')
+    def test_utilities_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_utilities(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/utilities?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['utilities']) == 4
-        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 249.4
-        assert get_first_page_response_data['utilities'][0]['location']['id'] == 2
+        print(get_first_page_response_data)
+        assert len(get_first_page_response_data['utilities']) == 8
+        assert get_first_page_response_data['utilities'][0]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][0]['monthly_price'] == 192.2
+        assert get_first_page_response_data['utilities'][0]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 252.3
-        assert get_first_page_response_data['utilities'][1]['location']['id'] == 3
-        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 304.5
+        assert get_first_page_response_data['utilities'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][1]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (1 Person)'
+        assert get_first_page_response_data['utilities'][1]['monthly_price'] == 226.3
+        assert get_first_page_response_data['utilities'][1]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][2]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][2]['monthly_price'] == 334.8
         assert get_first_page_response_data['utilities'][2]['location']['id'] == 1
         assert get_first_page_response_data['utilities'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['utilities'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage'
-        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 395.85
-        assert get_first_page_response_data['utilities'][3]['location']['id'] == 4
-        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['utilities'][3]['utility'] == 'Electricity, Heating, Cooling, Water and Garbage (Family)'
+        assert get_first_page_response_data['utilities'][3]['monthly_price'] == 345.65
+        assert get_first_page_response_data['utilities'][3]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][4]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][4]['monthly_price'] == 36.44
+        assert get_first_page_response_data['utilities'][4]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][5]['utility'] == 'Internet (60 Mbps, Unlimited Data, Monthly)'
+        assert get_first_page_response_data['utilities'][5]['monthly_price'] == 96.46
+        assert get_first_page_response_data['utilities'][5]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['utilities'][6]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][6]['monthly_price'] == 29.57
+        assert get_first_page_response_data['utilities'][6]['location']['id'] == 2
+        assert get_first_page_response_data['utilities'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['utilities'][7]['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
+        assert get_first_page_response_data['utilities'][7]['monthly_price'] == 55.54
+        assert get_first_page_response_data['utilities'][7]['location']['id'] == 1
+        assert get_first_page_response_data['utilities'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['utilities'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value

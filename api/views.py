@@ -749,37 +749,6 @@ class UtilitiesResource(Resource):
             dumped_utilities = utilities_schema.dump(utilities)
             return dumped_utilities
     
-    # Updates utility name, monthly price for a given utility
-    def patch(self, id):
-        utilities = Utilities.query.get_or_404(id)
-        
-        utilities_dict = request.get_json(force = True)
-        try:
-            utilities_schema.load(utilities_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'utility' in utilities_dict and utilities_dict['utility'] != None:
-                    utilities.utility = utilities_dict['utility']
-                if 'monthly_price' in utilities_dict and \
-                utilities_dict['monthly_price'] != None:
-                    utilities.monthly_price = utilities_dict['monthly_price']
-            
-                utilities.update()
-                response = {'message': 'Utilities id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
     # Deletes Utilities record
     def delete(self, id):
         admin_dict = request.get_json()
@@ -860,36 +829,84 @@ class UtilitiesListResource(Resource):
                 dumped_utilities = pagination_helper.paginate_query()
                 return dumped_utilities
     
-    # Creates a new utility record
+    # Creates a new utilities record
     def post(self):
         utilities_dict = request.get_json()
-        try:
-            utilities_schema.load(utilities_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = utilities_dict['city']
+                utilities_data = get_data(file_prefix = 'utilities')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new homepurchase rows added
+            utilities_added = 0
+
+            for data in utilities_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Utilities.is_unique(location_id = location.id, utility = data['Utility']):
+                        continue
+                    try:
+                        utilities = Utilities(utility = data['Utility'], 
+                        monthly_price = data['Monthly Price'],
+                        location = location)
+                        utilities.add(utilities)
+                        utilities_added += 1
+                        query = Utilities.query.get(utilities.id)
+                        dump_result = home_purchase_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                utilities = Utilities(utility = utilities_dict['utility'], 
-                monthly_price = utilities_dict['monthly_price'],
-                location = location)
-                utilities.add(utilities)
-                query = Utilities.query.get(utilities.id)
-                dump_result = utilities_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {utilities_added} utilities records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+
+    # Updates price per sqm and mortgage interest rate for specified record
+    def patch(self):
+        
+        utilities_dict = request.get_json(force = True)
+
+        if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                utilities_data = get_data(file_prefix = 'utilities')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track rent updated
+            utilities_updated = 0
+
+            for data in utilities_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    utilities = Utilities.query.filter_by(location_id = location.id, utility = data['Utility']).first()
+                    if utilities == None:
+                        continue
+                    elif data['Utility'] != utilities.monthly_price:
+                        utilities.monthly_price = data['Monthly Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {utilities_updated} utilities records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value   

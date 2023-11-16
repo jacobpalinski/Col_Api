@@ -335,8 +335,24 @@ def create_rent(client, mock_environment_variables):
         }))
     return response
 
+def rent_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/rent',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
 def create_utilities(client, mock_environment_variables):
     response = client.post('/v1/utilities',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def utilities_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/utilities',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'admin': os.environ.get('ADMIN_KEY')
