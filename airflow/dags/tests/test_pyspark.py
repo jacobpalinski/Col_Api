@@ -206,13 +206,13 @@ def test_merge_and_transform_transportation(mock_environment_variables, mock_bot
 
 def test_merge_and_transform_childcare(mock_environment_variables, mock_boto3_s3, pyspark_session, current_date, mocker):
    merge_and_transform_childcare(spark_session = pyspark_session)
-   expected_childcare = json.dumps([{"City": "Perth", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 1617.64}, 
+   expected_childcare = json.dumps([{"City": "Perth", "Type": "Daycare / Preschool (1 Year)", "Annual Price": 19411.68}, 
    {"City": "Perth", "Type": "International Primary School (1 Year)", "Annual Price": 13498.21}, 
-   {"City": "Auckland", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 829.42}, 
+   {"City": "Auckland", "Type": "Daycare / Preschool (1 Year)", "Annual Price": 9953.04}, 
    {"City": "Auckland", "Type": "International Primary School (1 Year)", "Annual Price": 13521.14},
-   {"City": "Hong Kong", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 783.72}, 
+   {"City": "Hong Kong", "Type": "Daycare / Preschool (1 Year)", "Annual Price": 9404.64}, 
    {"City": "Hong Kong", "Type": "International Primary School (1 Year)", "Annual Price": 20470.76}, 
-   {"City": "Asuncion", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 165.08}, 
+   {"City": "Asuncion", "Type": "Daycare / Preschool (1 Year)", "Annual Price": 1980.96}, 
    {"City": "Asuncion", "Type": "International Primary School (1 Year)", "Annual Price": 3436.45}])
    mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-raw', Key = f'numbeo_price_info{current_date}')
    mock_boto3_s3.put_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'childcare{current_date}',

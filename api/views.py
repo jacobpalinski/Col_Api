@@ -1268,39 +1268,6 @@ class ChildcareResource(Resource):
             dumped_childcare = childcare_schema.dump(childcare)
             return dumped_childcare
     
-    # Updates type and annual price information for a given childcare service
-    def patch(self, id):
-        childcare = Childcare.query.get_or_404(id)
-        
-        childcare_dict = request.get_json(force = True)
-        try:
-            childcare_schema.load(childcare_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'type' in childcare_dict and childcare_dict['type'] != None:
-                    childcare.type = childcare_dict['type']
-                if 'annual_price' in childcare_dict and \
-                childcare_dict['annual_price'] != None:
-                    childcare.annual_price = childcare_dict['annual_price']
-            
-                childcare.update()
-                response = {'message': 'Childcare id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                orm.session.rollback()
-                response = {"error": str(e)}
-                return response, HttpStatus.bad_request_400.value
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
     # Deletes Childcare record
     def delete(self, id):
         admin_dict = request.get_json()
@@ -1384,33 +1351,81 @@ class ChildcareListResource(Resource):
     # Creates a new childcare record
     def post(self):
         childcare_dict = request.get_json()
-        try:
-            childcare_schema.load(childcare_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = childcare_dict['city']
+                childcare_data = get_data(file_prefix = 'childcare')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new childcare rows added
+            childcare_added = 0
+
+            for data in childcare_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Childcare.is_unique(location_id = location.id, type = data['Type']):
+                        continue
+                    try:
+                        childcare = Childcare(type = data['Type'], 
+                        annual_price = data['Annual Price'],
+                        location = location)
+                        childcare.add(childcare)
+                        childcare_added += 1
+                        query = Childcare.query.get(childcare.id)
+                        dump_result = childcare_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                childcare = Childcare(type = childcare_dict['type'],
-                annual_price = childcare_dict['annual_price'],
-                location = location)
-                childcare.add(childcare)
-                query = Childcare.query.get(childcare.id)
-                dump_result = childcare_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {childcare_added} childcare records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates annual price for specified record
+    def patch(self):
+        
+        childcare_dict = request.get_json(force = True)
+
+        if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                childcare_data = get_data(file_prefix = 'childcare')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track childcare updated
+            childcare_updated = 0
+
+            for data in childcare_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    childcare = Childcare.query.filter_by(location_id = location.id, type = data['Type']).first()
+                    if childcare == None:
+                        continue
+                    elif data['Annual Price'] != childcare.annual_price:
+                        childcare.annual_price = data['Annual Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {childcare_updated} childcare records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value

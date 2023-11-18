@@ -3490,15 +3490,16 @@ class TestFoodBeverageListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestChildcareResource:
-    def test_childcare_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
+    def test_childcare_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_response = client.get('/v1/childcare/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['type'] == 'Preschool'
+        print(get_response_data)
+        assert get_response_data['type'] == 'Daycare / Preschool (1 Month)'
         assert get_response_data['annual_price'] == 19632
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'

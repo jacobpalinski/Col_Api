@@ -248,6 +248,10 @@ def merge_and_transform_childcare(spark_session: SparkSession):
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.regexp_replace(functions.col('Price'), r'[^0-9.]', ''))
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.col('Price').cast('float'))
 
+   # Rename Daycare / Preschool (1 Month) item and annualise price
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Item', functions.when(functions.col('Item') == 'Daycare / Preschool (1 Month)', 'Daycare / Preschool (1 Year)').otherwise(functions.col('Item')))
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Price', functions.when(functions.col('Item') == 'Daycare / Preschool (1 Year)', functions.col('Price') * 12).otherwise(functions.col('Price')))
+
    # Rename 'Price' column to 'Annual Price'
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Price', 'Annual Price')
 

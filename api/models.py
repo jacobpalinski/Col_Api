@@ -266,6 +266,14 @@ class Childcare(orm.Model,ResourceAddUpdateDelete):
     location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
+    @classmethod
+    def is_unique(cls, location_id, type):
+        existing_row = cls.query.filter_by(location_id = location_id, type = type).first()
+        if existing_row is None:
+            return True
+        else:
+            return False
+
     def __init__(self,type,annual_price,location):
         self.type = type
         self.annual_price = annual_price
