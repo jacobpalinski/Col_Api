@@ -2161,41 +2161,41 @@ class TestUtilitiesListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestTransportationResource:
-    def test_transportation_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    def test_transportation_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_response = client.get('/v1/transportation/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['type'] == 'Monthly Public Transportation Pass'
-        assert get_response_data['price'] == 103
+        assert get_response_data['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data['price'] == 2.9
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        get_response = client.get('/v1/transportation/2',
+    def test_transportation_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
+        get_response = client.get('/v1/transportation/9',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_transportation_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    def test_transportation_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         delete_response = client.delete('/v1/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Transportation id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Transportation.query.count() == 0
+        assert Transportation.query.count() == 7
 
     def test_transportation_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/transportation/1',
@@ -2204,10 +2204,10 @@ class TestTransportationResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Transportation.query.count() == 0
     
-    def test_transportation_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    def test_transportation_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         delete_response = client.delete('/v1/transportation/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -2216,164 +2216,263 @@ class TestTransportationResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestTransportationListResource:
-    def test_transportation_post_transportation_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['type'] == 'Monthly Public Transportation Pass'
-        assert post_response_data['price'] == 103
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Transportation.query.count() == 1
-    
-    def test_transportation_post_transportation_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/transportation',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': 'Monthly Public Transportation Pass',
-        'price': 103,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_transportation_post_transportation_location_notexist(self,client):
-        response = create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
+    def test_transportation_post_transportation_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_transportation(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Transportation.query.count() == 0
     
-    def test_transportation_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        patch_response = client.patch('/v1/transportation/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'One-Way Ticket',
-            'price': 2.76,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_transportation_post_transportation_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = client.post('/v1/transportation',
+        headers = {'Content-Type': 'application/json'})
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.forbidden_403.value
+        assert post_response_data['message'] == 'Admin privileges needed'
+    
+    def test_transportation_post_transportation_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/transportation',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Transportation.query.count() == 0
+
+    def test_transportation_post_transportation_with_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_transportation(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 8 transportation records'
+        assert Transportation.query.count() == 8
+    
+    def test_transportation_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
+        patch_response = transportation_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/transportation/1',
+        assert patch_response_data['message'] == 'Successfully updated 4 transportation records'
+        get_response = client.get('/v1/transportation',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['type'] == 'One-Way Ticket'
-        assert get_response_data['price'] == 2.76
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
-
-    def test_transportation_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/transportation/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'One-Way Ticket',
-            'price': 2.76,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Transportation.query.count() == 0
-
-    def test_transportation_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        patch_response = client.patch('/v1/transportation/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': 'One-Way Ticket',
-        'price': 2.76,
-        }))
+        assert len(get_response_data['transportation data']) == 8
+        assert get_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_response_data['transportation data'][0]['price'] == 1.3
+        assert get_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][1]['type'] == 'Petrol (1L)'
+        assert get_response_data['transportation data'][1]['price'] == 2.88
+        assert get_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_response_data['transportation data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][2]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data['transportation data'][2]['price'] == 63.9
+        assert get_response_data['transportation data'][2]['location']['id'] == 2
+        assert get_response_data['transportation data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][3]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data['transportation data'][3]['price'] == 114.13
+        assert get_response_data['transportation data'][3]['location']['id'] == 1
+        assert get_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][4]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data['transportation data'][4]['price'] == 1.53
+        assert get_response_data['transportation data'][4]['location']['id'] == 2
+        assert get_response_data['transportation data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][5]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data['transportation data'][5]['price'] == 2.94
+        assert get_response_data['transportation data'][5]['location']['id'] == 1
+        assert get_response_data['transportation data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][5]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][6]['type'] == 'Taxi (8km)'
+        assert get_response_data['transportation data'][6]['price'] == 13.0
+        assert get_response_data['transportation data'][6]['location']['id'] == 2
+        assert get_response_data['transportation data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][7]['type'] == 'Taxi (8km)'
+        assert get_response_data['transportation data'][7]['price'] == 17.41
+        assert get_response_data['transportation data'][7]['location']['id'] == 1
+        assert get_response_data['transportation data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][7]['location']['city'] == 'Perth'
+    
+    def test_transportation_patch_no_updated_data(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
+        patch_response = transportation_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 transportation records'
+        get_response = client.get('/v1/transportation',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert get_response.status_code == HttpStatus.ok_200.value
+        assert len(get_response_data['transportation data']) == 8
+        assert get_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_response_data['transportation data'][0]['price'] == 1.26
+        assert get_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][1]['type'] == 'Petrol (1L)'
+        assert get_response_data['transportation data'][1]['price'] == 2.88
+        assert get_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_response_data['transportation data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][2]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data['transportation data'][2]['price'] == 63.9
+        assert get_response_data['transportation data'][2]['location']['id'] == 2
+        assert get_response_data['transportation data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][3]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data['transportation data'][3]['price'] == 112.90
+        assert get_response_data['transportation data'][3]['location']['id'] == 1
+        assert get_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][4]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data['transportation data'][4]['price'] == 1.53
+        assert get_response_data['transportation data'][4]['location']['id'] == 2
+        assert get_response_data['transportation data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][5]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data['transportation data'][5]['price'] == 2.90
+        assert get_response_data['transportation data'][5]['location']['id'] == 1
+        assert get_response_data['transportation data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][5]['location']['city'] == 'Perth'
+        assert get_response_data['transportation data'][6]['type'] == 'Taxi (8km)'
+        assert get_response_data['transportation data'][6]['price'] == 13.0
+        assert get_response_data['transportation data'][6]['location']['id'] == 2
+        assert get_response_data['transportation data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['transportation data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['transportation data'][7]['type'] == 'Taxi (8km)'
+        assert get_response_data['transportation data'][7]['price'] == 17.4
+        assert get_response_data['transportation data'][7]['location']['id'] == 1
+        assert get_response_data['transportation data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['transportation data'][7]['location']['city'] == 'Perth'
+
+    def test_transportation_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
+        patch_response = client.patch('/v1/transportation',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_transportation_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
+        response = client.patch('/v1/transportation',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_transportation_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_country_city_abbreviation(self,client,create_user,login,mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_response = client.get('/v1/transportation?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_response_data[0]['price'] == 149.35
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['type'] == 'Petrol (1L)'
+        assert get_response_data[0]['price'] == 1.95
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data[1]['price'] == 175
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data[2]['price'] == 4.5
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['type'] == 'Taxi (8km)'
+        assert get_response_data[3]['price'] == 26.97
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_response = client.get('/v1/transportation?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_response_data[0]['price'] == 103
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['type'] == 'Petrol (1L)'
+        assert get_response_data[0]['price'] == 1.26
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data[1]['price'] == 112.9
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data[2]['price'] == 2.9
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['type'] == 'Taxi (8km)'
+        assert get_response_data[3]['price'] == 17.4
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/transportation?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['transportation data']) == 3
-        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][0]['price'] == 103
+        assert len(get_first_page_response_data['transportation data']) == 4
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 1.26
         assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][1]['price'] == 112
-        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 112.9
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][2]['price'] == 150
-        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 2.9
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 17.4
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -2387,38 +2486,36 @@ class TestTransportationListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/transportation?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['transportation data']) == 3
-        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][0]['price'] == 149.35
+        assert len(get_first_page_response_data['transportation data']) == 4
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 1.95
         assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][1]['price'] == 162.4
-        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 175.0
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][2]['price'] == 217.5
-        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 4.5
+        assert get_first_page_response_data['transportation data'][2]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 26.97
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -2432,65 +2529,87 @@ class TestTransportationListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_response = client.get('/v1/transportation?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_response_data[0]['price'] == 149.35
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['type'] == 'Petrol (1L)'
+        assert get_response_data[0]['price'] == 1.95
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data[1]['price'] == 175
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data[2]['price'] == 4.5
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['type'] == 'Taxi (8km)'
+        assert get_response_data[3]['price'] == 26.97
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/transportation',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['transportation data']) == 4
-        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][0]['price'] == 102
-        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 4
-        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][1]['price'] == 103
-        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
-        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][2]['price'] == 112
+        assert len(get_first_page_response_data['transportation data']) == 8
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 1.26
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 2.88
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 63.9
         assert get_first_page_response_data['transportation data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['transportation data'][3]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][3]['price'] == 150
-        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 112.90
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][4]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][4]['price'] == 1.53
+        assert get_first_page_response_data['transportation data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][5]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][5]['price'] == 2.90
+        assert get_first_page_response_data['transportation data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][6]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][6]['price'] == 13.0
+        assert get_first_page_response_data['transportation data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][7]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][7]['price'] == 17.4
+        assert get_first_page_response_data['transportation data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -2504,65 +2623,87 @@ class TestTransportationListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_response = client.get('/v1/transportation?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_response_data[0]['price'] == 103
+        assert len(get_response_data) == 4
+        assert get_response_data[0]['type'] == 'Petrol (1L)'
+        assert get_response_data[0]['price'] == 1.26
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'Public Transport (Monthly)'
+        assert get_response_data[1]['price'] == 112.9
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_response_data[2]['price'] == 2.9
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['type'] == 'Taxi (8km)'
+        assert get_response_data[3]['price'] == 17.4
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_transportation_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_transportation(client,'Monthly Public Transportation Pass', 103, 'Perth')
-        create_transportation(client,'Monthly Public Transportation Pass', 112, 'Melbourne')
-        create_transportation(client,'Monthly Public Transportation Pass', 150, 'Sydney')
-        create_transportation(client,'Monthly Public Transportation Pass', 102, 'Zurich')
+    def test_transportation_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_transportation(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/transportation?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['transportation data']) == 4
-        assert get_first_page_response_data['transportation data'][0]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][0]['price'] == 147.9
-        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 4
-        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['transportation data'][1]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][1]['price'] == 149.35
-        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 1
-        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['transportation data'][2]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][2]['price'] == 162.4
+        assert len(get_first_page_response_data['transportation data']) == 8
+        assert get_first_page_response_data['transportation data'][0]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][0]['price'] == 1.95
+        assert get_first_page_response_data['transportation data'][0]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][0]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][0]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][1]['type'] == 'Petrol (1L)'
+        assert get_first_page_response_data['transportation data'][1]['price'] == 4.46
+        assert get_first_page_response_data['transportation data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][1]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][2]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][2]['price'] == 99.05
         assert get_first_page_response_data['transportation data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['transportation data'][3]['type'] == 'Monthly Public Transportation Pass'
-        assert get_first_page_response_data['transportation data'][3]['price'] == 217.5
-        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 3
+        assert get_first_page_response_data['transportation data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][2]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][3]['type'] == 'Public Transport (Monthly)'
+        assert get_first_page_response_data['transportation data'][3]['price'] == 175
+        assert get_first_page_response_data['transportation data'][3]['location']['id'] == 1
         assert get_first_page_response_data['transportation data'][3]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['transportation data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][4]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][4]['price'] == 2.37
+        assert get_first_page_response_data['transportation data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][5]['type'] == 'Public Transport (One Way Ticket)'
+        assert get_first_page_response_data['transportation data'][5]['price'] == 4.5
+        assert get_first_page_response_data['transportation data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['transportation data'][6]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][6]['price'] == 20.15
+        assert get_first_page_response_data['transportation data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['transportation data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['transportation data'][7]['type'] == 'Taxi (8km)'
+        assert get_first_page_response_data['transportation data'][7]['price'] == 26.97
+        assert get_first_page_response_data['transportation data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['transportation data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['transportation data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value

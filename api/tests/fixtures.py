@@ -367,6 +367,14 @@ def create_transportation(client, mock_environment_variables):
         }))
     return response
 
+def transportation_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/transportation',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
 def create_foodbeverage(client, mock_environment_variables):
     response = client.post('/v1/foodbeverage',
         headers = {'Content-Type': 'application/json'},

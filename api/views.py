@@ -522,7 +522,7 @@ class HomePurchaseListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates price per sqm and mortgage interest rate for specified record
+    # Updates homepurchase record
     def patch(self):
         
         homepurchase_dict = request.get_json(force = True)
@@ -534,7 +534,7 @@ class HomePurchaseListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
 
-            # Track homepurchase updated
+            # Track homepurchase rows updated
             homepurchase_updated = 0
 
             for data in homepurchase_data:
@@ -657,7 +657,7 @@ class RentListResource(Resource):
                 dumped_rent = pagination_helper.paginate_query()
                 return dumped_rent
 
-    # Creates a record of rental costs for a particular location
+    # Creates new rent records
     def post(self):
         rent_dict = request.get_json()
 
@@ -668,7 +668,7 @@ class RentListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
             
-            # Track new homepurchase rows added
+            # Track new rent rows added
             rent_added = 0
 
             for data in rent_data:
@@ -686,7 +686,7 @@ class RentListResource(Resource):
                         rent.add(rent)
                         rent_added += 1
                         query = Rent.query.get(rent.id)
-                        dump_result = home_purchase_schema.dump(query)
+                        dump_result = rent_schema.dump(query)
                         print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
@@ -703,7 +703,7 @@ class RentListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates price per sqm and mortgage interest rate for specified record
+    # Updates monthly price for specified record
     def patch(self):
         
         rent_dict = request.get_json(force = True)
@@ -715,7 +715,7 @@ class RentListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
 
-            # Track rent updated
+            # Track rent rows updated
             rent_updated = 0
 
             for data in rent_data:
@@ -829,7 +829,7 @@ class UtilitiesListResource(Resource):
                 dumped_utilities = pagination_helper.paginate_query()
                 return dumped_utilities
     
-    # Creates a new utilities record
+    # Creates new utilities records
     def post(self):
         utilities_dict = request.get_json()
 
@@ -840,7 +840,7 @@ class UtilitiesListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
             
-            # Track new homepurchase rows added
+            # Track new utilities rows added
             utilities_added = 0
 
             for data in utilities_data:
@@ -857,7 +857,7 @@ class UtilitiesListResource(Resource):
                         utilities.add(utilities)
                         utilities_added += 1
                         query = Utilities.query.get(utilities.id)
-                        dump_result = home_purchase_schema.dump(query)
+                        dump_result = utilities_schema.dump(query)
                         print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
@@ -874,7 +874,7 @@ class UtilitiesListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
 
-    # Updates price per sqm and mortgage interest rate for specified record
+    # Updates monthly price for specified record
     def patch(self):
         
         utilities_dict = request.get_json(force = True)
@@ -886,7 +886,7 @@ class UtilitiesListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
 
-            # Track rent updated
+            # Track utilities rows updated
             utilities_updated = 0
 
             for data in utilities_data:
@@ -919,37 +919,6 @@ class TransportationResource(Resource):
             transportation = Transportation.query.get_or_404(id)
             dumped_transportation = transportation_schema.dump(transportation)
             return dumped_transportation
-    
-    # Updates type and price for a particular record
-    def patch(self, id):
-        transportation = Transportation.query.get_or_404(id)
-        
-        transportation_dict = request.get_json(force = True)
-        try:
-            transportation_schema.load(transportation_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'type' in transportation_dict and transportation_dict['type'] != None:
-                    transportation.type = transportation_dict['type']
-                if 'price' in transportation_dict and \
-                transportation_dict['price'] != None:
-                    transportation.price = transportation_dict['price']
-            
-                transportation.update()
-                response = {'message': 'Transportation id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
     
     # Deletes Transportation record
     def delete(self, id):
@@ -1031,39 +1000,87 @@ class TransportationListResource(Resource):
                 dumped_transportation = pagination_helper.paginate_query()
                 return dumped_transportation
     
-    # Creates a new record for a mode of transport
+    # Creates a new transportation record
     def post(self):
         transportation_dict = request.get_json()
-        try:
-            transportation_schema.load(transportation_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = transportation_dict['city']
+                transportation_data = get_data(file_prefix = 'transportation')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new transportation rows added
+            transportation_added = 0
+
+            for data in transportation_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Transportation.is_unique(location_id = location.id, type = data['Type']):
+                        continue
+                    try:
+                        transportation = Transportation(type = data['Type'], 
+                        price = data['Price'],
+                        location = location)
+                        transportation.add(transportation)
+                        transportation_added += 1
+                        query = Transportation.query.get(transportation.id)
+                        dump_result = transportation_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                transportation = Transportation(type = transportation_dict['type'], 
-                price = transportation_dict['price'],
-                location = location)
-                transportation.add(transportation)
-                query = Transportation.query.get(transportation.id)
-                dump_result = transportation_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {transportation_added} transportation records'}
+            return response, HttpStatus.created_201.value
         
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
+    
+    # Updates price per sqm and mortgage interest rate for specified record
+    def patch(self):
+        
+        transportation_dict = request.get_json(force = True)
+
+        if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                transportation_data = get_data(file_prefix = 'transportation')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track transportation updated
+            transportation_updated = 0
+
+            for data in transportation_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    transportation = Transportation.query.filter_by(location_id = location.id, type = data['Type']).first()
+                    if transportation == None:
+                        continue
+                    elif data['Price'] != transportation.price:
+                        transportation.monthly_price = data['Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {transportation_updated} transportation records'}
+            return response, HttpStatus.ok_200.value
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value   
 
 class FoodBeverageResource(Resource):
     # Retrieves information regarding a food and beverage item from a specific id
