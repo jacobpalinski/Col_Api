@@ -30,7 +30,7 @@ home_purchase_schema = HomePurchaseSchema()
 rent_schema = RentSchema()
 utilities_schema = UtilitiesSchema()
 transportation_schema = TransportationSchema()
-food_and_beverage_schema = FoodBeverageSchema()
+foodbeverage_schema = FoodBeverageSchema()
 childcare_schema = ChildcareSchema()
 apparel_schema = ApparelSchema()
 leisure_schema = LeisureSchema()
@@ -1045,7 +1045,7 @@ class TransportationListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
     
-    # Updates price per sqm and mortgage interest rate for specified record
+    # Updates price for specified record
     def patch(self):
         
         transportation_dict = request.get_json(force = True)
@@ -1069,7 +1069,7 @@ class TransportationListResource(Resource):
                     if transportation == None:
                         continue
                     elif data['Price'] != transportation.price:
-                        transportation.monthly_price = data['Price']
+                        transportation.price = data['Price']
                     else:
                         continue
                 
@@ -1089,45 +1089,8 @@ class FoodBeverageResource(Resource):
         if authenticate_jwt() == True:
             if id != None:
                 food_and_beverage = FoodBeverage.query.get_or_404(id)
-                dumped_food_and_beverage = food_and_beverage_schema.dump(food_and_beverage)
+                dumped_food_and_beverage = foodbeverage_schema.dump(food_and_beverage)
                 return dumped_food_and_beverage
-    
-    # Updates item category, purchase point, item and price for a given item
-    def patch(self, id):
-        food_and_beverage = FoodBeverage.query.get_or_404(id)
-        
-        food_and_beverage_dict = request.get_json(force = True)
-        try:
-            food_and_beverage_schema.load(food_and_beverage_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'item_category' in food_and_beverage_dict and food_and_beverage_dict['item_category'] != None:
-                    food_and_beverage.item_category = food_and_beverage_dict['item_category']
-                if 'purchase_point' in food_and_beverage_dict and \
-                food_and_beverage_dict['purchase_point'] != None:
-                    food_and_beverage.purchase_point = food_and_beverage_dict['purchase_point']
-                if 'item' in food_and_beverage_dict and \
-                food_and_beverage_dict['item'] != None:
-                    food_and_beverage.item = food_and_beverage_dict['item']
-                if 'price' in food_and_beverage_dict and \
-                food_and_beverage_dict['price'] != None:
-                    food_and_beverage.price = food_and_beverage_dict['price']
-            
-                food_and_beverage.update()
-                response = {'message': 'FoodBeverage id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
     
     # Deletes FoodBeverage record
     def delete(self, id):
@@ -1172,7 +1135,7 @@ class FoodBeverageListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res, many = True)
+                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many = True)
                     for result in dumped_food_and_beverage:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_food_and_beverage
@@ -1183,7 +1146,7 @@ class FoodBeverageListResource(Resource):
                     query = qry,
                     resource_for_url = 'cost_of_living.foodbeveragelistresource',
                     key_name = 'food and beverage data',   
-                    schema = food_and_beverage_schema
+                    schema = foodbeverage_schema
                     )
                     dumped_food_and_beverage = pagination_helper.paginate_query()
                     for result in dumped_food_and_beverage['food and beverage data']:
@@ -1196,7 +1159,7 @@ class FoodBeverageListResource(Resource):
                 if city:
                     qry= qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_food_and_beverage = food_and_beverage_schema.dump(qry_res, many = True)
+                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many = True)
                     return dumped_food_and_beverage
                 
                 qry_res = qry.all()
@@ -1205,43 +1168,93 @@ class FoodBeverageListResource(Resource):
                 query = qry,
                 resource_for_url = 'cost_of_living.foodbeveragelistresource',
                 key_name = 'food and beverage data',   
-                schema = food_and_beverage_schema
+                schema = foodbeverage_schema
                 )
                 dumped_food_and_beverage = pagination_helper.paginate_query()
                 return dumped_food_and_beverage
     
-    # Creates a new record for food and beverage item
+    # Creates a new foodbeverage record
     def post(self):
-        food_and_beverage_dict = request.get_json()
-        try:
-            food_and_beverage_schema.load(food_and_beverage_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
+        foodbeverage_dict = request.get_json()
 
-        if food_and_beverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
+        if foodbeverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                location_city = food_and_beverage_dict['city']
+                foodbeverage_data = get_data(file_prefix = 'foodbeverage')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new foodbeverage rows added
+            foodbeverage_added = 0
+
+            for data in foodbeverage_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not FoodBeverage.is_unique(location_id = location.id, item_category = data['Item Category'],
+                    purchase_point = data['Purchase Point'], item = data['Item']):
+                        continue
+                    try:
+                        foodbeverage = FoodBeverage(item_category = data['Item Category'], 
+                        purchase_point = data['Purchase Point'],
+                        item = data['Item'],
+                        price = data['Price'],
+                        location = location)
+                        foodbeverage.add(foodbeverage)
+                        foodbeverage_added += 1
+                        query = FoodBeverage.query.get(foodbeverage.id)
+                        dump_result = foodbeverage_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                food_and_beverage = FoodBeverage(item_category = food_and_beverage_dict['item_category'], 
-                purchase_point = food_and_beverage_dict['purchase_point'],
-                item = food_and_beverage_dict['item'],
-                price = food_and_beverage_dict['price'],
-                location = location)
-                food_and_beverage.add(food_and_beverage)
-                query = FoodBeverage.query.get(food_and_beverage.id)
-                dump_result = food_and_beverage_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {foodbeverage_added} foodbeverage records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates price for specified record
+    def patch(self):
+        
+        foodbeverage_dict = request.get_json(force = True)
+
+        if foodbeverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                foodbeverage_data = get_data(file_prefix = 'foodbeverage')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track foodbeverage updated
+            foodbeverage_updated = 0
+
+            for data in foodbeverage_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    foodbeverage = FoodBeverage.query.filter_by(location_id = location.id, item_category = data['Item Category'],
+                    purchase_point = data['Purchase Point'], item = data['Item']).first()
+                    if foodbeverage == None:
+                        continue
+                    elif data['Price'] != foodbeverage.price:
+                        foodbeverage.price = data['Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {foodbeverage_updated} foodbeverage records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value

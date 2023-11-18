@@ -1671,8 +1671,9 @@ class TestUtilitiesListResource:
         response = client.post('/v1/utilities',
         headers = {'Content-Type': 'application/json'})
         response_data = json.loads(response.get_data(as_text = True))
-        assert response.status_code == HttpStatus.forbidden_400.value
-        assert response_data['message'] == 'Admin privileges needed'
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Utilities.query.count() == 0
     
     def test_utilities_post_utilities_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
         response = client.post('/v1/utilities',
@@ -1809,8 +1810,8 @@ class TestUtilitiesListResource:
         patch_response = client.patch('/v1/utilities',
         headers = {'Content-Type': 'application/json'})
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
-        assert patch_response_data['message'] == 'Admin privileges needed'
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
     
     def test_utilities_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
@@ -2226,11 +2227,11 @@ class TestTransportationListResource:
     def test_transportation_post_transportation_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         create_location(client, mock_environment_variables)
-        post_response = client.post('/v1/transportation',
+        response = client.post('/v1/transportation',
         headers = {'Content-Type': 'application/json'})
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
     
     def test_transportation_post_transportation_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
         response = client.post('/v1/transportation',
@@ -2718,43 +2719,44 @@ class TestTransportationListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestFoodBeverageResource:
-    def test_foodbeverage_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+    def test_foodbeverage_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_response = client.get('/v1/foodbeverage/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        print(get_response_data)
         assert get_response_data['item_category'] == 'Beverage'
-        assert get_response_data['purchase_point'] == 'Supermarket'
-        assert get_response_data['item'] == 'Milk 1L'
-        assert get_response_data['price'] == 1.77
+        assert get_response_data['purchase_point'] == 'Restaurant'
+        assert get_response_data['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data['price'] == 7.41
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        get_response = client.get('/v1/foodbeverage/2',
+    def test_foodbeverage_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
+        get_response = client.get('/v1/foodbeverage/11',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_foodbeverage_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+    def test_foodbeverage_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         delete_response = client.delete('/v1/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'FoodBeverage id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert FoodBeverage.query.count() == 0
+        assert FoodBeverage.query.count() == 9
 
     def test_foodbeverage_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/foodbeverage/1',
@@ -2763,10 +2765,10 @@ class TestFoodBeverageResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert FoodBeverage.query.count() == 0
     
-    def test_foodbeverage_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+    def test_foodbeverage_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         delete_response = client.delete('/v1/foodbeverage/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -2775,186 +2777,368 @@ class TestFoodBeverageResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
     
 class TestFoodBeverageListResource:
-    def test_foodbeverage_post_foodbeverage_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['item_category'] == 'Beverage'
-        assert post_response_data['purchase_point'] == 'Supermarket'
-        assert post_response_data['item'] == 'Milk 1L'
-        assert post_response_data['price'] == 1.77
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert FoodBeverage.query.count() == 1
-    
-    def test_foodbeverage_post_foodbeverage_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/foodbeverage',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': 'Beverage',
-        'purchase_point': 'Supermarket',
-        'item': 'Milk 1L',
-        'price': 1.77,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_foodbeverage_post_foodbeverage_location_notexist(self,client):
-        response = create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
+    def test_foodbeverage_post_foodbeverage_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_foodbeverage(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert FoodBeverage.query.count() == 0
     
-    def test_foodbeverage_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        patch_response = client.patch('/v1/foodbeverage/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'item_category': 'Food',
-            'purchase_point': 'Restaurant',
-            'item': 'McMeal',
-            'price': 10.24,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_foodbeverage_post_foodbeverage_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        response = client.post('/v1/foodbeverage',
+        headers = {'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_foodbeverage_post_foodbeverage_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/foodbeverage',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert FoodBeverage.query.count() == 0
+
+    def test_foodbeverage_post_foodbeverage_with_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_foodbeverage(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 10 foodbeverage records'
+        assert FoodBeverage.query.count() == 10
+    
+    def test_foodbeverage_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
+        patch_response = foodbeverage_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/foodbeverage/1',
+        assert patch_response_data['message'] == 'Successfully updated 5 foodbeverage records'
+        get_response = client.get('/v1/foodbeverage',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['item_category'] == 'Food'
-        assert get_response_data['purchase_point'] == 'Restaurant'
-        assert get_response_data['item'] == 'McMeal'
-        assert get_response_data['price'] == 10.24
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert len(get_response_data['food and beverage data']) == 10
+        assert get_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data['food and beverage data'][0]['price'] == 3.8
+        assert get_response_data['food and beverage data'][0]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][1]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data['food and beverage data'][1]['price'] == 5.05
+        assert get_response_data['food and beverage data'][1]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][2]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][2]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data['food and beverage data'][2]['price'] == 6.39
+        assert get_response_data['food and beverage data'][2]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][3]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data['food and beverage data'][3]['price'] == 7.81
+        assert get_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][4]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][4]['item'] == 'Milk (1L)'
+        assert get_response_data['food and beverage data'][4]['price'] == 1.96
+        assert get_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][5]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][5]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][5]['item'] == 'Milk (1L)'
+        assert get_response_data['food and beverage data'][5]['price'] == 3.08
+        assert get_response_data['food and beverage data'][5]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][5]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][5]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][6]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][6]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][6]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data['food and beverage data'][6]['price'] == 63.9
+        assert get_response_data['food and beverage data'][6]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][7]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][7]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][7]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data['food and beverage data'][7]['price'] == 97.68
+        assert get_response_data['food and beverage data'][7]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][7]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][8]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][8]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][8]['item'] == 'Bread (500g)'
+        assert get_response_data['food and beverage data'][8]['price'] == 2.26
+        assert get_response_data['food and beverage data'][8]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][8]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][8]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][9]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][9]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][9]['item'] == 'Bread (500g)'
+        assert get_response_data['food and beverage data'][9]['price'] == 2.54
+        assert get_response_data['food and beverage data'][9]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][9]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][9]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/foodbeverage/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'item_category': 'Food',
-            'purchase_point': 'Restaurant',
-            'item': 'McMeal',
-            'price': 10.24,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert FoodBeverage.query.count() == 0
-    
-    def test_foodbeverage_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        patch_response = client.patch('/v1/foodbeverage/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': 'Food',
-        'purchase_point': 'Restaurant',
-        'item': 'McMeal',
-        'price': 10.24
-        }))
+    def test_foodbeverage_patch_no_updated_data(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
+        patch_response = foodbeverage_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 foodbeverage records'
+        get_response = client.get('/v1/foodbeverage',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['food and beverage data']) == 10
+        assert get_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data['food and beverage data'][0]['price'] == 3.64
+        assert get_response_data['food and beverage data'][0]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][1]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data['food and beverage data'][1]['price'] == 5.05
+        assert get_response_data['food and beverage data'][1]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][1]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][1]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][2]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][2]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data['food and beverage data'][2]['price'] == 6.39
+        assert get_response_data['food and beverage data'][2]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][3]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data['food and beverage data'][3]['price'] == 7.41
+        assert get_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][4]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][4]['item'] == 'Milk (1L)'
+        assert get_response_data['food and beverage data'][4]['price'] == 1.82
+        assert get_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][5]['item_category'] == 'Beverage'
+        assert get_response_data['food and beverage data'][5]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][5]['item'] == 'Milk (1L)'
+        assert get_response_data['food and beverage data'][5]['price'] == 3.08
+        assert get_response_data['food and beverage data'][5]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][5]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][5]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][6]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][6]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][6]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data['food and beverage data'][6]['price'] == 63.9
+        assert get_response_data['food and beverage data'][6]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][7]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][7]['purchase_point'] == 'Restaurant'
+        assert get_response_data['food and beverage data'][7]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data['food and beverage data'][7]['price'] == 96.31
+        assert get_response_data['food and beverage data'][7]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][7]['location']['city'] == 'Perth'
+        assert get_response_data['food and beverage data'][8]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][8]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][8]['item'] == 'Bread (500g)'
+        assert get_response_data['food and beverage data'][8]['price'] == 2.26
+        assert get_response_data['food and beverage data'][8]['location']['id'] == 2
+        assert get_response_data['food and beverage data'][8]['location']['country'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][8]['location']['city'] == 'Hong Kong'
+        assert get_response_data['food and beverage data'][9]['item_category'] == 'Food'
+        assert get_response_data['food and beverage data'][9]['purchase_point'] == 'Supermarket'
+        assert get_response_data['food and beverage data'][9]['item'] == 'Bread (500g)'
+        assert get_response_data['food and beverage data'][9]['price'] == 2.44
+        assert get_response_data['food and beverage data'][9]['location']['id'] == 1
+        assert get_response_data['food and beverage data'][9]['location']['country'] == 'Australia'
+        assert get_response_data['food and beverage data'][9]['location']['city'] == 'Perth'
+        assert get_response.status_code == HttpStatus.ok_200.value
+    
+    def test_foodbeverage_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
+        patch_response = client.patch('/v1/foodbeverage',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_foodbeverage_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
+        response = client.patch('/v1/foodbeverage',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_foodbeverage_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_country_city_abbreviation(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_response = client.get('/v1/foodbeverage?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data) == 5
         assert get_response_data[0]['item_category'] == 'Beverage'
-        assert get_response_data[0]['purchase_point'] == 'Supermarket'
-        assert get_response_data[0]['item'] == 'Milk 1L'
-        assert get_response_data[0]['price'] == 2.57
+        assert get_response_data[0]['purchase_point'] == 'Restaurant'
+        assert get_response_data[0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data[0]['price'] == 5.64
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item_category'] == 'Beverage'
+        assert get_response_data[1]['purchase_point'] == 'Restaurant'
+        assert get_response_data[1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data[1]['price'] == 11.49
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item_category'] == 'Beverage'
+        assert get_response_data[2]['purchase_point'] == 'Supermarket'
+        assert get_response_data[2]['item'] == 'Milk (1L)'
+        assert get_response_data[2]['price'] == 2.82
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item_category'] == 'Food'
+        assert get_response_data[3]['purchase_point'] == 'Restaurant'
+        assert get_response_data[3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data[3]['price'] == 149.28
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
+        assert get_response_data[4]['item_category'] == 'Food'
+        assert get_response_data[4]['purchase_point'] == 'Supermarket'
+        assert get_response_data[4]['item'] == 'Bread (500g)'
+        assert get_response_data[4]['price'] == 3.78
+        assert get_response_data[4]['location']['id'] == 1
+        assert get_response_data[4]['location']['country'] == 'Australia'
+        assert get_response_data[4]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_response = client.get('/v1/foodbeverage?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data) == 5
         assert get_response_data[0]['item_category'] == 'Beverage'
-        assert get_response_data[0]['purchase_point'] == 'Supermarket'
-        assert get_response_data[0]['item'] == 'Milk 1L'
-        assert get_response_data[0]['price'] == 1.77
+        assert get_response_data[0]['purchase_point'] == 'Restaurant'
+        assert get_response_data[0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data[0]['price'] == 3.64
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item_category'] == 'Beverage'
+        assert get_response_data[1]['purchase_point'] == 'Restaurant'
+        assert get_response_data[1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data[1]['price'] == 7.41
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item_category'] == 'Beverage'
+        assert get_response_data[2]['purchase_point'] == 'Supermarket'
+        assert get_response_data[2]['item'] == 'Milk (1L)'
+        assert get_response_data[2]['price'] == 1.82
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item_category'] == 'Food'
+        assert get_response_data[3]['purchase_point'] == 'Restaurant'
+        assert get_response_data[3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data[3]['price'] == 96.31
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
+        assert get_response_data[4]['item_category'] == 'Food'
+        assert get_response_data[4]['purchase_point'] == 'Supermarket'
+        assert get_response_data[4]['item'] == 'Bread (500g)'
+        assert get_response_data[4]['price'] == 2.44
+        assert get_response_data[4]['location']['id'] == 1
+        assert get_response_data[4]['location']['country'] == 'Australia'
+        assert get_response_data[4]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/foodbeverage?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['food and beverage data']) == 3
+        assert len(get_first_page_response_data['food and beverage data']) == 5
         assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][0]['price'] == 1.50
-        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 3.64
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][1]['price'] == 1.62
-        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 7.41
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
         assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][2]['price'] == 1.77
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 1.82
         assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 96.31
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][4]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][4]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][4]['price'] == 2.44
+        assert get_first_page_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 5
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -2968,44 +3152,51 @@ class TestFoodBeverageListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/foodbeverage?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['food and beverage data']) == 3
+        assert len(get_first_page_response_data['food and beverage data']) == 5
         assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][0]['price'] == 2.17
-        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 5.64
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][1]['price'] == 2.35
-        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 11.49
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
         assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][2]['price'] == 2.57
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 2.82
         assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
         assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 149.28
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][4]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][4]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][4]['price'] == 3.78
+        assert get_first_page_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 5
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -3019,75 +3210,132 @@ class TestFoodBeverageListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_response = client.get('/v1/foodbeverage?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data) == 5
         assert get_response_data[0]['item_category'] == 'Beverage'
-        assert get_response_data[0]['purchase_point'] == 'Supermarket'
-        assert get_response_data[0]['item'] == 'Milk 1L'
-        assert get_response_data[0]['price'] == 2.57
+        assert get_response_data[0]['purchase_point'] == 'Restaurant'
+        assert get_response_data[0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data[0]['price'] == 5.64
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item_category'] == 'Beverage'
+        assert get_response_data[1]['purchase_point'] == 'Restaurant'
+        assert get_response_data[1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data[1]['price'] == 11.49
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item_category'] == 'Beverage'
+        assert get_response_data[2]['purchase_point'] == 'Supermarket'
+        assert get_response_data[2]['item'] == 'Milk (1L)'
+        assert get_response_data[2]['price'] == 2.82
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item_category'] == 'Food'
+        assert get_response_data[3]['purchase_point'] == 'Restaurant'
+        assert get_response_data[3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data[3]['price'] == 149.28
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
+        assert get_response_data[4]['item_category'] == 'Food'
+        assert get_response_data[4]['purchase_point'] == 'Supermarket'
+        assert get_response_data[4]['item'] == 'Bread (500g)'
+        assert get_response_data[4]['price'] == 3.78
+        assert get_response_data[4]['location']['id'] == 1
+        assert get_response_data[4]['location']['country'] == 'Australia'
+        assert get_response_data[4]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/foodbeverage',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['food and beverage data']) == 4
+        assert len(get_first_page_response_data['food and beverage data']) == 10
         assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][0]['price'] == 1.50
-        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 3.64
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][1]['price'] == 1.62
-        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
-        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 5.05
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][2]['price'] == 1.77
-        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
-        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 6.39
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][3]['price'] == 1.80
-        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 7.41
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][4]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][4]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][4]['price'] == 1.82
+        assert get_first_page_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][5]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][5]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][5]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][5]['price'] == 3.08
+        assert get_first_page_response_data['food and beverage data'][5]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][5]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][5]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][6]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][6]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][6]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][6]['price'] == 63.9
+        assert get_first_page_response_data['food and beverage data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][7]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][7]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][7]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][7]['price'] == 96.31
+        assert get_first_page_response_data['food and beverage data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][8]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][8]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][8]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][8]['price'] == 2.26
+        assert get_first_page_response_data['food and beverage data'][8]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][8]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][8]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][9]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][9]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][9]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][9]['price'] == 2.44
+        assert get_first_page_response_data['food and beverage data'][9]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][9]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][9]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 10
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -3101,75 +3349,133 @@ class TestFoodBeverageListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_response = client.get('/v1/foodbeverage?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data) == 5
         assert get_response_data[0]['item_category'] == 'Beverage'
-        assert get_response_data[0]['purchase_point'] == 'Supermarket'
-        assert get_response_data[0]['item'] == 'Milk 1L'
-        assert get_response_data[0]['price'] == 1.77
+        assert get_response_data[0]['purchase_point'] == 'Restaurant'
+        assert get_response_data[0]['item'] == 'Cappuccino (Regular)'
+        assert get_response_data[0]['price'] == 3.64
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item_category'] == 'Beverage'
+        assert get_response_data[1]['purchase_point'] == 'Restaurant'
+        assert get_response_data[1]['item'] == 'Domestic Draught (0.5L)'
+        assert get_response_data[1]['price'] == 7.41
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item_category'] == 'Beverage'
+        assert get_response_data[2]['purchase_point'] == 'Supermarket'
+        assert get_response_data[2]['item'] == 'Milk (1L)'
+        assert get_response_data[2]['price'] == 1.82
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item_category'] == 'Food'
+        assert get_response_data[3]['purchase_point'] == 'Restaurant'
+        assert get_response_data[3]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_response_data[3]['price'] == 96.31
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
+        assert get_response_data[4]['item_category'] == 'Food'
+        assert get_response_data[4]['purchase_point'] == 'Supermarket'
+        assert get_response_data[4]['item'] == 'Bread (500g)'
+        assert get_response_data[4]['price'] == 2.44
+        assert get_response_data[4]['location']['id'] == 1
+        assert get_response_data[4]['location']['country'] == 'Australia'
+        assert get_response_data[4]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_foodbeverage_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.77, 'Perth')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.50, 'Melbourne')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.62, 'Sydney')
-        create_foodbeverage(client,'Beverage', 'Supermarket', 'Milk 1L', 1.80, 'Zurich')
+    def test_foodbeverage_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_foodbeverage(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/foodbeverage?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['food and beverage data']) == 4
+        assert len(get_first_page_response_data['food and beverage data']) == 10
+        print(get_first_page_response_data)
         assert get_first_page_response_data['food and beverage data'][0]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][0]['price'] == 2.17
-        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][0]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][0]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][0]['price'] == 5.64
+        assert get_first_page_response_data['food and beverage data'][0]['location']['id'] == 1
         assert get_first_page_response_data['food and beverage data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Melbourne'
+        assert get_first_page_response_data['food and beverage data'][0]['location']['city'] == 'Perth'
         assert get_first_page_response_data['food and beverage data'][1]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][1]['price'] == 2.35
-        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 3
-        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['food and beverage data'][1]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][1]['item'] == 'Cappuccino (Regular)'
+        assert get_first_page_response_data['food and beverage data'][1]['price'] == 7.83
+        assert get_first_page_response_data['food and beverage data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][1]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][1]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['food and beverage data'][2]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][2]['price'] == 2.57
-        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 1
-        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][2]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][2]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][2]['price'] == 9.9
+        assert get_first_page_response_data['food and beverage data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][2]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['food and beverage data'][3]['item_category'] == 'Beverage'
-        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Supermarket'
-        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Milk 1L'
-        assert get_first_page_response_data['food and beverage data'][3]['price'] == 2.61
-        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['food and beverage data'][3]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][3]['item'] == 'Domestic Draught (0.5L)'
+        assert get_first_page_response_data['food and beverage data'][3]['price'] == 11.49
+        assert get_first_page_response_data['food and beverage data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][4]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][4]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][4]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][4]['price'] == 2.82
+        assert get_first_page_response_data['food and beverage data'][4]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][4]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][4]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][5]['item_category'] == 'Beverage'
+        assert get_first_page_response_data['food and beverage data'][5]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][5]['item'] == 'Milk (1L)'
+        assert get_first_page_response_data['food and beverage data'][5]['price'] == 4.77
+        assert get_first_page_response_data['food and beverage data'][5]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][5]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][5]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][6]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][6]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][6]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][6]['price'] == 99.05
+        assert get_first_page_response_data['food and beverage data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][7]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][7]['purchase_point'] == 'Restaurant'
+        assert get_first_page_response_data['food and beverage data'][7]['item'] == 'Dinner (2 People Mid Range Restaurant)'
+        assert get_first_page_response_data['food and beverage data'][7]['price'] == 149.28
+        assert get_first_page_response_data['food and beverage data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['food and beverage data'][8]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][8]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][8]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][8]['price'] == 3.5
+        assert get_first_page_response_data['food and beverage data'][8]['location']['id'] == 2
+        assert get_first_page_response_data['food and beverage data'][8]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][8]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['food and beverage data'][9]['item_category'] == 'Food'
+        assert get_first_page_response_data['food and beverage data'][9]['purchase_point'] == 'Supermarket'
+        assert get_first_page_response_data['food and beverage data'][9]['item'] == 'Bread (500g)'
+        assert get_first_page_response_data['food and beverage data'][9]['price'] == 3.78
+        assert get_first_page_response_data['food and beverage data'][9]['location']['id'] == 1
+        assert get_first_page_response_data['food and beverage data'][9]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['food and beverage data'][9]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 10
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value

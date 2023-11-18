@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession, Row, functions
 from utils.aws_utils import *
 
 # Creates spark session
-def create_spark_session(app_name):
+def create_spark_session(app_name: str):
     spark = SparkSession.builder.appName(app_name).getOrCreate()
     return spark
 

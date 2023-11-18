@@ -162,8 +162,8 @@ def merge_and_transform_foodbeverage(spark_session: SparkSession):
    livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Purchase Point', 
    functions.when(functions.col('Item').isin(restaurant_items), 'Restaurant').otherwise('Supermarket'))
 
-   beverage_items = ['Milk(1L)', 'Water(1L)', 'Wine (750ml Bottle Mid Range)', 'Domestic Beer (0.5L Bottle)', 'Cappuccino (Regular)',
-   'Coke (0.5L)']
+   beverage_items = ['Milk (1L)', 'Water (1L)', 'Wine (750ml Bottle Mid Range)', 'Domestic Beer (0.5L Bottle)', 'Cappuccino (Regular)',
+   'Coke (0.5L)', 'Domestic Draught (0.5L)']
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumn('Item Category', 
    functions.when(functions.col('Item').isin(beverage_items), 'Beverage').otherwise('Food'))
    livingcost_price_info_df_filtered = livingcost_price_info_df_filtered.withColumn('Item Category', 
