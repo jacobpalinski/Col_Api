@@ -3498,84 +3498,33 @@ class TestChildcareResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        print(get_response_data)
-        assert get_response_data['type'] == 'Daycare / Preschool (1 Month)'
-        assert get_response_data['annual_price'] == 19632
+        assert get_response_data['type'] == 'Daycare / Preschool (1 Year)'
+        assert get_response_data['annual_price'] == 19411.68
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        get_response = client.get('/v1/childcare/2',
+    def test_childcare_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
+        get_response = client.get('/v1/childcare/5',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
-    
-    def test_childcare_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/v1/childcare/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'International Primary School',
-            'annual_price': 15547.56,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/childcare/1',
-            headers = {'Content-Type': 'application/json',
-            "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['type'] == 'International Primary School'
-        assert get_response_data['annual_price'] == 15547.56
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
-        assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/childcare/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'International Primary School',
-            'annual_price': 15547.56,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Childcare.query.count() == 0
-    
-    def test_childcare_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/v1/childcare/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': 'Food',
-        'purchase_point': 'Restaurant',
-        'item': 'McMeal',
-        'price': 10.24
-        }))
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
-        assert patch_response_data['message'] == 'Admin privileges needed'
-
-    def test_childcare_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
+    def test_childcare_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         delete_response = client.delete('/v1/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Childcare id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Childcare.query.count() == 0
+        assert Childcare.query.count() == 3
 
     def test_childcare_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/childcare/1',
@@ -3584,10 +3533,10 @@ class TestChildcareResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Childcare.query.count() == 0
     
-    def test_childcare_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
+    def test_childcare_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         delete_response = client.delete('/v1/childcare/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -3596,166 +3545,195 @@ class TestChildcareResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestChildcareListResource:
-    def test_childcare_post_childcare_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_childcare(client,'Preschool', 19632, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['type'] == 'Preschool'
-        assert post_response_data['annual_price'] == 19632
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Childcare.query.count() == 1
-    
-    def test_childcare_post_childcare_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/childcare',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'type': 'Preschool',
-        'annual_price': 19632,
-        'city': 'Perth',
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_childcare_post_childcare_location_notexist(self,client):
-        response = create_childcare(client,'Preschool', 19632, 'Perth')
+    def test_childcare_post_childcare_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_childcare(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Childcare.query.count() == 0
     
-    def test_childcare_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/v1/childcare/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'International Primary School',
-            'annual_price': 15547.56,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_childcare_post_childcare_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = client.post('/v1/childcare',
+        headers = {'Content-Type': 'application/json'})
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.bad_request_400.value
+        assert post_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Childcare.query.count() == 0
+    
+    def test_childcare_post_childcare_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/childcare',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Childcare.query.count() == 0
+
+    def test_childcare_post_childcare_with_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_childcare(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 4 childcare records'
+        assert Childcare.query.count() == 4
+    
+    def test_childcare_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
+        patch_response = childcare_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/childcare/1',
+        assert patch_response_data['message'] == 'Successfully updated 2 childcare records'
+        get_response = client.get('/v1/childcare',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['type'] == 'International Primary School'
-        assert get_response_data['annual_price'] == 15547.56
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
+        assert len(get_response_data['childcare data']) == 4
+        assert get_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_response_data['childcare data'][0]['annual_price'] == 9404.64
+        assert get_response_data['childcare data'][0]['location']['id'] == 2
+        assert get_response_data['childcare data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['childcare data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['childcare data'][1]['type'] == 'Daycare / Preschool'
+        assert get_response_data['childcare data'][1]['annual_price'] == 20599.08
+        assert get_response_data['childcare data'][1]['location']['id'] == 1
+        assert get_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['childcare data'][2]['type'] == 'International Primary School'
+        assert get_response_data['childcare data'][2]['annual_price'] == 13837.01
+        assert get_response_data['childcare data'][2]['location']['id'] == 1
+        assert get_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['childcare data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['childcare data'][3]['type'] == 'International Primary School'
+        assert get_response_data['childcare data'][3]['annual_price'] == 20470.76
+        assert get_response_data['childcare data'][3]['location']['id'] == 2
+        assert get_response_data['childcare data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['childcare data'][3]['location']['city'] == 'Hong Kong'
 
-    def test_childcare_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/childcare/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'type': 'International Primary School',
-            'annual_price': 15547.56,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Childcare.query.count() == 0
-    
-    def test_childcare_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        patch_response = client.patch('/v1/childcare/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item_category': 'Food',
-        'purchase_point': 'Restaurant',
-        'item': 'McMeal',
-        'price': 10.24
-        }))
+    def test_childcare_patch_no_updated_data(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
+        patch_response = childcare_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 childcare records'
+        get_response = client.get('/v1/childcare',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert get_response.status_code == HttpStatus.ok_200.value
+        print(get_response_data)
+        assert len(get_response_data['childcare data']) == 4
+        assert get_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_response_data['childcare data'][0]['annual_price'] == 9404.64
+        assert get_response_data['childcare data'][0]['location']['id'] == 2
+        assert get_response_data['childcare data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['childcare data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['childcare data'][1]['type'] == 'Daycare / Preschool'
+        assert get_response_data['childcare data'][1]['annual_price'] == 19411.68
+        assert get_response_data['childcare data'][1]['location']['id'] == 1
+        assert get_response_data['childcare data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['childcare data'][2]['type'] == 'International Primary School'
+        assert get_response_data['childcare data'][2]['annual_price'] == 13498.21
+        assert get_response_data['childcare data'][2]['location']['id'] == 1
+        assert get_response_data['childcare data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['childcare data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['childcare data'][3]['type'] == 'International Primary School'
+        assert get_response_data['childcare data'][3]['annual_price'] == 20470.76
+        assert get_response_data['childcare data'][3]['location']['id'] == 2
+        assert get_response_data['childcare data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['childcare data'][3]['location']['city'] == 'Hong Kong'
+    
+    def test_childcare_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
+        patch_response = client.patch('/v1/childcare',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_childcare_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
+        response = client.patch('/v1/childcare',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_childcare_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_country_city_abbreviation(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_response = client.get('/v1/childcare?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Preschool'
-        assert get_response_data[0]['annual_price'] == 28466.4
+        assert len(get_response_data) == 2
+        assert get_response_data[0]['type'] == 'Daycare / Preschool'
+        assert get_response_data[0]['annual_price'] == 30088.1
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'International Primary School'
+        assert get_response_data[1]['annual_price'] == 20922.23
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_response = client.get('/v1/childcare?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Preschool'
-        assert get_response_data[0]['annual_price'] == 19632
+        assert len(get_response_data) == 2
+        assert get_response_data[0]['type'] == 'Daycare / Preschool'
+        assert get_response_data[0]['annual_price'] == 19411.68
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'International Primary School'
+        assert get_response_data[1]['annual_price'] == 13498.21
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/childcare?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['childcare data']) == 3
-        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 19632
+        assert len(get_first_page_response_data['childcare data']) == 2
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 19411.68
         assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 20376
-        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 13498.21
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 21012
-        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 2
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -3769,38 +3747,26 @@ class TestChildcareListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/childcare?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['childcare data']) == 3
-        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 28466.4
+        assert len(get_first_page_response_data['childcare data']) == 2
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 30088.1
         assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 29545.2
-        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 20922.23
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 30467.4
-        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 2
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -3814,64 +3780,56 @@ class TestChildcareListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_response = client.get('/v1/childcare?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Preschool'
-        assert get_response_data[0]['annual_price'] == 28466.4
+        assert len(get_response_data) == 2
+        assert get_response_data[0]['type'] == 'Daycare / Preschool'
+        assert get_response_data[0]['annual_price'] == 30088.1
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'International Primary School'
+        assert get_response_data[1]['annual_price'] == 20922.23
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/childcare',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['childcare data']) == 4
-        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 19632
-        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 20376
-        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 9404.64
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 19411.68
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 21012
-        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 13498.21
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['childcare data'][3]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 35616
-        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][3]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 20470.76
+        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -3886,64 +3844,56 @@ class TestChildcareListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_response = client.get('/v1/childcare?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['type'] == 'Preschool'
-        assert get_response_data[0]['annual_price'] == 19632
+        assert len(get_response_data) == 2
+        assert get_response_data[0]['type'] == 'Daycare / Preschool'
+        assert get_response_data[0]['annual_price'] == 19411.68
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['type'] == 'International Primary School'
+        assert get_response_data[1]['annual_price'] == 13498.21
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_childcare_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_childcare(client,'Preschool', 19632, 'Perth')
-        create_childcare(client,'Preschool', 21012, 'Melbourne')
-        create_childcare(client,'Preschool', 20376, 'Sydney')
-        create_childcare(client,'Preschool', 35616, 'Zurich')
+    def test_childcare_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_childcare(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/childcare?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['childcare data']) == 4
-        assert get_first_page_response_data['childcare data'][0]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 28466.4
-        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['childcare data'][1]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 29545.2
-        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['childcare data'][0]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][0]['annual_price'] == 14577.19
+        assert get_first_page_response_data['childcare data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][1]['type'] == 'Daycare / Preschool'
+        assert get_first_page_response_data['childcare data'][1]['annual_price'] == 30088.1
+        assert get_first_page_response_data['childcare data'][1]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['childcare data'][2]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 30467.4
-        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][2]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][2]['annual_price'] == 20922.23
+        assert get_first_page_response_data['childcare data'][2]['location']['id'] == 1
         assert get_first_page_response_data['childcare data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['childcare data'][3]['type'] == 'Preschool'
-        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 51643.2
-        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Zurich'
+        assert get_first_page_response_data['childcare data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['childcare data'][3]['type'] == 'International Primary School'
+        assert get_first_page_response_data['childcare data'][3]['annual_price'] == 31729.68
+        assert get_first_page_response_data['childcare data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['childcare data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['childcare data'][3]['location']['city'] == 'Hong Kong'
         assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None

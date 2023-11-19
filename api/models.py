@@ -263,7 +263,7 @@ class Childcare(orm.Model,ResourceAddUpdateDelete):
     id = orm.Column(orm.Integer,primary_key = True)
     type = orm.Column(orm.String(80),nullable = False)
     annual_price = orm.Column(orm.Float,nullable = False)
-    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),unique = True,nullable = False)
+    location_id = orm.Column(orm.Integer,orm.ForeignKey('location.id'),nullable = False)
     last_updated = orm.Column(orm.TIMESTAMP,server_default = orm.func.current_timestamp(),nullable = False)
 
     @classmethod

@@ -81,10 +81,10 @@ def mock_boto3_s3(mocker, monkeypatch, current_date):
     {"City": "Perth", "Type": "Taxi (8km)", "Price": 17.4}, 
     {"City": "Hong Kong", "Type": "Taxi (8km)", "Price": 13.0}]).encode('utf-8')))},
     f'childcare{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
-    {"City": "Perth", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 1617.64}, 
-    {"City": "Perth", "Type": "International Primary School (1 Year)", "Annual Price": 13498.21},
-    {"City": "Hong Kong", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 783.72}, 
-    {"City": "Hong Kong", "Type": "International Primary School (1 Year)", "Annual Price": 20470.76}]).encode('utf-8')))},
+    {"City": "Perth", "Type": "Daycare / Preschool", "Annual Price": 19411.68}, 
+    {"City": "Perth", "Type": "International Primary School", "Annual Price": 13498.21},
+    {"City": "Hong Kong", "Type": "Daycare / Preschool", "Annual Price": 9404.64}, 
+    {"City": "Hong Kong", "Type": "International Primary School", "Annual Price": 20470.76}]).encode('utf-8')))},
     f'apparel{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
     {"City": "Perth", "Item": "Pair of Jeans", "Price": 87.19}, 
     {"City": "Perth", "Item": "Summer Dress Chain Store", "Price": 62.76}, 
@@ -167,10 +167,10 @@ def mock_boto3_s3_patch_modified(mocker, monkeypatch, current_date):
     {"City": "Perth", "Type": "Taxi (8km)", "Price": 17.41}, 
     {"City": "Hong Kong", "Type": "Taxi (8km)", "Price": 13.0}]).encode('utf-8')))},
     f'childcare{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
-    {"City": "Perth", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 1716.59}, 
-    {"City": "Perth", "Type": "International Primary School (1 Year)", "Annual Price": 13837.01},
-    {"City": "Hong Kong", "Type": "Daycare / Preschool (1 Month)", "Annual Price": 783.72}, 
-    {"City": "Hong Kong", "Type": "International Primary School (1 Year)", "Annual Price": 20470.76}]).encode('utf-8')))},
+    {"City": "Perth", "Type": "Daycare / Preschool", "Annual Price": 20599.08}, 
+    {"City": "Perth", "Type": "International Primary School", "Annual Price": 13837.01},
+    {"City": "Hong Kong", "Type": "Daycare / Preschool", "Annual Price": 9404.64}, 
+    {"City": "Hong Kong", "Type": "International Primary School", "Annual Price": 20470.76}]).encode('utf-8')))},
     f'apparel{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([
     {"City": "Perth", "Item": "Pair of Jeans", "Price": 90.22}, 
     {"City": "Perth", "Item": "Summer Dress Chain Store", "Price": 74.84}, 
@@ -325,6 +325,14 @@ def foodbeverage_patch_updated_data(client, mock_environment_variables, mock_bot
 
 def create_childcare(client, mock_environment_variables):
     response = client.post('/v1/childcare',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response
+
+def childcare_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/childcare',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({
         'admin': os.environ.get('ADMIN_KEY')
