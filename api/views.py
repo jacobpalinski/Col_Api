@@ -1438,37 +1438,6 @@ class ApparelResource(Resource):
             apparel = Apparel.query.get_or_404(id)
             dumped_apparel = apparel_schema.dump(apparel)
             return dumped_apparel
-    
-    # Updates item name and price for a given piece of apparel
-    def patch(self, id):
-        apparel = Apparel.query.get_or_404(id)
-        
-        apparel_dict = request.get_json(force = True)
-        try:
-            apparel_schema.load(apparel_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'item' in apparel_dict and apparel_dict['item'] != None:
-                    apparel.item = apparel_dict['item']
-                if 'price' in apparel_dict and \
-                apparel_dict['price'] != None:
-                    apparel.price = apparel_dict['price']
-            
-                apparel.update()
-                response = {'message': 'Apparel id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
 
     # Deletes Apparel record
     def delete(self, id):
@@ -1549,36 +1518,84 @@ class ApparelListResource(Resource):
                 dumped_apparel = pagination_helper.paginate_query()
                 return dumped_apparel
     
-    # Creates a new apparel item
+    # Creates a new apparel record
     def post(self):
         apparel_dict = request.get_json()
-        try:
-            apparel_schema.load(apparel_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = apparel_dict['city']
+                apparel_data = get_data(file_prefix = 'apparel')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new apparel rows added
+            apparel_added = 0
+
+            for data in apparel_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Apparel.is_unique(location_id = location.id, item = data['Item']):
+                        continue
+                    try:
+                        apparel = Apparel(item = data['Item'], 
+                        price = data['Price'],
+                        location = location)
+                        apparel.add(apparel)
+                        apparel_added += 1
+                        query = Apparel.query.get(apparel.id)
+                        dump_result = apparel_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                apparel = Apparel(item = apparel_dict['item'], 
-                price = apparel_dict['price'],
-                location = location)
-                apparel.add(apparel)
-                query = Apparel.query.get(apparel.id)
-                dump_result = apparel_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {apparel_added} apparel records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates annual price for specified record
+    def patch(self):
+        
+        apparel_dict = request.get_json(force = True)
+
+        if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                apparel_data = get_data(file_prefix = 'apparel')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track apparel updated
+            apparel_updated = 0
+
+            for data in apparel_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    apparel = Apparel.query.filter_by(location_id = location.id, item = data['Item']).first()
+                    if apparel == None:
+                        continue
+                    elif data['Price'] != apparel.price:
+                        apparel.price = data['Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {apparel_updated} apparel records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value

@@ -3909,41 +3909,41 @@ class TestChildcareListResource:
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
 class TestApparelResource:
-    def test_apparel_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+    def test_apparel_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_response = client.get('/v1/apparel/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['item'] == 'Levis Pair of Jeans'
-        assert get_response_data['price'] == 77
+        assert get_response_data['item'] == 'Pair of Jeans'
+        assert get_response_data['price'] == 87.19
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        get_response = client.get('/v1/apparel/2',
+    def test_apparel_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
+        get_response = client.get('/v1/apparel/10',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_apparel_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+    def test_apparel_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         delete_response = client.delete('/v1/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Apparel id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Apparel.query.count() == 0
+        assert Apparel.query.count() == 7
 
     def test_apparel_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/apparel/1',
@@ -3952,10 +3952,10 @@ class TestApparelResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Apparel.query.count() == 0
     
-    def test_apparel_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+    def test_apparel_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         delete_response = client.delete('/v1/apparel/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -3964,164 +3964,261 @@ class TestApparelResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestApparelListResource:
-    def test_apparel_post_apparel_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['item'] == 'Levis Pair of Jeans'
-        assert post_response_data['price'] == 77
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Apparel.query.count() == 1
-    
-    def test_apparel_post_apparel_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/apparel',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': 'Levis Pair of Jeans',
-        'price': 77,
-        'city': 'Perth',
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_apparel_post_apparel_location_notexist(self,client):
-        response = create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
+    def test_apparel_post_apparel_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_apparel(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Apparel.query.count() == 0
     
-    def test_apparel_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        patch_response = client.patch('/v1/apparel/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'item': 'Mens Leather Business Shoes',
-            'price': 194,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_apparel_post_apparel_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = client.post('/v1/apparel')
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.bad_request_400.value
+        assert post_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Apparel.query.count() == 0
+    
+    def test_apparel_post_apparel_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/apparel',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Apparel.query.count() == 0
+
+    def test_apparel_post_apparel_with_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_apparel(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 8 apparel records'
+        assert Apparel.query.count() == 8
+    
+    def test_apparel_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
+        patch_response = apparel_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/apparel/1',
+        assert patch_response_data['message'] == 'Successfully updated 4 apparel records'
+        get_response = client.get('/v1/apparel',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['item'] == 'Mens Leather Business Shoes'
-        assert get_response_data['price'] == 194
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert len(get_response_data['apparel data']) == 8
+        assert get_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_response_data['apparel data'][0]['price'] == 86.5
+        assert get_response_data['apparel data'][0]['location']['id'] == 2
+        assert get_response_data['apparel data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][1]['item'] == 'Brand Sneakers'
+        assert get_response_data['apparel data'][1]['price'] == 139.1
+        assert get_response_data['apparel data'][1]['location']['id'] == 1
+        assert get_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][2]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data['apparel data'][2]['price'] == 127.96
+        assert get_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_response_data['apparel data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][3]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data['apparel data'][3]['price'] == 171.78
+        assert get_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][4]['item'] == 'Pair of Jeans'
+        assert get_response_data['apparel data'][4]['price'] == 81.83
+        assert get_response_data['apparel data'][4]['location']['id'] == 2
+        assert get_response_data['apparel data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][5]['item'] == 'Pair of Jeans'
+        assert get_response_data['apparel data'][5]['price'] == 90.22
+        assert get_response_data['apparel data'][5]['location']['id'] == 1
+        assert get_response_data['apparel data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][5]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][6]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data['apparel data'][6]['price'] == 41.51
+        assert get_response_data['apparel data'][6]['location']['id'] == 2
+        assert get_response_data['apparel data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][7]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data['apparel data'][7]['price'] == 74.84
+        assert get_response_data['apparel data'][7]['location']['id'] == 1
+        assert get_response_data['apparel data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][7]['location']['city'] == 'Perth'
+        assert get_response.status_code == HttpStatus.ok_200.value
+    
+    def test_apparel_patch_no_updated_data(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
+        patch_response = apparel_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        assert patch_response_data['message'] == 'Successfully updated 0 apparel records'
+        get_response = client.get('/v1/apparel',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['apparel data']) == 8
+        assert get_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_response_data['apparel data'][0]['price'] == 86.5
+        assert get_response_data['apparel data'][0]['location']['id'] == 2
+        assert get_response_data['apparel data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][1]['item'] == 'Brand Sneakers'
+        assert get_response_data['apparel data'][1]['price'] == 139.0
+        assert get_response_data['apparel data'][1]['location']['id'] == 1
+        assert get_response_data['apparel data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][2]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data['apparel data'][2]['price'] == 127.96
+        assert get_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_response_data['apparel data'][2]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][2]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][3]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data['apparel data'][3]['price'] == 161.79
+        assert get_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][4]['item'] == 'Pair of Jeans'
+        assert get_response_data['apparel data'][4]['price'] == 81.83
+        assert get_response_data['apparel data'][4]['location']['id'] == 2
+        assert get_response_data['apparel data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][5]['item'] == 'Pair of Jeans'
+        assert get_response_data['apparel data'][5]['price'] == 87.19
+        assert get_response_data['apparel data'][5]['location']['id'] == 1
+        assert get_response_data['apparel data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][5]['location']['city'] == 'Perth'
+        assert get_response_data['apparel data'][6]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data['apparel data'][6]['price'] == 41.51
+        assert get_response_data['apparel data'][6]['location']['id'] == 2
+        assert get_response_data['apparel data'][6]['location']['country'] == 'Hong Kong'
+        assert get_response_data['apparel data'][6]['location']['city'] == 'Hong Kong'
+        assert get_response_data['apparel data'][7]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data['apparel data'][7]['price'] == 62.76
+        assert get_response_data['apparel data'][7]['location']['id'] == 1
+        assert get_response_data['apparel data'][7]['location']['country'] == 'Australia'
+        assert get_response_data['apparel data'][7]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/apparel/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'item': 'Mens Leather Business Shoes',
-            'price': 194,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Apparel.query.count() == 0
-    
-    def test_apparel_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        patch_response = client.patch('/v1/apparel/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': 'Mens Leather Business Shoes',
-        'price': 194
-        }))
+    def test_apparel_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
+        patch_response = client.patch('/v1/apparel',
+        headers = {'Content-Type': 'application/json'})
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_apparel_update_incorrect_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
+        response = client.patch('/v1/apparel',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_apparel_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_country_city_abbreviation(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_response = client.get('/v1/apparel?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['item'] == 'Levis Pair of Jeans'
-        assert get_response_data[0]['price'] == 111.65
+        assert get_response_data[0]['item'] == 'Brand Sneakers'
+        assert get_response_data[0]['price'] == 215.45
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data[1]['price'] == 250.77
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item'] == 'Pair of Jeans'
+        assert get_response_data[2]['price'] == 135.14
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data[3]['price'] == 97.28
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_response = client.get('/v1/apparel?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['item'] == 'Levis Pair of Jeans'
-        assert get_response_data[0]['price'] == 77
+        assert get_response_data[0]['item'] == 'Brand Sneakers'
+        assert get_response_data[0]['price'] == 139.0
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data[1]['price'] == 161.79
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item'] == 'Pair of Jeans'
+        assert get_response_data[2]['price'] == 87.19
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data[3]['price'] == 62.76
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/apparel?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['apparel data']) == 3
-        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][0]['price'] == 77
+        assert len(get_first_page_response_data['apparel data']) == 4
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 139.0
         assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][1]['price'] == 83
-        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 161.79
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][2]['price'] == 84
-        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 87.19
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 62.76
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -4135,38 +4232,36 @@ class TestApparelListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/apparel?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['apparel data']) == 3
-        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][0]['price'] == 111.65
+        assert len(get_first_page_response_data['apparel data']) == 4
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 215.45
         assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][1]['price'] == 120.35
-        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 250.77
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][2]['price'] == 121.8
-        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 135.14
+        assert get_first_page_response_data['apparel data'][2]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['count'] == 3
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 97.28
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 4
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -4180,65 +4275,86 @@ class TestApparelListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_response = client.get('/v1/apparel?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['item'] == 'Levis Pair of Jeans'
-        assert get_response_data[0]['price'] == 111.65
+        assert get_response_data[0]['item'] == 'Brand Sneakers'
+        assert get_response_data[0]['price'] == 215.45
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data[1]['price'] == 250.77
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item'] == 'Pair of Jeans'
+        assert get_response_data[2]['price'] == 135.14
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data[3]['price'] == 97.28
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/apparel',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['apparel data']) == 4
-        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][0]['price'] == 77
-        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][1]['price'] == 83
-        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert len(get_first_page_response_data['apparel data']) == 8
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 86.5
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 139.0
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][2]['price'] == 84
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 127.96
         assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['apparel data'][3]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][3]['price'] == 114
-        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 161.79
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][4]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][4]['price'] == 81.83
+        assert get_first_page_response_data['apparel data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][5]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][5]['price'] == 87.19
+        assert get_first_page_response_data['apparel data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][6]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][6]['price'] == 41.51
+        assert get_first_page_response_data['apparel data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][7]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][7]['price'] == 62.76
+        assert get_first_page_response_data['apparel data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -4252,65 +4368,86 @@ class TestApparelListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_response = client.get('/v1/apparel?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['item'] == 'Levis Pair of Jeans'
-        assert get_response_data[0]['price'] == 77
+        assert get_response_data[0]['item'] == 'Brand Sneakers'
+        assert get_response_data[0]['price'] == 139.0
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['item'] == 'Mens Leather Business Shoes'
+        assert get_response_data[1]['price'] == 161.79
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['item'] == 'Pair of Jeans'
+        assert get_response_data[2]['price'] == 87.19
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
+        assert get_response_data[3]['item'] == 'Summer Dress Chain Store'
+        assert get_response_data[3]['price'] == 62.76
+        assert get_response_data[3]['location']['id'] == 1
+        assert get_response_data[3]['location']['country'] == 'Australia'
+        assert get_response_data[3]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_apparel_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_apparel(client,'Levis Pair of Jeans', 77, 'Perth')
-        create_apparel(client,'Levis Pair of Jeans', 84, 'Melbourne')
-        create_apparel(client,'Levis Pair of Jeans', 83, 'Sydney')
-        create_apparel(client,'Levis Pair of Jeans', 114, 'Zurich')
+    def test_apparel_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_apparel(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/apparel?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['apparel data']) == 4
-        assert get_first_page_response_data['apparel data'][0]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][0]['price'] == 111.65
-        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['apparel data'][1]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][1]['price'] == 120.35
-        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 3
+        assert len(get_first_page_response_data['apparel data']) == 8
+        assert get_first_page_response_data['apparel data'][0]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][0]['price'] == 134.08
+        assert get_first_page_response_data['apparel data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][1]['item'] == 'Brand Sneakers'
+        assert get_first_page_response_data['apparel data'][1]['price'] == 215.45
+        assert get_first_page_response_data['apparel data'][1]['location']['id'] == 1
         assert get_first_page_response_data['apparel data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['apparel data'][2]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][2]['price'] == 121.8
+        assert get_first_page_response_data['apparel data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][2]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][2]['price'] == 198.34
         assert get_first_page_response_data['apparel data'][2]['location']['id'] == 2
-        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['apparel data'][3]['item'] == 'Levis Pair of Jeans'
-        assert get_first_page_response_data['apparel data'][3]['price'] == 165.3
-        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['apparel data'][2]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][2]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][3]['item'] == 'Mens Leather Business Shoes'
+        assert get_first_page_response_data['apparel data'][3]['price'] == 250.77
+        assert get_first_page_response_data['apparel data'][3]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][3]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][3]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][4]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][4]['price'] == 126.84
+        assert get_first_page_response_data['apparel data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][5]['item'] == 'Pair of Jeans'
+        assert get_first_page_response_data['apparel data'][5]['price'] == 135.14
+        assert get_first_page_response_data['apparel data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['apparel data'][6]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][6]['price'] == 64.34
+        assert get_first_page_response_data['apparel data'][6]['location']['id'] == 2
+        assert get_first_page_response_data['apparel data'][6]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][6]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['apparel data'][7]['item'] == 'Summer Dress Chain Store'
+        assert get_first_page_response_data['apparel data'][7]['price'] == 97.28
+        assert get_first_page_response_data['apparel data'][7]['location']['id'] == 1
+        assert get_first_page_response_data['apparel data'][7]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['apparel data'][7]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 8
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
