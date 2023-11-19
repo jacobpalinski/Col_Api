@@ -1609,37 +1609,6 @@ class LeisureResource(Resource):
             dumped_leisure = leisure_schema.dump(leisure)
             return dumped_leisure
     
-    # Updates activity name and price information for a given leisure activity
-    def patch(self,id):
-        leisure = Leisure.query.get_or_404(id)
-        
-        leisure_dict = request.get_json(force = True)
-        try:
-            leisure_schema.load(leisure_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
-
-        if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-
-            try:
-                if 'activity' in leisure_dict and leisure_dict['activity'] != None:
-                    leisure.activity = leisure_dict['activity']
-                if 'price' in leisure_dict and \
-                leisure_dict['price'] != None:
-                    leisure.price = leisure_dict['price']
-            
-                leisure.update()
-                response = {'message': 'Leisure id updated successfully'}
-                return response, HttpStatus.ok_200.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
-        
-        else:
-            response = {'message': 'Admin privileges needed'}
-            return response, HttpStatus.forbidden_403.value
-    
     # Deletes Leisure record
     def delete(self, id):
         admin_dict = request.get_json()
@@ -1719,36 +1688,84 @@ class LeisureListResource(Resource):
                 dumped_leisure = pagination_helper.paginate_query()
                 return dumped_leisure
     
-    # Creates a new leisure activity
+    # Creates a new leisure record
     def post(self):
         leisure_dict = request.get_json()
-        try:
-            leisure_schema.load(leisure_dict, unknown = INCLUDE)
-        except ValidationError:
-            response = {'message': 'Invalid schema'}
-            return response, HttpStatus.bad_request_400.value
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
-        
             try:
-                location_city = leisure_dict['city']
+                leisure_data = get_data(file_prefix = 'leisure')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+            
+            # Track new leisure rows added
+            leisure_added = 0
+
+            for data in leisure_data:
+                location_city = data['City']
                 location = Location.query.filter_by(city = location_city).first()
 
-                if location is None:
+                if location:
+                    if not Leisure.is_unique(location_id = location.id, activity = data['Activity']):
+                        continue
+                    try:
+                        leisure = Leisure(activity = data['Activity'], 
+                        price = data['Price'],
+                        location = location)
+                        leisure.add(leisure)
+                        leisure_added += 1
+                        query = Leisure.query.get(leisure.id)
+                        dump_result = leisure_schema.dump(query)
+                        print(f'{HttpStatus.created_201.value} {dump_result}')
+
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
+
+                else:
                     response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
                     return response, HttpStatus.notfound_404.value
                 
-                leisure = Leisure(activity = leisure_dict['activity'], 
-                price = leisure_dict['price'],
-                location = location)
-                leisure.add(leisure)
-                query = Leisure.query.get(leisure.id)
-                dump_result = leisure_schema.dump(query)
-                return dump_result, HttpStatus.created_201.value
-
-            except SQLAlchemyError as e:
-                sql_alchemy_error_response(e)
+            response = {'message': f'Successfully added {leisure_added} leisure records'}
+            return response, HttpStatus.created_201.value
         
+        else:
+            response = {'message': 'Admin privileges needed'}
+            return response, HttpStatus.forbidden_403.value
+    
+    # Updates annual price for specified record
+    def patch(self):
+        
+        leisure_dict = request.get_json(force = True)
+
+        if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
+            try:
+                leisure_data = get_data(file_prefix = 'leisure')
+            except botocore.exceptions.ClientError as e:
+                response = {'message': e}
+                return response, HttpStatus.notfound_404.value
+
+            # Track apparel updated
+            leisure_updated = 0
+
+            for data in leisure_data:
+                location_city = data['City']
+                location = Location.query.filter_by(city = location_city).first()
+
+                try:
+                    leisure = Leisure.query.filter_by(location_id = location.id, activity = data['Activity']).first()
+                    if leisure == None:
+                        continue
+                    elif data['Price'] != leisure.price:
+                        leisure.price = data['Price']
+                    else:
+                        continue
+                
+                except SQLAlchemyError as e:
+                    sql_alchemy_error_response(e)
+            
+            response = {'message': f'Successfully updated {leisure_updated} leisure records'}
+            return response, HttpStatus.ok_200.value
         else:
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value

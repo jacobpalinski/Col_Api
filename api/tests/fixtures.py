@@ -362,3 +362,11 @@ def create_leisure(client, mock_environment_variables):
         'admin': os.environ.get('ADMIN_KEY')
         }))
     return response
+
+def leisure_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified):
+    response = client.patch('/v1/leisure',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({
+        'admin': os.environ.get('ADMIN_KEY')
+        }))
+    return response

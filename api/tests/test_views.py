@@ -1612,7 +1612,6 @@ class TestUtilitiesResource:
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        print(get_response_data)
         assert get_response_data['utility'] == 'Mobile Plan (10GB+ Data, Monthly)'
         assert get_response_data['monthly_price'] == 35.83
         assert get_response_data['location']['id'] == 1
@@ -4461,90 +4460,42 @@ class TestApparelListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-class TestLesiureResource:
-    def test_leisure_get_with_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+class TestLeisureResource:
+    def test_leisure_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_response = client.get('/v1/leisure/1',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['activity'] == 'Monthly Gym Membership'
-        assert get_response_data['price'] == 48
+        assert get_response_data['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data['price'] == 49.05
         assert get_response_data['location']['id'] == 1
         assert get_response_data['location']['country'] == 'Australia'
         assert get_response_data['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_notexist_id(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        get_response = client.get('/v1/leisure/2',
+    def test_leisure_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
+        get_response = client.get('/v1/leisure/7',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
-    
-    def test_leisure_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/v1/leisure/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'activity': '1hr Tennis Court Rent',
-            'price': 12.64,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/leisure/1',
-            headers = {'Content-Type': 'application/json',
-            "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['activity'] == '1hr Tennis Court Rent'
-        assert get_response_data['price'] == 12.64
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
-        assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/leisure/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'activity': '1hr Tennis Court Rent',
-            'price': 12.64,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Leisure.query.count() == 0
-    
-    def test_leisure_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/v1/leisure/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': 'Mens Leather Business Shoes',
-        'price': 194
-        }))
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
-        assert patch_response_data['message'] == 'Admin privileges needed'
-
-    def test_leisure_delete(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+    def test_leisure_delete(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         delete_response = client.delete('/v1/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response_data['message'] == 'Leisure id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
-        assert Leisure.query.count() == 0
+        assert Leisure.query.count() == 5
 
     def test_leisure_delete_no_id_exist(self,client):
         delete_response = client.delete('/v1/leisure/1',
@@ -4553,10 +4504,10 @@ class TestLesiureResource:
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Leisure.query.count() == 0
     
-    def test_leisure_delete_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+    def test_leisure_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         delete_response = client.delete('/v1/leisure/1',
         headers = {'Content-Type': 'application/json'},
         data = json.dumps({}))
@@ -4565,163 +4516,226 @@ class TestLesiureResource:
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestLeisureListResource:
-    def test_leisure_post_leisure_location_exist(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response_data['activity'] == 'Monthly Gym Membership'
-        assert post_response_data['price'] == 48
-        assert post_response_data['location']['id'] == 1
-        assert post_response_data['location']['country'] == 'Australia'
-        assert post_response_data['location']['city'] == 'Perth'
-        assert post_response.status_code == HttpStatus.created_201.value
-        assert Leisure.query.count() == 1
-    
-    def test_leisure_post_leisure_location_exist_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        post_response = client.post('/v1/leisure',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'activity': 'Monthly Gym Membership',
-        'price': 48,
-        'city': 'Perth'
-        }))
-        post_response_data = json.loads(post_response.get_data(as_text = True))
-        assert post_response.status_code == HttpStatus.forbidden_403.value
-        assert post_response_data['message'] == 'Admin privileges needed'
-
-    def test_leisure_post_leisure_location_notexist(self,client):
-        response = create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
+    def test_leisure_post_leisure_location_notexist(self,client, mock_environment_variables, mock_boto3_s3):
+        response = create_leisure(client, mock_environment_variables)
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Specified city doesnt exist in /locations/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Leisure.query.count() == 0
     
-    def test_leisure_update(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/v1/leisure/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'activity': '1hr Tennis Court Rent',
-            'price': 12.64,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
+    def test_leisure_post_leisure_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/leisure',
+        headers = {'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.bad_request_400.value
+        assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+        assert Leisure.query.count() == 0
+    
+    def test_leisure_post_leisure_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        response = client.post('/v1/leisure',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
+        assert response_data['message'] == 'Admin privileges needed'
+        assert Leisure.query.count() == 0
+
+    def test_leisure_post_leisure_with_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        post_response = create_leisure(client, mock_environment_variables)
+        post_response_data = json.loads(post_response.get_data(as_text = True))
+        assert post_response.status_code == HttpStatus.created_201.value
+        assert post_response_data['message'] == f'Successfully added 6 leisure records'
+        assert Leisure.query.count() == 6
+    
+    def test_leisure_patch_updated_data(self,client,create_user,login, mock_environment_variables, mock_boto3_s3_patch_modified):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
+        patch_response = leisure_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response_data['message'] == 'Successfully updated 3 leisure records'
         assert patch_response.status_code == HttpStatus.ok_200.value
-        get_response = client.get('/v1/leisure/1',
+        get_response = client.get('/v1/leisure',
             headers = {'Content-Type': 'application/json',
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data['activity'] == '1hr Tennis Court Rent'
-        assert get_response_data['price'] == 12.64
-        assert get_response_data['location']['id'] == 1
-        assert get_response_data['location']['country'] == 'Australia'
-        assert get_response_data['location']['city'] == 'Perth'
+        assert len(get_response_data['leisure data']) == 6
+        assert get_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_response_data['leisure data'][0]['price'] == 12.78
+        assert get_response_data['leisure data'][0]['location']['id'] == 2
+        assert get_response_data['leisure data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][1]['activity'] == 'Cinema International Release'
+        assert get_response_data['leisure data'][1]['price'] == 15.3
+        assert get_response_data['leisure data'][1]['location']['id'] == 1
+        assert get_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['leisure data'][2]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data['leisure data'][2]['price'] == 49.56
+        assert get_response_data['leisure data'][2]['location']['id'] == 1
+        assert get_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['leisure data'][3]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data['leisure data'][3]['price'] == 88.44
+        assert get_response_data['leisure data'][3]['location']['id'] == 2
+        assert get_response_data['leisure data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][4]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data['leisure data'][4]['price'] == 8.85
+        assert get_response_data['leisure data'][4]['location']['id'] == 2
+        assert get_response_data['leisure data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][5]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data['leisure data'][5]['price'] == 15.25
+        assert get_response_data['leisure data'][5]['location']['id'] == 1
+        assert get_response_data['leisure data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][5]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_update_no_id_exist(self,client):
-        patch_response = client.patch('/v1/leisure/1',
-            headers = {'Content-Type': 'application/json'},
-            data = json.dumps({
-            'activity': '1hr Tennis Court Rent',
-            'price': 12.64,
-            'admin': os.environ.get('ADMIN_KEY')
-            }))
-        assert patch_response.status_code == HttpStatus.notfound_404.value
-        assert Leisure.query.count() == 0
-    
-    def test_leisure_update_no_admin(self,client):
-        create_currency(client,'AUD',1.45)
-        create_location(client,'Australia','Perth','AUD')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        patch_response = client.patch('/v1/leisure/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
-        'item': 'Mens Leather Business Shoes',
-        'price': 194
-        }))
+    def test_leisure_patch_no_updated_data(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
+        patch_response = leisure_patch_updated_data(client, mock_environment_variables, mock_boto3_s3)
         patch_response_data = json.loads(patch_response.get_data(as_text = True))
-        assert patch_response.status_code == HttpStatus.forbidden_403.value
+        assert patch_response_data['message'] == 'Successfully updated 0 leisure records'
+        assert patch_response.status_code == HttpStatus.ok_200.value
+        get_response = client.get('/v1/leisure',
+            headers = {'Content-Type': 'application/json',
+            "Authorization": f"Bearer {login['auth_token']}"})
+        get_response_data = json.loads(get_response.get_data(as_text = True))
+        assert len(get_response_data['leisure data']) == 6
+        assert get_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_response_data['leisure data'][0]['price'] == 12.78
+        assert get_response_data['leisure data'][0]['location']['id'] == 2
+        assert get_response_data['leisure data'][0]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][0]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][1]['activity'] == 'Cinema International Release'
+        assert get_response_data['leisure data'][1]['price'] == 14.82
+        assert get_response_data['leisure data'][1]['location']['id'] == 1
+        assert get_response_data['leisure data'][1]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_response_data['leisure data'][2]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data['leisure data'][2]['price'] == 49.05
+        assert get_response_data['leisure data'][2]['location']['id'] == 1
+        assert get_response_data['leisure data'][2]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][2]['location']['city'] == 'Perth'
+        assert get_response_data['leisure data'][3]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data['leisure data'][3]['price'] == 88.44
+        assert get_response_data['leisure data'][3]['location']['id'] == 2
+        assert get_response_data['leisure data'][3]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][3]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][4]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data['leisure data'][4]['price'] == 8.85
+        assert get_response_data['leisure data'][4]['location']['id'] == 2
+        assert get_response_data['leisure data'][4]['location']['country'] == 'Hong Kong'
+        assert get_response_data['leisure data'][4]['location']['city'] == 'Hong Kong'
+        assert get_response_data['leisure data'][5]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data['leisure data'][5]['price'] == 14.92
+        assert get_response_data['leisure data'][5]['location']['id'] == 1
+        assert get_response_data['leisure data'][5]['location']['country'] == 'Australia'
+        assert get_response_data['leisure data'][5]['location']['city'] == 'Perth'
+        assert get_response.status_code == HttpStatus.ok_200.value
+    
+    def test_leisure_patch_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
+        patch_response = client.patch('/v1/leisure',
+        headers = {'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        assert patch_response.status_code == HttpStatus.bad_request_400.value
+        assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
+    
+    def test_leisure_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
+        response = client.patch('/v1/leisure',
+        headers = {'Content-Type': 'application/json'},
+        data = json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text = True))
+        assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
 
-    def test_leisure_get_country_city_abbreviation(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_country_city_abbreviation(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_response = client.get('/v1/leisure?country=Australia&city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['activity'] == 'Monthly Gym Membership'
-        assert get_response_data[0]['price'] == 69.6
+        assert len(get_response_data) == 3
+        assert get_response_data[0]['activity'] == 'Cinema International Release'
+        assert get_response_data[0]['price'] == 22.97
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data[1]['price'] == 76.03
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data[2]['price'] == 23.13
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_country_city_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_country_city_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_response = client.get('/v1/leisure?country=Australia&city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['activity'] == 'Monthly Gym Membership'
-        assert get_response_data[0]['price'] == 48
+        assert len(get_response_data) == 3
+        assert get_response_data[0]['activity'] == 'Cinema International Release'
+        assert get_response_data[0]['price'] == 14.82
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data[1]['price'] == 49.05
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data[2]['price'] == 14.92
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_country_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_country_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/leisure?country=Australia',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['leisure data']) == 3
-        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][0]['price'] == 48
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 14.82
         assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][1]['price'] == 50
-        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 49.05
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][2]['price'] == 61
-        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 14.92
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -4736,37 +4750,30 @@ class TestLeisureListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_country_abbreviation_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_country_abbreviation_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/leisure?country=Australia&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
         assert len(get_first_page_response_data['leisure data']) == 3
-        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][0]['price'] == 69.6
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 22.97
         assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
         assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][1]['price'] == 72.5
-        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 76.03
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][2]['price'] == 88.45
-        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 23.13
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Perth'
         assert get_first_page_response_data['count'] == 3
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
@@ -4781,65 +4788,72 @@ class TestLeisureListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_city_abbreviation_country_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_city_abbreviation_country_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_response = client.get('/v1/leisure?city=Perth&abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['activity'] == 'Monthly Gym Membership'
-        assert get_response_data[0]['price'] == 69.6
+        assert len(get_response_data) == 3
+        assert get_response_data[0]['activity'] == 'Cinema International Release'
+        assert get_response_data[0]['price'] == 22.97
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data[1]['price'] == 76.03
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data[2]['price'] == 23.13
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_country_none_city_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_country_none_city_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/leisure',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['leisure data']) == 4
-        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][0]['price'] == 48
-        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][1]['price'] == 50
-        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert len(get_first_page_response_data['leisure data']) == 6
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 12.78
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 14.82
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][2]['price'] == 61
-        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 49.05
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['leisure data'][3]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][3]['price'] == 93
-        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][3]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][3]['price'] == 88.44
+        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][4]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][4]['price'] == 8.85
+        assert get_first_page_response_data['leisure data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][5]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][5]['price'] == 14.92
+        assert get_first_page_response_data['leisure data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 6
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
@@ -4853,64 +4867,72 @@ class TestLeisureListResource:
         assert get_second_page_response_data['next'] == None
         assert get_second_page_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_city_country_none_abbreviation_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_city_country_none_abbreviation_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_response = client.get('/v1/leisure?city=Perth',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_response_data = json.loads(get_response.get_data(as_text = True))
-        assert get_response_data[0]['activity'] == 'Monthly Gym Membership'
-        assert get_response_data[0]['price'] == 48
+        assert len(get_response_data) == 3
+        assert get_response_data[0]['activity'] == 'Cinema International Release'
+        assert get_response_data[0]['price'] == 14.82
         assert get_response_data[0]['location']['id'] == 1
         assert get_response_data[0]['location']['country'] == 'Australia'
         assert get_response_data[0]['location']['city'] == 'Perth'
+        assert get_response_data[1]['activity'] == 'Gym Membership (Monthly)'
+        assert get_response_data[1]['price'] == 49.05
+        assert get_response_data[1]['location']['id'] == 1
+        assert get_response_data[1]['location']['country'] == 'Australia'
+        assert get_response_data[1]['location']['city'] == 'Perth'
+        assert get_response_data[2]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_response_data[2]['price'] == 14.92
+        assert get_response_data[2]['location']['id'] == 1
+        assert get_response_data[2]['location']['country'] == 'Australia'
+        assert get_response_data[2]['location']['city'] == 'Perth'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_leisure_get_abbreviation_country_none_city_none(self,client,create_user,login):
-        create_currency(client,'AUD',1.45)
-        create_currency(client,'CHF',0.92)
-        create_location(client,'Australia','Perth','AUD')
-        create_location(client,'Australia','Melbourne','AUD')
-        create_location(client,'Australia','Sydney','AUD')
-        create_location(client,'Switzerland','Zurich','CHF')
-        create_leisure(client,'Monthly Gym Membership', 48, 'Perth')
-        create_leisure(client,'Monthly Gym Membership', 50, 'Melbourne')
-        create_leisure(client,'Monthly Gym Membership', 61, 'Sydney')
-        create_leisure(client,'Monthly Gym Membership', 93, 'Zurich')
+    def test_leisure_get_abbreviation_country_none_city_none(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+        create_currency(client, mock_environment_variables)
+        create_location(client, mock_environment_variables)
+        create_leisure(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/leisure?abbreviation=AUD',
             headers = {"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
-        assert len(get_first_page_response_data['leisure data']) == 4
-        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][0]['price'] == 69.6
-        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 1
-        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Perth'
-        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][1]['price'] == 72.5
-        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 2
+        assert len(get_first_page_response_data['leisure data']) == 6
+        assert get_first_page_response_data['leisure data'][0]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][0]['price'] == 19.81
+        assert get_first_page_response_data['leisure data'][0]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][0]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][0]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][1]['activity'] == 'Cinema International Release'
+        assert get_first_page_response_data['leisure data'][1]['price'] == 22.97
+        assert get_first_page_response_data['leisure data'][1]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][1]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Melbourne'
-        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Monthly Gym Membership'
-        assert get_first_page_response_data['leisure data'][2]['price'] == 88.45
-        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 3
+        assert get_first_page_response_data['leisure data'][1]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][2]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][2]['price'] == 76.03
+        assert get_first_page_response_data['leisure data'][2]['location']['id'] == 1
         assert get_first_page_response_data['leisure data'][2]['location']['country'] == 'Australia'
-        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Sydney'
-        assert get_first_page_response_data['leisure data'][3]['price'] == 134.85
-        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 4
-        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Switzerland'
-        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Zurich'
-        assert get_first_page_response_data['count'] == 4
+        assert get_first_page_response_data['leisure data'][2]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['leisure data'][3]['activity'] == 'Gym Membership (Monthly)'
+        assert get_first_page_response_data['leisure data'][3]['price'] == 137.08
+        assert get_first_page_response_data['leisure data'][3]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][3]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][3]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][4]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][4]['price'] == 13.72
+        assert get_first_page_response_data['leisure data'][4]['location']['id'] == 2
+        assert get_first_page_response_data['leisure data'][4]['location']['country'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][4]['location']['city'] == 'Hong Kong'
+        assert get_first_page_response_data['leisure data'][5]['activity'] == 'Tennis Court Rent (1hr)'
+        assert get_first_page_response_data['leisure data'][5]['price'] == 23.13
+        assert get_first_page_response_data['leisure data'][5]['location']['id'] == 1
+        assert get_first_page_response_data['leisure data'][5]['location']['country'] == 'Australia'
+        assert get_first_page_response_data['leisure data'][5]['location']['city'] == 'Perth'
+        assert get_first_page_response_data['count'] == 6
         assert get_first_page_response_data['previous'] == None
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
