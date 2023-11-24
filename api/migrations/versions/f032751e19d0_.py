@@ -58,8 +58,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('childcare',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -68,20 +67,18 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('foodbeverage',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('item_category', sa.String(length=20), nullable=False),
     sa.Column('purchase_point', sa.String(length=20), nullable=False),
-    sa.Column('item', sa.String(length=30), nullable=False),
+    sa.Column('item', sa.String(length=50), nullable=False),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('homepurchase',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -91,8 +88,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('leisure',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -101,8 +97,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('rent',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -112,8 +107,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('transportation',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -122,8 +116,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('utilities',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -132,8 +125,7 @@ def upgrade():
     sa.Column('location_id', sa.Integer(), nullable=False),
     sa.Column('last_updated', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('location_id')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 
