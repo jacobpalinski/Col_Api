@@ -13,47 +13,47 @@ from unittest.mock import call
 from fixtures import *
 
 class TestUserResource:
-    def test_user_post_no_user_no_admin(self,client):
+    def test_user_post_no_user_no_admin(self, client):
         response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email' : TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Successfully registered'
         assert response.status_code == HttpStatus.created_201.value
         assert User.query.count() == 1
         assert User.query.first().admin == False
     
-    def test_user_post_no_user_with_admin(self,client):
+    def test_user_post_no_user_with_admin(self, client):
         response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email' : TEST_EMAIL,
             'password': TEST_PASSWORD,
             'admin': os.environ.get('ADMIN_KEY')
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Successfully registered with admin privileges'
         assert response.status_code == HttpStatus.created_201.value
         assert User.query.count() == 1
         assert User.query.first().admin == True
 
-    def test_user_post_exist_user(self,client):
+    def test_user_post_exist_user(self, client):
         response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email': TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
         second_post_response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email': TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
-        second_post_response_data = json.loads(second_post_response.get_data(as_text = True))
+        second_post_response_data = json.loads(second_post_response.get_data(as_text=True))
         assert second_post_response_data['message'] == 'User already exists. Please log in'
         assert second_post_response.status_code == HttpStatus.conflict_409.value
         assert User.query.count() == 1
@@ -61,12 +61,12 @@ class TestUserResource:
     @pytest.mark.parametrize('invalid_email', ['testgmail.com', 'test@gmailcom'])
     def test_user_post_invalid_schema_email(self, client, invalid_email):
         response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email': invalid_email,
             'password': TEST_PASSWORD
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Invalid email address'
         assert response.status_code == HttpStatus.bad_request_400.value
         assert User.query.count() == 0
@@ -76,161 +76,163 @@ class TestUserResource:
     'Apple321'])
     def test_user_post_invalid_password(self, client, invalid_password):
         response = client.post('/v1/auth/user',
-            headers = {'Content-Type' : 'application/json'},
-            data = json.dumps({
+            headers={'Content-Type' : 'application/json'},
+            data=json.dumps({
             'email': TEST_EMAIL,
             'password': invalid_password
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Invalid password'
         assert response.status_code == HttpStatus.unauthorized_401.value
         assert User.query.count() == 0
     
-    def test_user_get_valid_token(self,client,create_user,login):
+    def test_user_get_valid_token(self, client, create_user, login):
         get_response = client.get('/v1/auth/user',
-            headers = {"Content-Type": "application/json",
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
-        print(get_response_data)
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['details']['user_id'] == 1
         assert get_response_data['details']['email'] == TEST_EMAIL
         assert datetime.strptime(get_response_data['details']['creation_date'],'%Y-%m-%d %H:%M:%S.%f').strftime('%Y-%m-%d') == date.today().strftime('%Y-%m-%d')
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_user_get_no_token(self,client):
+    def test_user_get_no_token(self, client):
         get_response = client.get('/v1/auth/user',
-            headers = {"Content-Type": "application/json",
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer "})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['message'] == 'Provide a valid auth token'
         assert get_response.status_code == HttpStatus.forbidden_403.value
 
-    def test_user_get_invalid_token(self,client):
-        get_response = client.get('/v1/auth/user', headers = {"Content-Type": "application/json",
+    def test_user_get_invalid_token(self, client):
+        get_response = client.get('/v1/auth/user', headers={"Content-Type": "application/json",
             "Authorization": f"Bearer invalid token"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['message'] == 'Invalid token. Please log in again'
         assert get_response.status_code == HttpStatus.unauthorized_401.value
 
-    def test_user_get_expired_token(self,client,create_user,login):
+    def test_user_get_expired_token(self, client, create_user, login):
         time.sleep(6)
         get_response = client.get('/v1/auth/user',
-            headers = {"Content-Type": "application/json",
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['message'] == 'Signature expired. Please log in again'
         assert get_response.status_code == HttpStatus.unauthorized_401.value
 
-    def test_user_get_malformed_bearer_token(self,client,create_user,login):
+    def test_user_get_malformed_bearer_token(self, client, create_user, login):
         get_response = client.get('/v1/auth/user',
-            headers = {"Content-Type": "application/json",
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer{login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['message'] == 'Bearer token malformed'
         assert get_response.status_code == HttpStatus.unauthorized_401.value
 
 class TestLoginResource:
-    def test_login_valid_user(self,client,create_user):
+    def test_login_valid_user(self, client, create_user):
         response = client.post('/v1/auth/login',
-            headers = {'Content-Type' : 'application/json'},
+            headers={'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'successfully logged in'
         assert bool(response_data.get('auth_token')) == True
         assert response.status_code == HttpStatus.ok_200.value
 
-    def test_login_invalid_user(self,client):
+    def test_login_invalid_user(self, client):
         response = client.post('/v1/auth/login',
             headers = {'Content-Type' : 'application/json'},
             data = json.dumps({
             'email' : TEST_EMAIL,
             'password': TEST_PASSWORD
             }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'User does not exist'
         assert response.status_code == HttpStatus.notfound_404.value
 
 class TestLogoutResource:
-    def test_logout_valid_token(self,client,create_user,login):
-        response = client.post('/v1/auth/logout', headers = {"Content-Type": "application/json",
+    def test_logout_valid_token(self, client, create_user, login):
+        response = client.post('/v1/auth/logout', 
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         response_data = json.loads(response.get_data(as_text = True))
         assert response_data['message'] == 'Successfully logged out'
         assert response.status_code == HttpStatus.ok_200.value
         assert BlacklistToken.query.count() == 1
 
-    def test_logout_no_token(self,client):
+    def test_logout_no_token(self, client):
         response = client.post('/v1/auth/logout',
-        headers = {"Content-Type": "application/json",
+        headers={"Content-Type": "application/json",
         "Authorization": f"Bearer "})
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Provide a valid auth token'
         assert response.status_code == HttpStatus.forbidden_403.value
         assert BlacklistToken.query.count() == 0
 
-    def test_logout_invalid_token(self,client):
-        response = client.post('/v1/auth/logout', headers = {"Content-Type": "application/json",
+    def test_logout_invalid_token(self, client):
+        response = client.post('/v1/auth/logout', headers={"Content-Type": "application/json",
         "Authorization": f"Bearer invalid token"})
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Provide a valid auth token'
         assert response.status_code == HttpStatus.forbidden_403.value
         assert BlacklistToken.query.count() == 0
 
-    def test_logout_expired_token(self,client,create_user,login):
+    def test_logout_expired_token(self, client, create_user, login):
         time.sleep(6)
-        response = client.post('/v1/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/auth/logout', 
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Signature expired. Please log in again'
         assert response.status_code == HttpStatus.unauthorized_401.value
 
-    def test_logout_blacklisted_token(self,client,create_user,login):
-        blacklist_token = BlacklistToken(token = login['auth_token'])
+    def test_logout_blacklisted_token(self, client, create_user, login):
+        blacklist_token = BlacklistToken(token=login['auth_token'])
         blacklist_token.add(blacklist_token)
         assert BlacklistToken.query.count() == 1
-        response = client.post('/v1/auth/logout', headers = {"Content-Type": "application/json",
+        response = client.post('/v1/auth/logout', 
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Provide a valid auth token'
         assert response.status_code == HttpStatus.forbidden_403.value
         assert BlacklistToken.query.count() == 1
 
-    def test_logout_malformed_token(self,client,create_user,login):
-        response = client.post('/v1/auth/logout', headers = {"Content-Type": "application/json",
+    def test_logout_malformed_token(self, client, create_user, login):
+        response = client.post('/v1/auth/logout', headers={"Content-Type": "application/json",
         "Authorization": f"Bearer{login['auth_token']}"})
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Bearer token malformed'
         assert response.status_code == HttpStatus.unauthorized_401.value
         assert BlacklistToken.query.count() == 0
 
 class TestResetPasswordResource:
-    def test_reset_password_exist_user(self,client,create_user):
+    def test_reset_password_exist_user(self, client, create_user):
         response = client.post('/v1/auth/user/password_reset',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
+        headers={'Content-Type' : 'application/json'},
+        data=json.dumps({
         'email' : TEST_EMAIL,
         'password': TEST_PASSWORD
         }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Password reset successful'
         assert response.status_code == HttpStatus.ok_200.value
 
-    def test_reset_password_no_user(self,client):
+    def test_reset_password_no_user(self, client):
         response = client.post('/v1/auth/user/password_reset',
-        headers = {'Content-Type' : 'application/json'},
-        data = json.dumps({
+        headers={'Content-Type' : 'application/json'},
+        data=json.dumps({
         'email' : TEST_EMAIL,
         'password': TEST_PASSWORD
         }))
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'User does not exist'
         assert response.status_code == HttpStatus.unauthorized_401.value
 
 class TestCurrencyResource:
-    def test_currency_get_with_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+    def test_currency_get_with_id(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         get_response = client.get('/v1/currencies/1',
         headers = {"Content-Type": "application/json",
@@ -240,71 +242,71 @@ class TestCurrencyResource:
         assert get_response_data['usd_to_local_exchange_rate'] == 1.55
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_currency_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+    def test_currency_get_notexist_id(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         get_response = client.get('/v1/currencies/5',
-        headers = {"Content-Type": "application/json",
+        headers={"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
 
-    def test_currency_delete(self,client, mock_environment_variables, mock_boto3_s3):
+    def test_currency_delete(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         delete_response = client.delete('/v1/currencies/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
-        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
+        delete_response_data = json.loads(delete_response.get_data(as_text=True))
         assert delete_response_data['message'] == 'Currency id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
         assert Currency.query.count() == 3
 
-    def test_currency_delete_no_id_exist(self,client):
+    def test_currency_delete_no_id_exist(self, client):
         delete_response = client.delete('/v1/currencies/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Currency.query.count() == 0
     
-    def test_currency_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+    def test_currency_delete_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         delete_response = client.delete('/v1/currencies/1',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({}))
-        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({}))
+        delete_response_data = json.loads(delete_response.get_data(as_text=True))
         assert delete_response.status_code == HttpStatus.forbidden_403.value
         assert delete_response_data['message'] == 'Admin privileges needed'
 
 class TestCurrencyListResource:
     def test_currency_post_currency_no_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = client.post('/v1/currencies',
-        headers = {'Content-Type': 'application/json'})
-        response_data = json.loads(response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'})
+        response_data=json.loads(response.get_data(as_text=True))
         assert response.status_code == HttpStatus.bad_request_400.value
         assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
         assert Currency.query.count() == 0
 
     def test_currency_post_currency_incorrect_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = client.post('/v1/currencies',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({'admin': 'incorrectadmin'}))
-        response_data = json.loads(response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({'admin': 'incorrectadmin'}))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response.status_code == HttpStatus.forbidden_403.value
         assert response_data['message'] == 'Admin privileges needed'
         assert Currency.query.count() == 0
     
     def test_currency_post_currency_with_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = create_currency(client, mock_environment_variables)
-        response_data = json.loads(response.get_data(as_text = True))
-        mock_boto3_s3.get_object.assert_called_once_with(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}')
+        response_data = json.loads(response.get_data(as_text=True))
+        mock_boto3_s3.get_object.assert_called_once_with(Bucket='test-bucket-transformed', Key=f'locations_with_currencies{current_date}')
         assert response.status_code == HttpStatus.created_201.value
         assert response_data['message'] == 'Successfully added 4 currencies'
         assert Currency.query.count() == 4
 
     def test_currency_post_currency_already_exists(self, client, mock_boto3_s3, mock_environment_variables, current_date):
-        expected_get_object_calls = [call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}'),
-        call(Bucket = 'test-bucket-transformed', Key = f'locations_with_currencies{current_date}')]
+        expected_get_object_calls = [call(Bucket='test-bucket-transformed', Key=f'locations_with_currencies{current_date}'),
+        call(Bucket='test-bucket-transformed', Key=f'locations_with_currencies{current_date}')]
         response = create_currency(client, mock_environment_variables)
         second_response = create_currency(client, mock_environment_variables)
-        response_data = json.loads(second_response.get_data(as_text = True))
+        response_data = json.loads(second_response.get_data(as_text=True))
         assert mock_boto3_s3.get_object.call_count == 2
         assert mock_boto3_s3.get_object.call_args_list == expected_get_object_calls
         assert second_response.status_code == HttpStatus.created_201.value
@@ -314,13 +316,13 @@ class TestCurrencyListResource:
     def test_currency_patch_updated_data(self, client, create_user, login, mock_boto3_s3, mock_boto3_s3_patch_modified, mock_environment_variables, current_date):
         create_currency(client, mock_environment_variables)
         patch_response = currency_patch_updated_data(client, mock_environment_variables, mock_boto3_s3_patch_modified)
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        patch_response_data = json.loads(patch_response.get_data(as_text=True))
         assert patch_response.status_code == HttpStatus.ok_200.value
         assert patch_response_data['message'] == 'usd_to_local_exchange_rate was successfully updated for 1 currencies'
         get_response = client.get('/v1/currencies',
-        headers = {'Content-Type': 'application/json',
+        headers={'Content-Type': 'application/json',
         "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response.status_code == HttpStatus.ok_200.value
         assert len(get_response_data['currencies']) == 4
         assert get_response_data['currencies'][0]['abbreviation'] == 'AUD'
@@ -335,17 +337,17 @@ class TestCurrencyListResource:
     def test_currency_patch_no_updated_data(self, client, create_user, login, mock_boto3_s3, mock_environment_variables, current_date):
         create_currency(client, mock_environment_variables)
         patch_response = client.patch('/v1/currencies',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({
         'admin': os.environ.get('ADMIN_KEY')
         }))
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        patch_response_data = json.loads(patch_response.get_data(as_text=True))
         assert patch_response.status_code == HttpStatus.ok_200.value
         assert patch_response_data['message'] == 'usd_to_local_exchange_rate was successfully updated for 0 currencies'
         get_response = client.get('/v1/currencies',
-        headers = {'Content-Type': 'application/json',
+        headers={'Content-Type': 'application/json',
         "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response.status_code == HttpStatus.ok_200.value
         assert len(get_response_data['currencies']) == 4
         assert get_response_data['currencies'][0]['abbreviation'] == 'AUD'
@@ -360,26 +362,26 @@ class TestCurrencyListResource:
     def test_currency_patch_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         patch_response = client.patch('/v1/currencies',
-        headers = {'Content-Type': 'application/json'})
-        patch_response_data = json.loads(patch_response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'})
+        patch_response_data = json.loads(patch_response.get_data(as_text=True))
         assert patch_response.status_code == HttpStatus.bad_request_400.value
         assert patch_response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
     
     def test_currency_patch_incorrect_admin(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         response = client.patch('/v1/currencies',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({'admin': 'incorrectadmin'}))
-        patch_response_data = json.loads(response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({'admin': 'incorrectadmin'}))
+        patch_response_data = json.loads(response.get_data(as_text=True))
         assert response.status_code == HttpStatus.forbidden_403.value
         assert patch_response_data['message'] == 'Admin privileges needed'
     
-    def test_currency_get_without_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+    def test_currency_get_without_id(self, client, create_user, login, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         get_first_page_response = client.get('/v1/currencies',
         headers = {"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
-        get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text = True))
+        get_first_page_response_data = json.loads(get_first_page_response.get_data(as_text=True))
         assert len(get_first_page_response_data['currencies']) == 4
         assert get_first_page_response_data['currencies'][0]['abbreviation'] == 'AUD'
         assert get_first_page_response_data['currencies'][0]['usd_to_local_exchange_rate'] == 1.55
@@ -394,9 +396,9 @@ class TestCurrencyListResource:
         assert get_first_page_response_data['next'] == None
         assert get_first_page_response.status_code == HttpStatus.ok_200.value
         get_second_page_response = client.get('/v1/currencies?page=2',
-        headers = {"Content-Type": "application/json",
+        headers={"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
-        get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text = True))
+        get_second_page_response_data = json.loads(get_second_page_response.get_data(as_text=True))
         assert get_second_page_response_data['previous'] != None
         assert get_second_page_response_data['previous'] == 'http://127.0.0.1/v1/currencies?page=1'
         assert get_second_page_response_data['next'] == None
@@ -408,20 +410,20 @@ class TestLocationResource:
         create_currency(client, mock_environment_variables)
         create_location(client, mock_environment_variables)
         get_response = client.get('/v1/locations/1',
-        headers = {"Content-Type": "application/json",
+        headers={"Content-Type": "application/json",
         "Authorization": f"Bearer {login['auth_token']}"})
-        get_response_data = json.loads(get_response.get_data(as_text = True))
+        get_response_data = json.loads(get_response.get_data(as_text=True))
         assert get_response_data['country'] == 'Australia'
         assert get_response_data['city'] == 'Perth'
         assert get_response_data['currency']['id'] == 1
         assert get_response_data['currency']['abbreviation'] == 'AUD'
         assert get_response.status_code == HttpStatus.ok_200.value
 
-    def test_location_get_notexist_id(self,client,create_user,login, mock_environment_variables, mock_boto3_s3):
+    def test_location_get_notexist_id(self,client, create_user, login, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         create_location(client, mock_environment_variables)
         get_response = client.get('/v1/locations/5',
-            headers = {"Content-Type": "application/json",
+            headers={"Content-Type": "application/json",
             "Authorization": f"Bearer {login['auth_token']}"})
         assert get_response.status_code == HttpStatus.notfound_404.value
     
@@ -429,25 +431,25 @@ class TestLocationResource:
         create_currency(client, mock_environment_variables)
         create_location(client, mock_environment_variables)
         delete_response = client.delete('/v1/locations/1',
-        headers = {'Content-Type': 'application/json'},
+        headers={'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
-        delete_response_data = json.loads(delete_response.get_data(as_text = True))
+        delete_response_data = json.loads(delete_response.get_data(as_text=True))
         assert delete_response_data['message'] == 'Location id successfully deleted'
         assert delete_response.status_code == HttpStatus.ok_200.value
         assert Location.query.count() == 3
 
-    def test_location_delete_no_id_exist(self,client):
+    def test_location_delete_no_id_exist(self, client):
         delete_response = client.delete('/v1/locations/1',
-        headers = {'Content-Type': 'application/json'},
+        headers={'Content-Type': 'application/json'},
         data = json.dumps({'admin': os.environ.get('ADMIN_KEY')}))
         assert delete_response.status_code == HttpStatus.notfound_404.value
         assert Location.query.count() == 0
     
-    def test_location_delete_no_admin(self,client, mock_environment_variables, mock_boto3_s3):
+    def test_location_delete_no_admin(self, client, mock_environment_variables, mock_boto3_s3):
         create_currency(client, mock_environment_variables)
         create_location(client, mock_environment_variables)
         delete_response = client.delete('/v1/locations/1',
-        headers = {'Content-Type': 'application/json'},
+        headers={'Content-Type': 'application/json'},
         data = json.dumps({}))
         delete_response_data = json.loads(delete_response.get_data(as_text = True))
         assert delete_response.status_code == HttpStatus.forbidden_403.value
@@ -456,23 +458,23 @@ class TestLocationResource:
 class TestLocationListResource:
     def test_location_post_location_currency_notexist(self, client, mock_environment_variables, mock_boto3_s3):
         response = create_location(client, mock_environment_variables)
-        response_data = json.loads(response.get_data(as_text = True))
+        response_data = json.loads(response.get_data(as_text=True))
         assert response_data['message'] == 'Specified currency doesnt exist in /currencies/ API endpoint'
         assert response.status_code == HttpStatus.notfound_404.value
         assert Location.query.count() == 0
 
     def test_location_post_location_no_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = client.post('/v1/locations',
-        headers = {'Content-Type': 'application/json'})
-        response_data = json.loads(response.get_data(as_text = True))
+        headers={'Content-Type': 'application/json'})
+        response_data = json.loads(response.get_data(as_text=True))
         assert response.status_code == HttpStatus.bad_request_400.value
         assert response_data['message'] == 'The browser (or proxy) sent a request that this server could not understand.'
         assert Location.query.count() == 0
     
     def test_location_post_location_incorrect_admin(self, client, mock_boto3_s3, mock_environment_variables, current_date):
         response = client.post('/v1/locations',
-        headers = {'Content-Type': 'application/json'},
-        data = json.dumps({'admin': 'incorrectadmin'}))
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps({'admin': 'incorrectadmin'}))
         response_data = json.loads(response.get_data(as_text = True))
         assert response.status_code == HttpStatus.forbidden_403.value
         assert response_data['message'] == 'Admin privileges needed'
@@ -481,7 +483,7 @@ class TestLocationListResource:
     def test_location_post_location_with_admin(self,client, create_user, login, mock_boto3_s3, mock_environment_variables, current_date):
         create_currency(client, mock_environment_variables)
         post_response = create_location(client, mock_environment_variables)
-        post_response_data = json.loads(post_response.get_data(as_text = True))
+        post_response_data = json.loads(post_response.get_data(as_text=True))
         assert post_response.status_code == HttpStatus.created_201.value
         assert post_response_data['message'] == 'Successfully added 4 locations'
         assert Location.query.count() == 4

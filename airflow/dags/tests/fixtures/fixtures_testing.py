@@ -29,7 +29,7 @@ def mock_boto3_s3(mocker, monkeypatch, current_date):
         {'Country': 'New Zealand', 'City': 'Auckland'}, {'Country': 'Hong Kong', 'City': 'Hong Kong'}, {'Country': 'Paraguay', 'City': 'Asuncion'}]).encode('utf-8')))},
         f'currency_conversion_rates{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'Abbreviation': 'AUD', 'USD_to_local': '1.55'},
         {'Abbreviation': 'NZD', 'USD_to_local': '1.69'}, {'Abbreviation': 'HKD', 'USD_to_local': '7.82'}, {'Abbreviation': 'PYG', 'USD_to_local': '7,258.93'}]).encode('utf-8')))},
-        f'livingcost_price_info{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value = json.dumps([{'City': 'Perth', 'Item': 'Lunch', 'Price': '$15.4'},
+        f'livingcost_price_info{current_date}': {'Body': mocker.MagicMock(read=mocker.MagicMock(return_value=json.dumps([{'City': 'Perth', 'Item': 'Lunch', 'Price': '$15.4'},
         {'City': 'Perth', 'Item': 'Coke (0.5L)', 'Price': '$2.95'},
         {'City': 'Perth', 'Item': 'Electricity, Heating, Cooling, Water and Garbage (1 Person)', 'Price': '$124' },
         {'City': 'Perth', 'Item': 'Electricity, Heating, Cooling, Water and Garbage (Family)', 'Price': '$216'},
@@ -228,19 +228,19 @@ def mock_boto3_s3(mocker, monkeypatch, current_date):
 
 @pytest.fixture
 def mock_currency_conversion_rates_html():
-    with open('mock_html/numbeo_currency_conversion.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_currency_conversion.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_locations_with_cities_html():
-    with open('mock_html/numbeo_country_page_with_cities.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_country_page_with_cities.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_locations_without_cities_html():
-    with open('mock_html/numbeo_country_page_without_cities.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_country_page_without_cities.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
@@ -256,73 +256,73 @@ def mock_countries_without_cities():
 
 @pytest.fixture
 def mock_livingcost_australia_html():
-    with open('mock_html/livingcost_australia.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_australia.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_new_zealand_html():
-    with open('mock_html/livingcost_new_zealand.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_new_zealand.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_china_html():
-    with open('mock_html/livingcost_china.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_china.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_paraguay_html():
-    with open('mock_html/livingcost_paraguay.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_paraguay.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_prices_perth_html():
-    with open('mock_html/livingcost_prices_perth.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_prices_perth.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_prices_auckland_html():
-    with open('mock_html/livingcost_prices_auckland.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_prices_auckland.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_prices_hong_kong_html():
-    with open('mock_html/livingcost_prices_hong_kong.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_prices_hong_kong.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_livingcost_prices_asuncion_html():
-    with open('mock_html/livingcost_prices_asuncion.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/livingcost_prices_asuncion.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_numbeo_prices_perth_html():
-    with open('mock_html/numbeo_prices_perth.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_prices_perth.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_numbeo_prices_auckland_html():
-    with open('mock_html/numbeo_prices_auckland.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_prices_auckland.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_numbeo_prices_hong_kong_html():
-    with open('mock_html/numbeo_prices_hong_kong.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_prices_hong_kong.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 
 @pytest.fixture
 def mock_numbeo_prices_asuncion_html():
-    with open('mock_html/numbeo_prices_asuncion.html', encoding = 'utf-8') as html_content:
+    with open('mock_html/numbeo_prices_asuncion.html', encoding='utf-8') as html_content:
         html = html_content.read()
         yield html
 

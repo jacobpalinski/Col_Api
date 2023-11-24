@@ -5,10 +5,10 @@ import botocore
 from flask import Blueprint, request, jsonify, make_response
 from flask_restful import Api, Resource
 from httpstatus import HttpStatus
-from models import (User,UserSchema,BlacklistToken,Currency,CurrencySchema,Location,LocationSchema,
-HomePurchase,HomePurchaseSchema,Rent,RentSchema,Utilities,UtilitiesSchema,
-Transportation,TransportationSchema,FoodBeverage, FoodBeverageSchema,
-Childcare,ChildcareSchema,Apparel, ApparelSchema, Leisure,LeisureSchema, INCLUDE)
+from models import (User, UserSchema, BlacklistToken, Currency, CurrencySchema, Location, LocationSchema,
+HomePurchase, HomePurchaseSchema, Rent, RentSchema, Utilities, UtilitiesSchema,
+Transportation, TransportationSchema, FoodBeverage, FoodBeverageSchema,
+Childcare, ChildcareSchema, Apparel, ApparelSchema, Leisure, LeisureSchema, INCLUDE)
 from helpers import *
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func, Float
@@ -52,8 +52,8 @@ class UserResource(Resource):
             auth_token = ''
         if auth_token:
             resp = User.decode_auth_token(auth_token)
-            if not isinstance(resp,str):
-                user = User.query.filter_by(id = resp).first()
+            if not isinstance(resp, str):
+                user = User.query.filter_by(id=resp).first()
                 response = {'details': {
                     'user_id': user.id,
                     'email' : user.email,
@@ -72,15 +72,15 @@ class UserResource(Resource):
     def post(self):
         user_register_dict = request.get_json()
         try:
-            user_schema.load(user_register_dict, unknown = INCLUDE)
+            user_schema.load(user_register_dict, unknown=INCLUDE)
         except ValidationError:
             response = {'message': 'Invalid email address'}
             return response, HttpStatus.bad_request_400.value
 
-        user = User.query.filter_by(email = user_register_dict['email']).first()
+        user = User.query.filter_by(email=user_register_dict['email']).first()
         if not user and not user_register_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                user = User(email = user_register_dict['email'])
+                user = User(email=user_register_dict['email'])
                 user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
                 response = {'message': 'Successfully registered'}
@@ -92,7 +92,7 @@ class UserResource(Resource):
         
         elif not user and user_register_dict['admin'] == os.environ.get('ADMIN_KEY'):
             try:
-                user = User(email = user_register_dict['email'], admin = True)
+                user = User(email=user_register_dict['email'], admin=True)
                 user.check_password_strength_and_hash_if_ok(user_register_dict['password'])
                 user.add(user)
                 response = {'message': 'Successfully registered with admin privileges'}
@@ -118,7 +118,7 @@ class LoginResource(Resource):
             return response, HttpStatus.bad_request_400.value
 
         try:
-            user = User.query.filter_by(email = user_dict['email']).first()
+            user = User.query.filter_by(email=user_dict['email']).first()
             if user and user.verify_password(user_dict['password']):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
@@ -150,8 +150,8 @@ class LogoutResource(Resource):
             auth_token = ''
         if auth_token:
             resp = User.decode_auth_token(auth_token)
-            if not isinstance(resp,str):
-                blacklist_token = BlacklistToken(token = auth_token)
+            if not isinstance(resp, str):
+                blacklist_token = BlacklistToken(token=auth_token)
                 try:
                     blacklist_token.add(blacklist_token)
                     response = {'message' : 'Successfully logged out'}
@@ -178,7 +178,7 @@ class ResetPasswordResource(Resource):
             return response, HttpStatus.bad_request_400.value
         
         try:
-            user = User.query.filter_by(email = reset_password_dict['email']).first()
+            user = User.query.filter_by(email=reset_password_dict['email']).first()
             if user:
                 user.check_password_strength_and_hash_if_ok(reset_password_dict['password'])
                 response = {'message': 'Password reset successful'}
@@ -240,7 +240,7 @@ class CurrencyListResource(Resource):
         
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+                locations_with_currencies_data = get_data(file_prefix='locations_with_currencies')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -249,11 +249,11 @@ class CurrencyListResource(Resource):
             currencies_added = 0
 
             for data in locations_with_currencies_data:
-                if not Currency.is_unique(abbreviation = data['Abbreviation']):
+                if not Currency.is_unique(abbreviation=data['Abbreviation']):
                     continue
                 try:
-                    currency = Currency(abbreviation = data['Abbreviation'],
-                    usd_to_local_exchange_rate = data['USD_to_local'])
+                    currency = Currency(abbreviation=data['Abbreviation'],
+                    usd_to_local_exchange_rate=data['USD_to_local'])
                     currency.add(currency)
                     currencies_added += 1
                     query = Currency.query.get(currency.id)
@@ -272,11 +272,11 @@ class CurrencyListResource(Resource):
     # Updates abbreviation and exchange rate for abbreviation with modified exchange rates
     def patch(self):
         
-        currency_dict = request.get_json(force = True)
+        currency_dict = request.get_json(force=True)
 
         if currency_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+                locations_with_currencies_data = get_data(file_prefix='locations_with_currencies')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -286,7 +286,7 @@ class CurrencyListResource(Resource):
 
             for data in locations_with_currencies_data:
                 try:
-                    currency = Currency.query.filter_by(abbreviation = data['Abbreviation']).first()
+                    currency = Currency.query.filter_by(abbreviation=data['Abbreviation']).first()
                     if currency == None:
                         continue
                     elif data['USD_to_local'] != currency.usd_to_local_exchange_rate:
@@ -351,7 +351,7 @@ class LocationListResource(Resource):
         location_dict = request.get_json()
         if location_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                locations_with_currencies_data = get_data(file_prefix = 'locations_with_currencies')
+                locations_with_currencies_data = get_data(file_prefix='locations_with_currencies')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -360,17 +360,17 @@ class LocationListResource(Resource):
             locations_added = 0
 
             for data in locations_with_currencies_data:
-                if not Location.is_unique(country = data['Country'], city = data['City']):
+                if not Location.is_unique(country=data['Country'], city=data['City']):
                     continue
                 try:
                     abbreviation = data['Abbreviation']
-                    currency = Currency.query.filter_by(abbreviation = abbreviation).first()
+                    currency = Currency.query.filter_by(abbreviation=abbreviation).first()
 
                     if currency is None:
                         response = {'message': 'Specified currency doesnt exist in /currencies/ API endpoint'}
                         return response, HttpStatus.notfound_404.value
                 
-                    location = Location(country = data['Country'], city = data['City'], currency = currency)
+                    location = Location(country=data['Country'], city=data['City'], currency=currency)
                     location.add(location)
                     locations_added += 1
                     query = Location.query.get(location.id)
@@ -438,7 +438,7 @@ class HomePurchaseListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many = True)
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many=True)
                     for result in dumped_home_purchase:
                         result['price_per_sqm'] = round(result['price_per_sqm'] * conversion, 2)
                     return dumped_home_purchase
@@ -462,16 +462,16 @@ class HomePurchaseListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many = True)
+                    dumped_home_purchase = home_purchase_schema.dump(qry_res, many=True)
                     return dumped_home_purchase
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.homepurchaselistresource',
-                key_name = 'home purchase data',   
-                schema = home_purchase_schema
+                query=qry,
+                resource_for_url='cost_of_living.homepurchaselistresource',
+                key_name='home purchase data',   
+                schema=home_purchase_schema
                 )
                 dumped_home_purchase = pagination_helper.paginate_query()
                 return dumped_home_purchase
@@ -482,7 +482,7 @@ class HomePurchaseListResource(Resource):
 
         if home_purchase_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                homepurchase_data = get_data(file_prefix = 'homepurchase')
+                homepurchase_data = get_data(file_prefix='homepurchase')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -492,16 +492,16 @@ class HomePurchaseListResource(Resource):
 
             for data in homepurchase_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not HomePurchase.is_unique(location_id = location.id, property_location = data['Property Location']):
+                    if not HomePurchase.is_unique(location_id=location.id, property_location=data['Property Location']):
                         continue
                     try:
-                        home_purchase = HomePurchase(property_location = data['Property Location'], 
-                        price_per_sqm = data['Price per Square Meter'], 
-                        mortgage_interest = data['Mortgage Interest'],
-                        location = location)
+                        home_purchase = HomePurchase(property_location=data['Property Location'], 
+                        price_per_sqm=data['Price per Square Meter'], 
+                        mortgage_interest=data['Mortgage Interest'],
+                        location=location)
                         home_purchase.add(home_purchase)
                         homepurchase_added += 1
                         query = HomePurchase.query.get(home_purchase.id)
@@ -541,10 +541,10 @@ class HomePurchaseListResource(Resource):
                 # Check if homepurchase has been updated
                 has_been_updated = False
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    homepurchase = HomePurchase.query.filter_by(location_id = location.id, property_location = data['Property Location']).first()
+                    homepurchase = HomePurchase.query.filter_by(location_id=location.id, property_location=data['Property Location']).first()
                     if homepurchase == None:
                         continue
                     if data['Price per Square Meter'] != homepurchase.price_per_sqm:
@@ -619,7 +619,7 @@ class RentListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_rent = rent_schema.dump(qry_res, many = True)
+                    dumped_rent = rent_schema.dump(qry_res, many=True)
                     for result in dumped_rent:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_rent
@@ -627,10 +627,10 @@ class RentListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.rentlistresource',
-                    key_name = 'rental data',   
-                    schema = rent_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.rentlistresource',
+                    key_name='rental data',   
+                    schema=rent_schema
                     )
                     dumped_rent = pagination_helper.paginate_query()
                     for result in dumped_rent['rental data']:
@@ -643,16 +643,16 @@ class RentListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_rent = rent_schema.dump(qry_res, many = True)
+                    dumped_rent = rent_schema.dump(qry_res, many=True)
                     return dumped_rent
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.rentlistresource',
-                key_name = 'rental data',   
-                schema = rent_schema
+                query=qry,
+                resource_for_url='cost_of_living.rentlistresource',
+                key_name='rental data',   
+                schema=rent_schema
                 )
                 dumped_rent = pagination_helper.paginate_query()
                 return dumped_rent
@@ -663,7 +663,7 @@ class RentListResource(Resource):
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                rent_data = get_data(file_prefix = 'rent')
+                rent_data = get_data(file_prefix='rent')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -676,13 +676,13 @@ class RentListResource(Resource):
                 location = Location.query.filter_by(city = location_city).first()
 
                 if location:
-                    if not Rent.is_unique(location_id = location.id, property_location = data['Property Location'], bedrooms = data['Bedrooms']):
+                    if not Rent.is_unique(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']):
                         continue
                     try:
-                        rent = Rent(property_location = data['Property Location'], 
-                        bedrooms = data['Bedrooms'], 
-                        monthly_price = data['Monthly Price'],
-                        location = location)
+                        rent = Rent(property_location=data['Property Location'], 
+                        bedrooms=data['Bedrooms'], 
+                        monthly_price=data['Monthly Price'],
+                        location=location)
                         rent.add(rent)
                         rent_added += 1
                         query = Rent.query.get(rent.id)
@@ -706,11 +706,11 @@ class RentListResource(Resource):
     # Updates monthly price for specified record
     def patch(self):
         
-        rent_dict = request.get_json(force = True)
+        rent_dict = request.get_json(force=True)
 
         if rent_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                rent_data = get_data(file_prefix = 'rent')
+                rent_data = get_data(file_prefix='rent')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -720,10 +720,10 @@ class RentListResource(Resource):
 
             for data in rent_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    rent = Rent.query.filter_by(location_id = location.id, property_location = data['Property Location'], bedrooms = data['Bedrooms']).first()
+                    rent = Rent.query.filter_by(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']).first()
                     if rent == None:
                         continue
                     elif data['Monthly Price'] != rent.monthly_price:
@@ -791,7 +791,7 @@ class UtilitiesListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_utilities = utilities_schema.dump(qry_res, many = True)
+                    dumped_utilities = utilities_schema.dump(qry_res, many=True)
                     for result in dumped_utilities:
                         result['monthly_price'] = round(result['monthly_price'] * conversion,2)
                     return dumped_utilities
@@ -799,10 +799,10 @@ class UtilitiesListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.utilitieslistresource',
-                    key_name = 'utilities',   
-                    schema = utilities_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.utilitieslistresource',
+                    key_name='utilities',   
+                    schema=utilities_schema
                     )
                     dumped_utilities = pagination_helper.paginate_query()
                     for result in dumped_utilities['utilities']:
@@ -815,16 +815,16 @@ class UtilitiesListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_utilities = utilities_schema.dump(qry_res, many = True)
+                    dumped_utilities = utilities_schema.dump(qry_res, many=True)
                     return dumped_utilities
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.utilitieslistresource',
-                key_name = 'utilities',   
-                schema = utilities_schema
+                query=qry,
+                resource_for_url='cost_of_living.utilitieslistresource',
+                key_name='utilities',   
+                schema=utilities_schema
                 )
                 dumped_utilities = pagination_helper.paginate_query()
                 return dumped_utilities
@@ -835,7 +835,7 @@ class UtilitiesListResource(Resource):
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                utilities_data = get_data(file_prefix = 'utilities')
+                utilities_data = get_data(file_prefix='utilities')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -845,15 +845,15 @@ class UtilitiesListResource(Resource):
 
             for data in utilities_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not Utilities.is_unique(location_id = location.id, utility = data['Utility']):
+                    if not Utilities.is_unique(location_id=location.id, utility=data['Utility']):
                         continue
                     try:
-                        utilities = Utilities(utility = data['Utility'], 
-                        monthly_price = data['Monthly Price'],
-                        location = location)
+                        utilities = Utilities(utility=data['Utility'], 
+                        monthly_price=data['Monthly Price'],
+                        location=location)
                         utilities.add(utilities)
                         utilities_added += 1
                         query = Utilities.query.get(utilities.id)
@@ -877,11 +877,11 @@ class UtilitiesListResource(Resource):
     # Updates monthly price for specified record
     def patch(self):
         
-        utilities_dict = request.get_json(force = True)
+        utilities_dict = request.get_json(force=True)
 
         if utilities_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                utilities_data = get_data(file_prefix = 'utilities')
+                utilities_data = get_data(file_prefix='utilities')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -891,10 +891,10 @@ class UtilitiesListResource(Resource):
 
             for data in utilities_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    utilities = Utilities.query.filter_by(location_id = location.id, utility = data['Utility']).first()
+                    utilities = Utilities.query.filter_by(location_id=location.id, utility=data['Utility']).first()
                     if utilities == None:
                         continue
                     elif data['Utility'] != utilities.monthly_price:
@@ -962,7 +962,7 @@ class TransportationListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_transportation = transportation_schema.dump(qry_res, many = True)
+                    dumped_transportation = transportation_schema.dump(qry_res, many=True)
                     for result in dumped_transportation:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_transportation
@@ -970,10 +970,10 @@ class TransportationListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.transportationlistresource',
-                    key_name = 'transportation data',   
-                    schema = transportation_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.transportationlistresource',
+                    key_name='transportation data',   
+                    schema=transportation_schema
                     )
                     dumped_transportation = pagination_helper.paginate_query()
                     for result in dumped_transportation['transportation data']:
@@ -986,16 +986,16 @@ class TransportationListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_transportation = transportation_schema.dump(qry_res, many = True)
+                    dumped_transportation = transportation_schema.dump(qry_res, many=True)
                     return dumped_transportation
                 
                 qry_res=qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.transportationlistresource',
-                key_name = 'transportation data',   
-                schema = transportation_schema
+                query=qry,
+                resource_for_url='cost_of_living.transportationlistresource',
+                key_name='transportation data',   
+                schema=transportation_schema
                 )
                 dumped_transportation = pagination_helper.paginate_query()
                 return dumped_transportation
@@ -1006,7 +1006,7 @@ class TransportationListResource(Resource):
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                transportation_data = get_data(file_prefix = 'transportation')
+                transportation_data = get_data(file_prefix='transportation')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1016,15 +1016,15 @@ class TransportationListResource(Resource):
 
             for data in transportation_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not Transportation.is_unique(location_id = location.id, type = data['Type']):
+                    if not Transportation.is_unique(location_id=location.id, type=data['Type']):
                         continue
                     try:
-                        transportation = Transportation(type = data['Type'], 
-                        price = data['Price'],
-                        location = location)
+                        transportation = Transportation(type=data['Type'], 
+                        price=data['Price'],
+                        location=location)
                         transportation.add(transportation)
                         transportation_added += 1
                         query = Transportation.query.get(transportation.id)
@@ -1048,11 +1048,11 @@ class TransportationListResource(Resource):
     # Updates price for specified record
     def patch(self):
         
-        transportation_dict = request.get_json(force = True)
+        transportation_dict = request.get_json(force=True)
 
         if transportation_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                transportation_data = get_data(file_prefix = 'transportation')
+                transportation_data = get_data(file_prefix='transportation')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1062,10 +1062,10 @@ class TransportationListResource(Resource):
 
             for data in transportation_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    transportation = Transportation.query.filter_by(location_id = location.id, type = data['Type']).first()
+                    transportation = Transportation.query.filter_by(location_id=location.id, type=data['Type']).first()
                     if transportation == None:
                         continue
                     elif data['Price'] != transportation.price:
@@ -1135,7 +1135,7 @@ class FoodBeverageListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many = True)
+                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many=True)
                     for result in dumped_food_and_beverage:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_food_and_beverage
@@ -1143,10 +1143,10 @@ class FoodBeverageListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.foodbeveragelistresource',
-                    key_name = 'food and beverage data',   
-                    schema = foodbeverage_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.foodbeveragelistresource',
+                    key_name='food and beverage data',   
+                    schema=foodbeverage_schema
                     )
                     dumped_food_and_beverage = pagination_helper.paginate_query()
                     for result in dumped_food_and_beverage['food and beverage data']:
@@ -1159,16 +1159,16 @@ class FoodBeverageListResource(Resource):
                 if city:
                     qry= qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many = True)
+                    dumped_food_and_beverage = foodbeverage_schema.dump(qry_res, many=True)
                     return dumped_food_and_beverage
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.foodbeveragelistresource',
-                key_name = 'food and beverage data',   
-                schema = foodbeverage_schema
+                query=qry,
+                resource_for_url='cost_of_living.foodbeveragelistresource',
+                key_name='food and beverage data',   
+                schema=foodbeverage_schema
                 )
                 dumped_food_and_beverage = pagination_helper.paginate_query()
                 return dumped_food_and_beverage
@@ -1179,7 +1179,7 @@ class FoodBeverageListResource(Resource):
 
         if foodbeverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                foodbeverage_data = get_data(file_prefix = 'foodbeverage')
+                foodbeverage_data = get_data(file_prefix='foodbeverage')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1189,18 +1189,18 @@ class FoodBeverageListResource(Resource):
 
             for data in foodbeverage_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not FoodBeverage.is_unique(location_id = location.id, item_category = data['Item Category'],
-                    purchase_point = data['Purchase Point'], item = data['Item']):
+                    if not FoodBeverage.is_unique(location_id=location.id, item_category=data['Item Category'],
+                    purchase_point=data['Purchase Point'], item=data['Item']):
                         continue
                     try:
-                        foodbeverage = FoodBeverage(item_category = data['Item Category'], 
-                        purchase_point = data['Purchase Point'],
-                        item = data['Item'],
-                        price = data['Price'],
-                        location = location)
+                        foodbeverage = FoodBeverage(item_category=data['Item Category'], 
+                        purchase_point=data['Purchase Point'],
+                        item=data['Item'],
+                        price=data['Price'],
+                        location=location)
                         foodbeverage.add(foodbeverage)
                         foodbeverage_added += 1
                         query = FoodBeverage.query.get(foodbeverage.id)
@@ -1224,11 +1224,11 @@ class FoodBeverageListResource(Resource):
     # Updates price for specified record
     def patch(self):
         
-        foodbeverage_dict = request.get_json(force = True)
+        foodbeverage_dict = request.get_json(force=True)
 
         if foodbeverage_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                foodbeverage_data = get_data(file_prefix = 'foodbeverage')
+                foodbeverage_data = get_data(file_prefix='foodbeverage')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1238,11 +1238,11 @@ class FoodBeverageListResource(Resource):
 
             for data in foodbeverage_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    foodbeverage = FoodBeverage.query.filter_by(location_id = location.id, item_category = data['Item Category'],
-                    purchase_point = data['Purchase Point'], item = data['Item']).first()
+                    foodbeverage = FoodBeverage.query.filter_by(location_id=location.id, item_category=data['Item Category'],
+                    purchase_point=data['Purchase Point'], item=data['Item']).first()
                     if foodbeverage == None:
                         continue
                     elif data['Price'] != foodbeverage.price:
@@ -1310,7 +1310,7 @@ class ChildcareListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_childcare = childcare_schema.dump(qry_res, many = True)
+                    dumped_childcare = childcare_schema.dump(qry_res, many=True)
                     for result in dumped_childcare:
                         result['annual_price'] = round(result['annual_price'] * conversion,2)
                     return dumped_childcare
@@ -1318,10 +1318,10 @@ class ChildcareListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.childcarelistresource',
-                    key_name = 'childcare data',   
-                    schema = childcare_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.childcarelistresource',
+                    key_name='childcare data',   
+                    schema=childcare_schema
                     )
                     dumped_childcare = pagination_helper.paginate_query()
                     for result in dumped_childcare['childcare data']:
@@ -1334,16 +1334,16 @@ class ChildcareListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_childcare = childcare_schema.dump(qry_res, many = True)
+                    dumped_childcare = childcare_schema.dump(qry_res, many=True)
                     return dumped_childcare
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.childcarelistresource',
-                key_name = 'childcare data',   
-                schema = childcare_schema
+                query=qry,
+                resource_for_url='cost_of_living.childcarelistresource',
+                key_name='childcare data',   
+                schema=childcare_schema
                 )
                 dumped_childcare = pagination_helper.paginate_query()
                 return dumped_childcare
@@ -1354,7 +1354,7 @@ class ChildcareListResource(Resource):
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                childcare_data = get_data(file_prefix = 'childcare')
+                childcare_data = get_data(file_prefix='childcare')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1364,15 +1364,15 @@ class ChildcareListResource(Resource):
 
             for data in childcare_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not Childcare.is_unique(location_id = location.id, type = data['Type']):
+                    if not Childcare.is_unique(location_id=location.id, type=data['Type']):
                         continue
                     try:
-                        childcare = Childcare(type = data['Type'], 
-                        annual_price = data['Annual Price'],
-                        location = location)
+                        childcare = Childcare(type=data['Type'], 
+                        annual_price=data['Annual Price'],
+                        location=location)
                         childcare.add(childcare)
                         childcare_added += 1
                         query = Childcare.query.get(childcare.id)
@@ -1396,11 +1396,11 @@ class ChildcareListResource(Resource):
     # Updates annual price for specified record
     def patch(self):
         
-        childcare_dict = request.get_json(force = True)
+        childcare_dict = request.get_json(force=True)
 
         if childcare_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                childcare_data = get_data(file_prefix = 'childcare')
+                childcare_data = get_data(file_prefix='childcare')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1410,10 +1410,10 @@ class ChildcareListResource(Resource):
 
             for data in childcare_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    childcare = Childcare.query.filter_by(location_id = location.id, type = data['Type']).first()
+                    childcare = Childcare.query.filter_by(location_id=location.id, type=data['Type']).first()
                     if childcare == None:
                         continue
                     elif data['Annual Price'] != childcare.annual_price:
@@ -1481,17 +1481,17 @@ class ApparelListResource(Resource):
                 
                 if (city and not country) or (city and country):
                     qry_res = qry.all()
-                    dumped_apparel = apparel_schema.dump(qry_res, many = True)
+                    dumped_apparel = apparel_schema.dump(qry_res, many=True)
                     for result in dumped_apparel:
                         result['price'] = round(result['price'] * conversion,2)
                     return dumped_apparel            
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.apparellistresource',
-                    key_name = 'apparel data',   
-                    schema = apparel_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.apparellistresource',
+                    key_name='apparel data',   
+                    schema=apparel_schema
                     )
                     dumped_apparel = pagination_helper.paginate_query()
                     for result in dumped_apparel['apparel data']:
@@ -1504,16 +1504,16 @@ class ApparelListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_apparel = apparel_schema.dump(qry_res, many = True)
+                    dumped_apparel = apparel_schema.dump(qry_res, many=True)
                     return dumped_apparel
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.apparellistresource',
-                key_name = 'apparel data',   
-                schema = apparel_schema
+                query=qry,
+                resource_for_url='cost_of_living.apparellistresource',
+                key_name='apparel data',   
+                schema=apparel_schema
                 )
                 dumped_apparel = pagination_helper.paginate_query()
                 return dumped_apparel
@@ -1534,15 +1534,15 @@ class ApparelListResource(Resource):
 
             for data in apparel_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not Apparel.is_unique(location_id = location.id, item = data['Item']):
+                    if not Apparel.is_unique(location_id=location.id, item=data['Item']):
                         continue
                     try:
-                        apparel = Apparel(item = data['Item'], 
-                        price = data['Price'],
-                        location = location)
+                        apparel = Apparel(item=data['Item'], 
+                        price=data['Price'],
+                        location=location)
                         apparel.add(apparel)
                         apparel_added += 1
                         query = Apparel.query.get(apparel.id)
@@ -1566,11 +1566,11 @@ class ApparelListResource(Resource):
     # Updates annual price for specified record
     def patch(self):
         
-        apparel_dict = request.get_json(force = True)
+        apparel_dict = request.get_json(force=True)
 
         if apparel_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                apparel_data = get_data(file_prefix = 'apparel')
+                apparel_data = get_data(file_prefix='apparel')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1580,10 +1580,10 @@ class ApparelListResource(Resource):
 
             for data in apparel_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    apparel = Apparel.query.filter_by(location_id = location.id, item = data['Item']).first()
+                    apparel = Apparel.query.filter_by(location_id=location.id, item=data['Item']).first()
                     if apparel == None:
                         continue
                     elif data['Price'] != apparel.price:
@@ -1658,10 +1658,10 @@ class LeisureListResource(Resource):
                 else:
                     pagination_helper = PaginationHelper(
                     request,
-                    query = qry,
-                    resource_for_url = 'cost_of_living.leisurelistresource',
-                    key_name = 'leisure data',   
-                    schema = leisure_schema
+                    query=qry,
+                    resource_for_url='cost_of_living.leisurelistresource',
+                    key_name='leisure data',   
+                    schema=leisure_schema
                     )
                     dumped_leisure = pagination_helper.paginate_query()
                     for result in dumped_leisure['leisure data']:
@@ -1674,16 +1674,16 @@ class LeisureListResource(Resource):
                 if city:
                     qry = qry.filter(Location.city == city)
                     qry_res = qry.all()
-                    dumped_leisure = leisure_schema.dump(qry_res, many = True)
+                    dumped_leisure = leisure_schema.dump(qry_res, many=True)
                     return dumped_leisure
                 
                 qry_res = qry.all()
                 pagination_helper = PaginationHelper(
                 request,
-                query = qry,
-                resource_for_url = 'cost_of_living.leisurelistresource',
-                key_name = 'leisure data',   
-                schema = leisure_schema
+                query=qry,
+                resource_for_url='cost_of_living.leisurelistresource',
+                key_name='leisure data',   
+                schema=leisure_schema
                 )
                 dumped_leisure = pagination_helper.paginate_query()
                 return dumped_leisure
@@ -1694,7 +1694,7 @@ class LeisureListResource(Resource):
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                leisure_data = get_data(file_prefix = 'leisure')
+                leisure_data = get_data(file_prefix='leisure')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1704,15 +1704,15 @@ class LeisureListResource(Resource):
 
             for data in leisure_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 if location:
-                    if not Leisure.is_unique(location_id = location.id, activity = data['Activity']):
+                    if not Leisure.is_unique(location_id=location.id, activity=data['Activity']):
                         continue
                     try:
-                        leisure = Leisure(activity = data['Activity'], 
-                        price = data['Price'],
-                        location = location)
+                        leisure = Leisure(activity=data['Activity'], 
+                        price=data['Price'],
+                        location=location)
                         leisure.add(leisure)
                         leisure_added += 1
                         query = Leisure.query.get(leisure.id)
@@ -1740,7 +1740,7 @@ class LeisureListResource(Resource):
 
         if leisure_dict.get('admin') == os.environ.get('ADMIN_KEY'):
             try:
-                leisure_data = get_data(file_prefix = 'leisure')
+                leisure_data = get_data(file_prefix='leisure')
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
@@ -1750,10 +1750,10 @@ class LeisureListResource(Resource):
 
             for data in leisure_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = Location.query.filter_by(city=location_city).first()
 
                 try:
-                    leisure = Leisure.query.filter_by(location_id = location.id, activity = data['Activity']).first()
+                    leisure = Leisure.query.filter_by(location_id=location.id, activity=data['Activity']).first()
                     if leisure == None:
                         continue
                     elif data['Price'] != leisure.price:
@@ -1770,11 +1770,11 @@ class LeisureListResource(Resource):
             response = {'message': 'Admin privileges needed'}
             return response, HttpStatus.forbidden_403.value
 
-cost_of_living.add_resource(UserResource,'/auth/user')
-cost_of_living.add_resource(LoginResource,'/auth/login')
+cost_of_living.add_resource(UserResource, '/auth/user')
+cost_of_living.add_resource(LoginResource, '/auth/login')
 cost_of_living.add_resource(LogoutResource, '/auth/logout')
-cost_of_living.add_resource(ResetPasswordResource,'/auth/user/password_reset')
-cost_of_living.add_resource(CurrencyResource,'/currencies/<int:id>')        
+cost_of_living.add_resource(ResetPasswordResource, '/auth/user/password_reset')
+cost_of_living.add_resource(CurrencyResource, '/currencies/<int:id>')        
 cost_of_living.add_resource(CurrencyListResource, '/currencies')
 cost_of_living.add_resource(LocationResource, '/locations/<int:id>')
 cost_of_living.add_resource(LocationListResource, '/locations')

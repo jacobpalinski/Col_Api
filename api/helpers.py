@@ -39,7 +39,7 @@ def authenticate_jwt():
 
 # Paginates output for get requests that generate a large number of results
 class PaginationHelper():
-    def __init__(self,request, query, resource_for_url, key_name, schema):
+    def __init__(self, request, query, resource_for_url, key_name, schema):
         self.request = request
         self.query = query
         self.resource_for_url = resource_for_url
@@ -52,38 +52,38 @@ class PaginationHelper():
         # No page number, assume request requires page 1
         page_number = self.request.args.get(self.page_argument_name, 1, type=int)
         paginated_objects = self.query.paginate(
-            page = page_number,
-            per_page = self.page_size,
-            error_out = False
+            page=page_number,
+            per_page=self.page_size,
+            error_out=False
         )
         objects = paginated_objects.items
         if paginated_objects.has_prev:
             # Formatting of previous page url based on arguments provided
             if self.request.args.get('country') and not self.request.args.get('abbreviation'):
-                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number - 1, _external = True)
+                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'), page=page_number - 1, _external=True)
             elif self.request.args.get('abbreviation') and not self.request.args.get('country'):
-                previous_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'),page = page_number - 1, _external = True)
+                previous_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'), page=page_number - 1, _external=True)
             elif self.request.args.get('abbreviation') and self.request.args.get('country'):
-                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),abbreviation=self.request.args.get('abbreviation'),page = page_number - 1, _external = True)
+                previous_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'), abbreviation=self.request.args.get('abbreviation'), page=page_number - 1, _external=True)
             else:
-                previous_page_url = url_for(self.resource_for_url, page = page_number - 1, _external = True)
+                previous_page_url = url_for(self.resource_for_url, page=page_number - 1, _external=True)
         else:
             previous_page_url = None
 
         if paginated_objects.has_next:
             # Formatting of next page url based on arguments provided
             if self.request.args.get('country') and not self.request.args.get('abbreviation'):
-                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),page = page_number + 1, _external = True)
+                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'), page=page_number + 1, _external=True)
             elif self.request.args.get('abbreviation') and not self.request.args.get('country'):
-                next_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'),page = page_number + 1, _external = True)
+                next_page_url = url_for(self.resource_for_url,abbreviation=self.request.args.get('abbreviation'), page=page_number + 1, _external=True)
             elif self.request.args.get('abbreviation') and self.request.args.get('country'):
-                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'),abbreviation=self.request.args.get('abbreviation'),page = page_number + 1, _external = True)
+                next_page_url = url_for(self.resource_for_url,country=self.request.args.get('country'), abbreviation=self.request.args.get('abbreviation'), page=page_number + 1, _external=True)
             else:
-                next_page_url = url_for(self.resource_for_url, page = page_number + 1, _external = True)
+                next_page_url = url_for(self.resource_for_url, page=page_number + 1, _external=True)
         else:
             next_page_url = None
         
-        dumped_objects = self.schema.dump(objects, many = True)
+        dumped_objects = self.schema.dump(objects, many=True)
         return {
             self.key_name : dumped_objects,
             'previous' : previous_page_url,
@@ -92,9 +92,9 @@ class PaginationHelper():
         }
 
 # Gets data for relevant endpoint from S3 transformed bucket 
-def get_data(file_prefix: str):
-    boto3_s3 = boto3.client('s3', aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY'))
+def get_data(file_prefix):
+    boto3_s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
     current_date = datetime.date.today().strftime('%Y%m%d')
-    file = boto3_s3.get_object(Bucket = os.environ.get('S3_BUCKET_TRANSFORMED'), Key = file_prefix + current_date)
+    file = boto3_s3.get_object(Bucket=os.environ.get('S3_BUCKET_TRANSFORMED'), Key=file_prefix + current_date)
     contents = file['Body'].read().decode('utf-8')
     return json.loads(contents)

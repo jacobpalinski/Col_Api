@@ -19,7 +19,7 @@ services:
     depends_on:
       - pgsql
     environment:
-      - DATABASE_URL= postgresql://postgres:Databrah91@pgsql:5432/cost_of_living
+      - DATABASE_URL=postgresql://postgres:Databrah91@pgsql:5432/cost_of_living
 
 volumes:
  pgdata: {}

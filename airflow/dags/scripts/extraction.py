@@ -13,7 +13,7 @@ from utils.aws_utils import *
 load_dotenv()
 
 # Extract relevant currencies with conversion rates
-def extract_currency_conversion_rates():
+def extract_currency_conversion_rates() -> None:
     # Scraped conversion rates USD -> local
     currency_conversion_rates = []
 
@@ -36,13 +36,13 @@ def extract_currency_conversion_rates():
             currency_conversion_rates.append({'Abbreviation': abbreviation , 'USD_to_local': conversion_rate})
 
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'currency_conversion_rates', data = currency_conversion_rates, bucket_type = 'raw')
+    put_data(file_prefix='currency_conversion_rates', data=currency_conversion_rates, bucket_type='raw')
 
 # Extract livingcost prices from city
-def extract_livingcost_prices_from_city():
+def extract_livingcost_prices_from_city() -> None:
 
     # Retrieve latest cities file
-    locations = get_data(file_prefix = 'locations.json')
+    locations = get_data(file_prefix='locations.json')
 
     # Store livingcost price info for each city
     livingcost_price_info = []
@@ -117,13 +117,13 @@ def extract_livingcost_prices_from_city():
         {'City': location['City'], 'Item': 'Brand Sneakers', 'Price': brand_sneakers}])
 
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'livingcost_price_info', data = livingcost_price_info, bucket_type = 'raw')
+    put_data(file_prefix='livingcost_price_info', data = livingcost_price_info, bucket_type='raw')
 
 # Extract numbeo prices
-def extract_numbeo_prices_from_city():
+def extract_numbeo_prices_from_city() -> None:
 
     # Retrieve latest cities file
-    locations = get_data(file_prefix = 'locations.json')
+    locations = get_data(file_prefix='locations.json')
 
     # Store numbeo price info for each city
     numbeo_price_info = []
@@ -266,4 +266,4 @@ def extract_numbeo_prices_from_city():
         {'City': location['City'], 'Item': 'Mortgage Interest Rate (Annual, 20 Years Fixed-Rate)', 'Price': mortgage_interest_rate}])
     
     # Load data to S3 raw bucket
-    put_data(file_prefix = 'numbeo_price_info', data = numbeo_price_info, bucket_type = 'raw')
+    put_data(file_prefix='numbeo_price_info', data=numbeo_price_info, bucket_type='raw')
