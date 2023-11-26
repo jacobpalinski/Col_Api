@@ -128,7 +128,8 @@ def merge_and_transform_rent(spark_session: SparkSession) -> None:
 
    # Remove 'Item' column
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.select([column for column in numbeo_price_info_df_filtered.columns if column != 'Item'])
-
+   
+   numbeo_price_info_df_filtered.show(2000)
    # Convert to list of dictionaries
    numbeo_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
 

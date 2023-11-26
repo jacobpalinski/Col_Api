@@ -256,9 +256,6 @@ class CurrencyListResource(Resource):
                     usd_to_local_exchange_rate=data['USD_to_local'])
                     currency.add(currency)
                     currencies_added += 1
-                    query = Currency.query.get(currency.id)
-                    dump_result = currency_schema.dump(query)
-                    print(f'{HttpStatus.created_201.value} {dump_result}')
 
                 except SQLAlchemyError as e:
                     sql_alchemy_error_response(e)
@@ -373,9 +370,6 @@ class LocationListResource(Resource):
                     location = Location(country=data['Country'], city=data['City'], currency=currency)
                     location.add(location)
                     locations_added += 1
-                    query = Location.query.get(location.id)
-                    dump_result = location_schema.dump(query)
-                    print(f'{HttpStatus.created_201.value} {dump_result}')
 
                 except SQLAlchemyError as e:
                     sql_alchemy_error_response(e)
@@ -490,9 +484,12 @@ class HomePurchaseListResource(Resource):
             # Track new homepurchase rows added
             homepurchase_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in homepurchase_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not HomePurchase.is_unique(location_id=location.id, property_location=data['Property Location']):
@@ -504,16 +501,12 @@ class HomePurchaseListResource(Resource):
                         location=location)
                         home_purchase.add(home_purchase)
                         homepurchase_added += 1
-                        query = HomePurchase.query.get(home_purchase.id)
-                        dump_result = home_purchase_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {homepurchase_added} homepurchase records'}
             return response, HttpStatus.created_201.value

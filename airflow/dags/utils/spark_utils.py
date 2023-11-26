@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession, Row, functions
+from typing import Union
 from utils.aws_utils import *
 
 # Creates spark session
@@ -7,7 +8,7 @@ def create_spark_session(app_name: str) -> SparkSession:
     return spark
 
 # Creates dataframe
-def create_dataframe(spark_session : SparkSession, extract_source: str, items_to_filter_by: list) -> SparkSession | Exception:
+def create_dataframe(spark_session : SparkSession, extract_source: str, items_to_filter_by: list) -> Union[SparkSession , Exception]:
     '''extract_source must be either "numbeo_price_info" or "livingcost_price_info"'''
     if extract_source == 'numbeo_price_info' or extract_source == 'livingcost_price_info':
         price_info = get_data(file_prefix=extract_source)

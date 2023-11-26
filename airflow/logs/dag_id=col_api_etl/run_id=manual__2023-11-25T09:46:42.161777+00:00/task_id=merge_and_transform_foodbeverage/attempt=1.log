@@ -1,0 +1,34 @@
+[2023-11-25T09:53:16.810+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_foodbeverage manual__2023-11-25T09:46:42.161777+00:00 [queued]>
+[2023-11-25T09:53:16.824+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_foodbeverage manual__2023-11-25T09:46:42.161777+00:00 [queued]>
+[2023-11-25T09:53:16.824+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 2
+[2023-11-25T09:53:16.843+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): merge_and_transform_foodbeverage> on 2023-11-25 09:46:42.161777+00:00
+[2023-11-25T09:53:16.850+0000] {standard_task_runner.py:57} INFO - Started process 3308 to run task
+[2023-11-25T09:53:16.860+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T09:53:16.866+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'col_api_etl', 'merge_and_transform_foodbeverage', 'manual__2023-11-25T09:46:42.161777+00:00', '--job-id', '64', '--raw', '--subdir', 'DAGS_FOLDER/col_api_etl.py', '--cfg-path', '/tmp/tmpimmuvbv7']
+[2023-11-25T09:53:16.869+0000] {standard_task_runner.py:85} INFO - Job 64: Subtask merge_and_transform_foodbeverage
+[2023-11-25T09:53:16.983+0000] {task_command.py:415} INFO - Running <TaskInstance: col_api_etl.merge_and_transform_foodbeverage manual__2023-11-25T09:46:42.161777+00:00 [running]> on host 9b6b24afef42
+[2023-11-25T09:53:17.084+0000] {clientserver.py:505} INFO - Error while sending or receiving.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+[2023-11-25T09:53:17.086+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T09:53:17.086+0000] {java_gateway.py:1052} INFO - Exception while sending command.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 506, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending
+[2023-11-25T09:53:17.090+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T09:53:17.109+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='col_api_etl' AIRFLOW_CTX_TASK_ID='merge_and_transform_foodbeverage' AIRFLOW_CTX_EXECUTION_DATE='2023-11-25T09:46:42.161777+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2023-11-25T09:46:42.161777+00:00'
+[2023-11-25T09:53:24.895+0000] {python.py:194} INFO - Done. Returned value was: None
+[2023-11-25T09:53:24.911+0000] {taskinstance.py:1400} INFO - Marking task as SUCCESS. dag_id=col_api_etl, task_id=merge_and_transform_foodbeverage, execution_date=20231125T094642, start_date=20231125T095316, end_date=20231125T095324
+[2023-11-25T09:53:24.958+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 0

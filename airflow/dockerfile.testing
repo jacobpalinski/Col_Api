@@ -1,5 +1,8 @@
 # Official Python image
 FROM apache/spark-py:latest
 
+# Switch to root user
+USER root
+
 # Install Python packages
-RUN pip install pytest pytest-mock requests-mock pyspark boto3 python-dotenv beautifulsoup4
+RUN pip install --no-cache-dir --user pytest pytest-mock requests-mock pyspark boto3 python-dotenv beautifulsoup4

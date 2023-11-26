@@ -1,0 +1,1133 @@
+[2023-11-25T10:41:18.981+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_rent manual__2023-11-25T10:30:17.600607+00:00 [queued]>
+[2023-11-25T10:41:18.998+0000] {taskinstance.py:1159} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: col_api_etl.merge_and_transform_rent manual__2023-11-25T10:30:17.600607+00:00 [queued]>
+[2023-11-25T10:41:18.998+0000] {taskinstance.py:1361} INFO - Starting attempt 1 of 2
+[2023-11-25T10:41:19.020+0000] {taskinstance.py:1382} INFO - Executing <Task(PythonOperator): merge_and_transform_rent> on 2023-11-25 10:30:17.600607+00:00
+[2023-11-25T10:41:19.035+0000] {standard_task_runner.py:57} INFO - Started process 14074 to run task
+[2023-11-25T10:41:19.043+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T10:41:19.061+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', 'col_api_etl', 'merge_and_transform_rent', 'manual__2023-11-25T10:30:17.600607+00:00', '--job-id', '77', '--raw', '--subdir', 'DAGS_FOLDER/col_api_etl.py', '--cfg-path', '/tmp/tmp54j5f9s0']
+[2023-11-25T10:41:19.063+0000] {standard_task_runner.py:85} INFO - Job 77: Subtask merge_and_transform_rent
+[2023-11-25T10:41:19.174+0000] {task_command.py:415} INFO - Running <TaskInstance: col_api_etl.merge_and_transform_rent manual__2023-11-25T10:30:17.600607+00:00 [running]> on host 9b6b24afef42
+[2023-11-25T10:41:19.340+0000] {taskinstance.py:1660} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='col_api_etl' AIRFLOW_CTX_TASK_ID='merge_and_transform_rent' AIRFLOW_CTX_EXECUTION_DATE='2023-11-25T10:30:17.600607+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2023-11-25T10:30:17.600607+00:00'
+[2023-11-25T10:41:19.488+0000] {clientserver.py:505} INFO - Error while sending or receiving.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+[2023-11-25T10:41:19.490+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T10:41:19.490+0000] {java_gateway.py:1052} INFO - Exception while sending command.
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 503, in send_command
+    self.socket.sendall(command.encode("utf-8"))
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/java_gateway.py", line 1038, in send_command
+    response = connection.send_command(command)
+  File "/home/airflow/.local/lib/python3.8/site-packages/py4j/clientserver.py", line 506, in send_command
+    raise Py4JNetworkError(
+py4j.protocol.Py4JNetworkError: Error while sending
+[2023-11-25T10:41:19.504+0000] {clientserver.py:543} INFO - Closing down clientserver connection
+[2023-11-25T10:41:27.717+0000] {logging_mixin.py:151} INFO - +--------------------+-------------+-------------------+--------+
+|                City|Monthly Price|  Property Location|Bedrooms|
++--------------------+-------------+-------------------+--------+
+|               Dubai|      2001.47|        City Centre|       1|
+|               Dubai|      1170.12|Outside City Centre|       1|
+|               Dubai|      3920.49|        City Centre|       3|
+|               Dubai|      2619.55|Outside City Centre|       3|
+|           Abu Dhabi|      1525.97|        City Centre|       1|
+|           Abu Dhabi|      1178.32|Outside City Centre|       1|
+|           Abu Dhabi|      3122.66|        City Centre|       3|
+|           Abu Dhabi|       2177.4|Outside City Centre|       3|
+|             Sharjah|       802.33|        City Centre|       1|
+|             Sharjah|       691.01|Outside City Centre|       1|
+|             Sharjah|      1344.72|        City Centre|       3|
+|             Sharjah|      1009.42|Outside City Centre|       3|
+|               Perth|       1783.6|        City Centre|       1|
+|               Perth|      1306.81|Outside City Centre|       1|
+|               Perth|      2616.61|        City Centre|       3|
+|               Perth|      1916.43|Outside City Centre|       3|
+|           Melbourne|      1582.26|        City Centre|       1|
+|           Melbourne|      1323.15|Outside City Centre|       1|
+|           Melbourne|      3145.67|        City Centre|       3|
+|           Melbourne|      2088.11|Outside City Centre|       3|
+|              Sydney|      2191.56|        City Centre|       1|
+|              Sydney|      1572.02|Outside City Centre|       1|
+|              Sydney|      4522.22|        City Centre|       3|
+|              Sydney|      2735.78|Outside City Centre|       3|
+|            Brisbane|      1731.09|        City Centre|       1|
+|            Brisbane|      1460.73|Outside City Centre|       1|
+|            Brisbane|      2696.36|        City Centre|       3|
+|            Brisbane|      1759.84|Outside City Centre|       3|
+|            Adelaide|      1425.52|        City Centre|       1|
+|            Adelaide|      1045.05|Outside City Centre|       1|
+|            Adelaide|      2554.37|        City Centre|       3|
+|            Adelaide|      1677.12|Outside City Centre|       3|
+|            Canberra|       1809.8|        City Centre|       1|
+|            Canberra|      1456.19|Outside City Centre|       1|
+|            Canberra|      2775.38|        City Centre|       3|
+|            Canberra|      2171.52|Outside City Centre|       3|
+|              Darwin|      1369.06|        City Centre|       1|
+|              Darwin|       685.12|Outside City Centre|       1|
+|              Darwin|      2281.76|        City Centre|       3|
+|              Darwin|      1825.41|Outside City Centre|       3|
+|            Sarajevo|       319.92|        City Centre|       1|
+|            Sarajevo|       220.02|Outside City Centre|       1|
+|            Sarajevo|       503.65|        City Centre|       3|
+|            Sarajevo|       336.12|Outside City Centre|       3|
+|              Manama|       929.72|        City Centre|       1|
+|              Manama|       742.45|Outside City Centre|       1|
+|              Manama|      1719.27|        City Centre|       3|
+|              Manama|      1216.46|Outside City Centre|       3|
+|               Sofia|       519.58|        City Centre|       1|
+|               Sofia|       387.32|Outside City Centre|       1|
+|               Sofia|       907.31|        City Centre|       3|
+|               Sofia|        630.8|Outside City Centre|       3|
+|           Sao Paulo|       543.01|        City Centre|       1|
+|           Sao Paulo|       351.02|Outside City Centre|       1|
+|           Sao Paulo|      1202.49|        City Centre|       3|
+|           Sao Paulo|       744.47|Outside City Centre|       3|
+|      Rio de Janeiro|       443.62|        City Centre|       1|
+|      Rio de Janeiro|       323.08|Outside City Centre|       1|
+|      Rio de Janeiro|       903.97|        City Centre|       3|
+|      Rio de Janeiro|       682.43|Outside City Centre|       3|
+|            Brasilia|       389.04|        City Centre|       1|
+|            Brasilia|        216.6|Outside City Centre|       1|
+|            Brasilia|       1014.5|        City Centre|       3|
+|            Brasilia|       547.57|Outside City Centre|       3|
+|             Toronto|      1907.52|        City Centre|       1|
+|             Toronto|      1687.45|Outside City Centre|       1|
+|             Toronto|      3155.08|        City Centre|       3|
+|             Toronto|      2611.09|Outside City Centre|       3|
+|            Montreal|      1204.79|        City Centre|       1|
+|            Montreal|       918.37|Outside City Centre|       1|
+|            Montreal|      2089.68|        City Centre|       3|
+|            Montreal|      1499.92|Outside City Centre|       3|
+|           Vancouver|      2074.35|        City Centre|       1|
+|           Vancouver|      1627.44|Outside City Centre|       1|
+|           Vancouver|      3707.42|        City Centre|       3|
+|           Vancouver|       2880.5|Outside City Centre|       3|
+|              Ottawa|      1430.74|        City Centre|       1|
+|              Ottawa|       1270.2|Outside City Centre|       1|
+|              Ottawa|      2258.15|        City Centre|       3|
+|              Ottawa|       1803.6|Outside City Centre|       3|
+|             Calgary|      1364.37|        City Centre|       1|
+|             Calgary|      1150.39|Outside City Centre|       1|
+|             Calgary|      2241.07|        City Centre|       3|
+|             Calgary|      1814.11|Outside City Centre|       3|
+|            Edmonton|      1022.08|        City Centre|       1|
+|            Edmonton|       856.84|Outside City Centre|       1|
+|            Edmonton|      1628.18|        City Centre|       3|
+|            Edmonton|      1269.73|Outside City Centre|       3|
+|             Halifax|      1363.18|        City Centre|       1|
+|             Halifax|       1138.2|Outside City Centre|       1|
+|             Halifax|      2263.36|        City Centre|       3|
+|             Halifax|      1821.25|Outside City Centre|       3|
+|         Quebec City|       887.57|        City Centre|       1|
+|         Quebec City|       728.18|Outside City Centre|       1|
+|         Quebec City|      1451.61|        City Centre|       3|
+|         Quebec City|       1078.5|Outside City Centre|       3|
+|              Zurich|      2837.47|        City Centre|       1|
+|              Zurich|      1881.51|Outside City Centre|       1|
+|              Zurich|      4708.67|        City Centre|       3|
+|              Zurich|      3348.77|Outside City Centre|       3|
+|              Geneva|      2383.22|        City Centre|       1|
+|              Geneva|      1977.45|Outside City Centre|       1|
+|              Geneva|      4628.55|        City Centre|       3|
+|              Geneva|      3602.31|Outside City Centre|       3|
+|                 Zug|      2265.55|        City Centre|       1|
+|                 Zug|      1825.03|Outside City Centre|       1|
+|                 Zug|      4870.94|        City Centre|       3|
+|                 Zug|      3322.81|Outside City Centre|       3|
+|               Basel|      1665.18|        City Centre|       1|
+|               Basel|      1252.15|Outside City Centre|       1|
+|               Basel|      3266.17|        City Centre|       3|
+|               Basel|      2567.63|Outside City Centre|       3|
+|                Bern|      1310.83|        City Centre|       1|
+|                Bern|       991.18|Outside City Centre|       1|
+|                Bern|      2662.02|        City Centre|       3|
+|                Bern|      1972.06|Outside City Centre|       3|
+|            Lausanne|      1807.16|        City Centre|       1|
+|            Lausanne|      1413.36|Outside City Centre|       1|
+|            Lausanne|      3806.13|        City Centre|       3|
+|            Lausanne|      2955.52|Outside City Centre|       3|
+|              Lugano|      1828.02|        City Centre|       1|
+|              Lugano|      1458.45|Outside City Centre|       1|
+|              Lugano|      3462.05|        City Centre|       3|
+|              Lugano|      2492.11|Outside City Centre|       3|
+|               Vaduz|      1424.33|        City Centre|       1|
+|               Vaduz|      1117.32|Outside City Centre|       1|
+|               Vaduz|      2521.16|        City Centre|       3|
+|               Vaduz|      1713.84|Outside City Centre|       3|
+|            Santiago|       514.02|        City Centre|       1|
+|            Santiago|       481.43|Outside City Centre|       1|
+|            Santiago|        928.7|        City Centre|       3|
+|            Santiago|       869.66|Outside City Centre|       3|
+|           Chongqing|       319.61|        City Centre|       1|
+|           Chongqing|       152.75|Outside City Centre|       1|
+|           Chongqing|       470.06|        City Centre|       3|
+|           Chongqing|       301.75|Outside City Centre|       3|
+|            Shanghai|        940.7|        City Centre|       1|
+|            Shanghai|        549.5|Outside City Centre|       1|
+|            Shanghai|      2990.26|        City Centre|       3|
+|            Shanghai|      1456.23|Outside City Centre|       3|
+|             Beijing|       925.46|        City Centre|       1|
+|             Beijing|       575.95|Outside City Centre|       1|
+|             Beijing|      2341.67|        City Centre|       3|
+|             Beijing|      1219.11|Outside City Centre|       3|
+|             Chengdu|       350.75|        City Centre|       1|
+|             Chengdu|       185.37|Outside City Centre|       1|
+|             Chengdu|       695.62|        City Centre|       3|
+|             Chengdu|       367.54|Outside City Centre|       3|
+|           Guangzhou|       493.51|        City Centre|       1|
+|           Guangzhou|       294.45|Outside City Centre|       1|
+|           Guangzhou|      1131.87|        City Centre|       3|
+|           Guangzhou|        683.9|Outside City Centre|       3|
+|            Shenzhen|       738.39|        City Centre|       1|
+|            Shenzhen|       409.55|Outside City Centre|       1|
+|            Shenzhen|      1634.36|        City Centre|       3|
+|            Shenzhen|        869.1|Outside City Centre|       3|
+|              Bogota|       404.99|        City Centre|       1|
+|              Bogota|       306.49|Outside City Centre|       1|
+|              Bogota|       756.16|        City Centre|       3|
+|              Bogota|       530.28|Outside City Centre|       3|
+|            Medellin|       411.81|        City Centre|       1|
+|            Medellin|       337.54|Outside City Centre|       1|
+|            Medellin|       702.02|        City Centre|       3|
+|            Medellin|       660.31|Outside City Centre|       3|
+|                Cali|       270.19|        City Centre|       1|
+|                Cali|       197.32|Outside City Centre|       1|
+|                Cali|       439.85|        City Centre|       3|
+|                Cali|       362.92|Outside City Centre|       3|
+|           Cartagena|        516.1|        City Centre|       1|
+|           Cartagena|       416.33|Outside City Centre|       1|
+|           Cartagena|       897.17|        City Centre|       3|
+|           Cartagena|       443.96|Outside City Centre|       3|
+|            San Jose|      3009.86|        City Centre|       1|
+|            San Jose|      2754.12|Outside City Centre|       1|
+|            San Jose|      5454.44|        City Centre|       3|
+|            San Jose|      4256.67|Outside City Centre|       3|
+|              Prague|       1466.7|        City Centre|       1|
+|              Prague|      1071.33|Outside City Centre|       1|
+|              Prague|      2621.67|        City Centre|       3|
+|              Prague|      2025.52|Outside City Centre|       3|
+|                Brno|       765.38|        City Centre|       1|
+|                Brno|       618.92|Outside City Centre|       1|
+|                Brno|      1184.64|        City Centre|       3|
+|                Brno|        959.2|Outside City Centre|       3|
+|             Ostrava|        549.4|        City Centre|       1|
+|             Ostrava|        438.3|Outside City Centre|       1|
+|             Ostrava|       863.35|        City Centre|       3|
+|             Ostrava|        774.9|Outside City Centre|       3|
+|          Copenhagen|      1783.96|        City Centre|       1|
+|          Copenhagen|      1276.25|Outside City Centre|       1|
+|          Copenhagen|      2975.77|        City Centre|       3|
+|          Copenhagen|      2181.14|Outside City Centre|       3|
+|              Aarhus|      1072.81|        City Centre|       1|
+|              Aarhus|       777.78|Outside City Centre|       1|
+|              Aarhus|      2160.49|        City Centre|       3|
+|              Aarhus|      1500.11|Outside City Centre|       3|
+|             Aalborg|       841.98|        City Centre|       1|
+|             Aalborg|        645.7|Outside City Centre|       1|
+|             Aalborg|       1526.2|        City Centre|       3|
+|             Aalborg|       1147.1|Outside City Centre|       3|
+|    Andorra la Vella|      1047.72|        City Centre|       1|
+|    Andorra la Vella|       884.83|Outside City Centre|       1|
+|    Andorra la Vella|      1936.13|        City Centre|       3|
+|    Andorra la Vella|      1769.65|Outside City Centre|       3|
+|              Vienna|      1033.35|        City Centre|       1|
+|              Vienna|       766.89|Outside City Centre|       1|
+|              Vienna|      1942.97|        City Centre|       3|
+|              Vienna|      1386.79|Outside City Centre|       3|
+|            Salzburg|      1150.14|        City Centre|       1|
+|            Salzburg|       944.23|Outside City Centre|       1|
+|            Salzburg|       1747.2|        City Centre|       3|
+|            Salzburg|      1473.19|Outside City Centre|       3|
+|                Graz|        759.8|        City Centre|       1|
+|                Graz|       642.69|Outside City Centre|       1|
+|                Graz|      1494.59|        City Centre|       3|
+|                Graz|      1275.24|Outside City Centre|       3|
+|                Linz|       747.45|        City Centre|       1|
+|                Linz|       649.12|Outside City Centre|       1|
+|                Linz|      1483.83|        City Centre|       3|
+|                Linz|      1161.52|Outside City Centre|       3|
+|           Innsbruck|      1094.63|        City Centre|       1|
+|           Innsbruck|       972.85|Outside City Centre|       1|
+|           Innsbruck|      2043.31|        City Centre|       3|
+|           Innsbruck|      1632.82|Outside City Centre|       3|
+|            Brussels|      1102.24|        City Centre|       1|
+|            Brussels|       944.71|Outside City Centre|       1|
+|            Brussels|      1952.09|        City Centre|       3|
+|            Brussels|      1658.58|Outside City Centre|       3|
+|             Antwerp|       952.65|        City Centre|       1|
+|             Antwerp|       784.71|Outside City Centre|       1|
+|             Antwerp|      1505.12|        City Centre|       3|
+|             Antwerp|       1224.0|Outside City Centre|       3|
+|                Gent|       949.84|        City Centre|       1|
+|                Gent|       800.45|Outside City Centre|       1|
+|                Gent|      1443.54|        City Centre|       3|
+|                Gent|      1171.25|Outside City Centre|       3|
+|               Liege|       687.56|        City Centre|       1|
+|               Liege|       612.99|Outside City Centre|       1|
+|               Liege|      1043.55|        City Centre|       3|
+|               Liege|       848.34|Outside City Centre|       3|
+|              Brugge|        733.4|        City Centre|       1|
+|              Brugge|       644.01|Outside City Centre|       1|
+|              Brugge|      1083.68|        City Centre|       3|
+|              Brugge|        800.9|Outside City Centre|       3|
+|              Zagreb|       693.19|        City Centre|       1|
+|              Zagreb|       558.88|Outside City Centre|       1|
+|              Zagreb|      1162.68|        City Centre|       3|
+|              Zagreb|       856.12|Outside City Centre|       3|
+|               Split|       641.95|        City Centre|       1|
+|               Split|       447.26|Outside City Centre|       1|
+|               Split|      1024.06|        City Centre|       3|
+|               Split|       754.37|Outside City Centre|       3|
+|           Dubrovnik|       539.25|        City Centre|       1|
+|           Dubrovnik|       350.45|Outside City Centre|       1|
+|           Dubrovnik|       799.53|        City Centre|       3|
+|           Dubrovnik|        545.2|Outside City Centre|       3|
+|             Nicosia|       701.81|        City Centre|       1|
+|             Nicosia|       597.62|Outside City Centre|       1|
+|             Nicosia|      1405.74|        City Centre|       3|
+|             Nicosia|      1107.88|Outside City Centre|       3|
+|             Tallinn|       698.79|        City Centre|       1|
+|             Tallinn|        518.8|Outside City Centre|       1|
+|             Tallinn|      1138.06|        City Centre|       3|
+|             Tallinn|       861.93|Outside City Centre|       3|
+|               Tartu|       557.35|        City Centre|       1|
+|               Tartu|       424.17|Outside City Centre|       1|
+|               Tartu|       997.33|        City Centre|       3|
+|               Tartu|       721.24|Outside City Centre|       3|
+|            Helsinki|      1059.43|        City Centre|       1|
+|            Helsinki|       869.17|Outside City Centre|       1|
+|            Helsinki|      1971.98|        City Centre|       3|
+|            Helsinki|      1409.43|Outside City Centre|       3|
+|               Turku|       764.39|        City Centre|       1|
+|               Turku|       611.41|Outside City Centre|       1|
+|               Turku|      1264.79|        City Centre|       3|
+|               Turku|       889.81|Outside City Centre|       3|
+|             Tampere|       843.55|        City Centre|       1|
+|             Tampere|       664.99|Outside City Centre|       1|
+|             Tampere|      1246.05|        City Centre|       3|
+|             Tampere|       945.03|Outside City Centre|       3|
+|                Oulu|       719.58|        City Centre|       1|
+|                Oulu|       544.58|Outside City Centre|       1|
+|                Oulu|      1304.44|        City Centre|       3|
+|                Oulu|       996.11|Outside City Centre|       3|
+|               Paris|      1431.49|        City Centre|       1|
+|               Paris|      1026.15|Outside City Centre|       1|
+|               Paris|      3249.69|        City Centre|       3|
+|               Paris|      2254.52|Outside City Centre|       3|
+|           Marseille|       839.22|        City Centre|       1|
+|           Marseille|       648.57|Outside City Centre|       1|
+|           Marseille|      1446.74|        City Centre|       3|
+|           Marseille|      1293.49|Outside City Centre|       3|
+|                Lyon|       860.19|        City Centre|       1|
+|                Lyon|       617.78|Outside City Centre|       1|
+|                Lyon|       1715.2|        City Centre|       3|
+|                Lyon|      1190.41|Outside City Centre|       3|
+|            Toulouse|       742.79|        City Centre|       1|
+|            Toulouse|       588.36|Outside City Centre|       1|
+|            Toulouse|      1563.76|        City Centre|       3|
+|            Toulouse|      1149.36|Outside City Centre|       3|
+|                Nice|       951.23|        City Centre|       1|
+|                Nice|       792.71|Outside City Centre|       1|
+|                Nice|      1847.19|        City Centre|       3|
+|                Nice|      1459.51|Outside City Centre|       3|
+|              Nantes|       711.93|        City Centre|       1|
+|              Nantes|       677.89|Outside City Centre|       1|
+|              Nantes|       1790.5|        City Centre|       3|
+|              Nantes|      1258.83|Outside City Centre|       3|
+|         Montpellier|       779.83|        City Centre|       1|
+|         Montpellier|       656.78|Outside City Centre|       1|
+|         Montpellier|      1806.14|        City Centre|       3|
+|         Montpellier|      1669.31|Outside City Centre|       3|
+|              Berlin|      1441.83|        City Centre|       1|
+|              Berlin|       1007.6|Outside City Centre|       1|
+|              Berlin|      2679.73|        City Centre|       3|
+|              Berlin|      1886.49|Outside City Centre|       3|
+|             Hamburg|      1090.45|        City Centre|       1|
+|             Hamburg|       832.01|Outside City Centre|       1|
+|             Hamburg|      2007.28|        City Centre|       3|
+|             Hamburg|      1564.18|Outside City Centre|       3|
+|              Munich|      1529.98|        City Centre|       1|
+|              Munich|      1237.74|Outside City Centre|       1|
+|              Munich|      2717.89|        City Centre|       3|
+|              Munich|      2076.54|Outside City Centre|       3|
+|           Stuttgart|      1120.17|        City Centre|       1|
+|           Stuttgart|       861.82|Outside City Centre|       1|
+|           Stuttgart|      2098.02|        City Centre|       3|
+|           Stuttgart|      1485.62|Outside City Centre|       3|
+|           Frankfurt|      1270.25|        City Centre|       1|
+|           Frankfurt|       899.94|Outside City Centre|       1|
+|           Frankfurt|      2277.36|        City Centre|       3|
+|           Frankfurt|      1577.53|Outside City Centre|       3|
+|             Cologne|      1016.58|        City Centre|       1|
+|             Cologne|       732.41|Outside City Centre|       1|
+|             Cologne|      1905.62|        City Centre|       3|
+|             Cologne|      1300.79|Outside City Centre|       3|
+|          Dusseldorf|      1061.56|        City Centre|       1|
+|          Dusseldorf|       814.98|Outside City Centre|       1|
+|          Dusseldorf|      1941.88|        City Centre|       3|
+|          Dusseldorf|      1503.29|Outside City Centre|       3|
+|             Hanover|       796.65|        City Centre|       1|
+|             Hanover|       595.97|Outside City Centre|       1|
+|             Hanover|      1430.32|        City Centre|       3|
+|             Hanover|       996.11|Outside City Centre|       3|
+|             Dresden|        680.7|        City Centre|       1|
+|             Dresden|       474.34|Outside City Centre|       1|
+|             Dresden|      1322.68|        City Centre|       3|
+|             Dresden|        991.9|Outside City Centre|       3|
+|             Leipzig|       695.93|        City Centre|       1|
+|             Leipzig|       494.62|Outside City Centre|       1|
+|             Leipzig|      1477.75|        City Centre|       3|
+|             Leipzig|      1061.79|Outside City Centre|       3|
+|              Athens|       586.97|        City Centre|       1|
+|              Athens|       513.48|Outside City Centre|       1|
+|              Athens|      1033.94|        City Centre|       3|
+|              Athens|       947.46|Outside City Centre|       3|
+|               Crete|       383.12|        City Centre|       1|
+|               Crete|       273.66|Outside City Centre|       1|
+|               Crete|       629.41|        City Centre|       3|
+|               Crete|       529.07|Outside City Centre|       3|
+|        Thessaloniki|        526.7|        City Centre|       1|
+|        Thessaloniki|       431.05|Outside City Centre|       1|
+|        Thessaloniki|       918.65|        City Centre|       3|
+|        Thessaloniki|       721.33|Outside City Centre|       3|
+|              Dublin|      2224.38|        City Centre|       1|
+|              Dublin|      1873.21|Outside City Centre|       1|
+|              Dublin|      3803.82|        City Centre|       3|
+|              Dublin|      3048.08|Outside City Centre|       3|
+|                Cork|      1649.93|        City Centre|       1|
+|                Cork|      1368.79|Outside City Centre|       1|
+|                Cork|      2775.98|        City Centre|       3|
+|                Cork|      2128.21|Outside City Centre|       3|
+|              Galway|      1576.27|        City Centre|       1|
+|              Galway|      1286.19|Outside City Centre|       1|
+|              Galway|      2508.53|        City Centre|       3|
+|              Galway|       1953.5|Outside City Centre|       3|
+|                Rome|      1210.18|        City Centre|       1|
+|                Rome|       753.97|Outside City Centre|       1|
+|                Rome|      2320.01|        City Centre|       3|
+|                Rome|      1356.13|Outside City Centre|       3|
+|               Milan|       1544.4|        City Centre|       1|
+|               Milan|      1002.32|Outside City Centre|       1|
+|               Milan|      3178.87|        City Centre|       3|
+|               Milan|      1981.86|Outside City Centre|       3|
+|              Naples|       707.86|        City Centre|       1|
+|              Naples|       479.95|Outside City Centre|       1|
+|              Naples|      1413.07|        City Centre|       3|
+|              Naples|        955.7|Outside City Centre|       3|
+|               Turin|       698.74|        City Centre|       1|
+|               Turin|       512.21|Outside City Centre|       1|
+|               Turin|      1334.41|        City Centre|       3|
+|               Turin|       912.35|Outside City Centre|       3|
+|             Palermo|       588.36|        City Centre|       1|
+|             Palermo|       437.85|Outside City Centre|       1|
+|             Palermo|       882.55|        City Centre|       3|
+|             Palermo|       742.79|Outside City Centre|       3|
+|               Genoa|       753.73|        City Centre|       1|
+|               Genoa|       555.13|Outside City Centre|       1|
+|               Genoa|      1204.09|        City Centre|       3|
+|               Genoa|       906.98|Outside City Centre|       3|
+|             Bologna|       993.59|        City Centre|       1|
+|             Bologna|       770.12|Outside City Centre|       1|
+|             Bologna|      1717.39|        City Centre|       3|
+|             Bologna|      1230.37|Outside City Centre|       3|
+|            Florence|       998.85|        City Centre|       1|
+|            Florence|        733.4|Outside City Centre|       1|
+|            Florence|      1989.03|        City Centre|       3|
+|            Florence|      1313.56|Outside City Centre|       3|
+|                Riga|       531.46|        City Centre|       1|
+|                Riga|       337.02|Outside City Centre|       1|
+|                Riga|       936.88|        City Centre|       3|
+|                Riga|       618.75|Outside City Centre|       3|
+|             Vilnius|       827.91|        City Centre|       1|
+|             Vilnius|       535.64|Outside City Centre|       1|
+|             Vilnius|      1516.36|        City Centre|       3|
+|             Vilnius|       978.77|Outside City Centre|       3|
+|          Luxembourg|      1804.15|        City Centre|       1|
+|          Luxembourg|      1400.95|Outside City Centre|       1|
+|          Luxembourg|      2942.98|        City Centre|       3|
+|          Luxembourg|      2439.44|Outside City Centre|       3|
+|            Valletta|      1094.63|        City Centre|       1|
+|            Valletta|       918.27|Outside City Centre|       1|
+|            Valletta|      2531.33|        City Centre|       3|
+|            Valletta|      1662.47|Outside City Centre|       3|
+|           Podgorica|       535.95|        City Centre|       1|
+|           Podgorica|       388.59|Outside City Centre|       1|
+|           Podgorica|       944.12|        City Centre|       3|
+|           Podgorica|       671.98|Outside City Centre|       3|
+|              Monaco|      7835.05|        City Centre|       1|
+|              Monaco|       6157.3|Outside City Centre|       1|
+|              Monaco|     32474.05|        City Centre|       3|
+|              Monaco|       9486.8|Outside City Centre|       3|
+|           Amsterdam|      1908.37|        City Centre|       1|
+|           Amsterdam|      1522.39|Outside City Centre|       1|
+|           Amsterdam|      3060.29|        City Centre|       3|
+|           Amsterdam|      2281.04|Outside City Centre|       3|
+|           Rotterdam|      1494.21|        City Centre|       1|
+|           Rotterdam|      1157.02|Outside City Centre|       1|
+|           Rotterdam|      2046.59|        City Centre|       3|
+|           Rotterdam|       1722.9|Outside City Centre|       3|
+|           Eindhoven|      1432.07|        City Centre|       1|
+|           Eindhoven|      1149.73|Outside City Centre|       1|
+|           Eindhoven|      2005.31|        City Centre|       3|
+|           Eindhoven|      1710.13|Outside City Centre|       3|
+|           The Hague|      1135.43|        City Centre|       1|
+|           The Hague|       869.26|Outside City Centre|       1|
+|           The Hague|      1790.79|        City Centre|       3|
+|           The Hague|      1448.42|Outside City Centre|       3|
+|           Groningen|      1031.19|        City Centre|       1|
+|           Groningen|       779.24|Outside City Centre|       1|
+|           Groningen|      1381.25|        City Centre|       3|
+|           Groningen|      1154.71|Outside City Centre|       3|
+|             Tilburg|      1072.92|        City Centre|       1|
+|             Tilburg|        883.0|Outside City Centre|       1|
+|             Tilburg|      1499.64|        City Centre|       3|
+|             Tilburg|      1317.39|Outside City Centre|       3|
+|              Lisbon|      1207.91|        City Centre|       1|
+|              Lisbon|       868.13|Outside City Centre|       1|
+|              Lisbon|      2201.12|        City Centre|       3|
+|              Lisbon|      1499.64|Outside City Centre|       3|
+|               Porto|      1011.62|        City Centre|       1|
+|               Porto|       762.35|Outside City Centre|       1|
+|               Porto|      1825.14|        City Centre|       3|
+|               Porto|      1223.32|Outside City Centre|       3|
+|               Braga|       749.32|        City Centre|       1|
+|               Braga|       614.21|Outside City Centre|       1|
+|               Braga|      1185.85|        City Centre|       3|
+|               Braga|       930.44|Outside City Centre|       3|
+|             Funchal|       1122.0|        City Centre|       1|
+|             Funchal|       820.97|Outside City Centre|       1|
+|             Funchal|      1932.02|        City Centre|       3|
+|             Funchal|      1380.45|Outside City Centre|       3|
+|          San Marino|       675.02|        City Centre|       1|
+|          San Marino|       565.56|Outside City Centre|       1|
+|          San Marino|       737.05|        City Centre|       3|
+|          San Marino|       638.53|Outside City Centre|       3|
+|          Bratislava|       747.17|        City Centre|       1|
+|          Bratislava|       581.12|Outside City Centre|       1|
+|          Bratislava|      1349.34|        City Centre|       3|
+|          Bratislava|       927.26|Outside City Centre|       3|
+|           Ljubljana|       823.83|        City Centre|       1|
+|           Ljubljana|       720.89|Outside City Centre|       1|
+|           Ljubljana|      1529.12|        City Centre|       3|
+|           Ljubljana|      1178.76|Outside City Centre|       3|
+|              Madrid|      1234.55|        City Centre|       1|
+|              Madrid|       862.53|Outside City Centre|       1|
+|              Madrid|      1985.74|        City Centre|       3|
+|              Madrid|      1427.12|Outside City Centre|       3|
+|           Barcelona|      1278.63|        City Centre|       1|
+|           Barcelona|      1008.39|Outside City Centre|       1|
+|           Barcelona|      2173.77|        City Centre|       3|
+|           Barcelona|      1596.48|Outside City Centre|       3|
+|Santa Cruz De Ten...|       844.43|        City Centre|       1|
+|Santa Cruz De Ten...|       656.78|Outside City Centre|       1|
+|Santa Cruz De Ten...|      1167.61|        City Centre|       3|
+|Santa Cruz De Ten...|       938.26|Outside City Centre|       3|
+|            Valencia|       953.85|        City Centre|       1|
+|            Valencia|       703.58|Outside City Centre|       1|
+|            Valencia|      1524.62|        City Centre|       3|
+|            Valencia|      1027.74|Outside City Centre|       3|
+|             Seville|       779.92|        City Centre|       1|
+|             Seville|       561.52|Outside City Centre|       1|
+|             Seville|      1200.45|        City Centre|       3|
+|             Seville|       836.94|Outside City Centre|       3|
+|            Zaragoza|       716.38|        City Centre|       1|
+|            Zaragoza|       541.84|Outside City Centre|       1|
+|            Zaragoza|      1376.11|        City Centre|       3|
+|            Zaragoza|       866.58|Outside City Centre|       3|
+|              Malaga|       955.31|        City Centre|       1|
+|              Malaga|       742.98|Outside City Centre|       1|
+|              Malaga|      1653.29|        City Centre|       3|
+|              Malaga|      1233.95|Outside City Centre|       3|
+|              Bilbao|      1005.69|        City Centre|       1|
+|              Bilbao|        875.7|Outside City Centre|       1|
+|              Bilbao|      1568.97|        City Centre|       3|
+|              Bilbao|      1251.98|Outside City Centre|       3|
+|            Alicante|       789.23|        City Centre|       1|
+|            Alicante|       635.49|Outside City Centre|       1|
+|            Alicante|      1267.95|        City Centre|       3|
+|            Alicante|       947.13|Outside City Centre|       3|
+|          Las Palmas|       891.34|        City Centre|       1|
+|          Las Palmas|        639.5|Outside City Centre|       1|
+|          Las Palmas|      1240.58|        City Centre|       3|
+|          Las Palmas|      1030.78|Outside City Centre|       3|
+|             Tbilisi|       850.58|        City Centre|       1|
+|             Tbilisi|       538.07|Outside City Centre|       1|
+|             Tbilisi|      1505.41|        City Centre|       3|
+|             Tbilisi|       918.27|Outside City Centre|       3|
+|           Hong Kong|      2259.13|        City Centre|       1|
+|           Hong Kong|      1639.53|Outside City Centre|       1|
+|           Hong Kong|      4621.55|        City Centre|       3|
+|           Hong Kong|      2975.83|Outside City Centre|       3|
+|            Budapest|       643.45|        City Centre|       1|
+|            Budapest|       510.43|Outside City Centre|       1|
+|            Budapest|      1109.34|        City Centre|       3|
+|            Budapest|       818.72|Outside City Centre|       3|
+|           Reykjavik|      1784.03|        City Centre|       1|
+|           Reykjavik|      1498.02|Outside City Centre|       1|
+|           Reykjavik|      2592.93|        City Centre|       3|
+|           Reykjavik|      2236.23|Outside City Centre|       3|
+|            Tel Aviv|      1729.13|        City Centre|       1|
+|            Tel Aviv|      1258.27|Outside City Centre|       1|
+|            Tel Aviv|      2920.22|        City Centre|       3|
+|            Tel Aviv|      2083.38|Outside City Centre|       3|
+|           Jerusalem|      1397.14|        City Centre|       1|
+|           Jerusalem|      1029.92|Outside City Centre|       1|
+|           Jerusalem|      2379.52|        City Centre|       3|
+|           Jerusalem|      1720.52|Outside City Centre|       3|
+|               Tokyo|       692.33|        City Centre|       1|
+|               Tokyo|       422.61|Outside City Centre|       1|
+|               Tokyo|      1653.85|        City Centre|       3|
+|               Tokyo|       787.43|Outside City Centre|       3|
+|               Osaka|       464.99|        City Centre|       1|
+|               Osaka|       282.91|Outside City Centre|       1|
+|               Osaka|       911.84|        City Centre|       3|
+|               Osaka|       542.99|Outside City Centre|       3|
+|             Sapporo|       468.34|        City Centre|       1|
+|             Sapporo|       245.32|Outside City Centre|       1|
+|             Sapporo|       719.23|        City Centre|       3|
+|             Sapporo|       535.24|Outside City Centre|       3|
+|            Yokohama|        727.6|        City Centre|       1|
+|            Yokohama|       572.53|Outside City Centre|       1|
+|            Yokohama|      1483.07|        City Centre|       3|
+|            Yokohama|       987.27|Outside City Centre|       3|
+|              Nagoya|       693.31|        City Centre|       1|
+|              Nagoya|       370.24|Outside City Centre|       1|
+|              Nagoya|       2701.3|        City Centre|       3|
+|              Nagoya|      2492.22|Outside City Centre|       3|
+|                Kobe|       468.34|        City Centre|       1|
+|                Kobe|       351.25|Outside City Centre|       1|
+|                Kobe|      1003.58|        City Centre|       3|
+|                Kobe|        657.9|Outside City Centre|       3|
+|             Fukuoka|       451.61|        City Centre|       1|
+|             Fukuoka|       286.67|Outside City Centre|       1|
+|             Fukuoka|       897.65|        City Centre|       3|
+|             Fukuoka|       533.01|Outside City Centre|       3|
+|               Seoul|       884.86|        City Centre|       1|
+|               Seoul|       574.98|Outside City Centre|       1|
+|               Seoul|      2798.37|        City Centre|       3|
+|               Seoul|      1752.02|Outside City Centre|       3|
+|               Busan|        409.0|        City Centre|       1|
+|               Busan|       291.41|Outside City Centre|       1|
+|               Busan|       924.85|        City Centre|       3|
+|               Busan|       624.45|Outside City Centre|       3|
+|             Incheon|       402.61|        City Centre|       1|
+|             Incheon|       287.58|Outside City Centre|       1|
+|             Incheon|      1482.62|        City Centre|       3|
+|             Incheon|       933.03|Outside City Centre|       3|
+|               Daegu|       429.45|        City Centre|       1|
+|               Daegu|       291.41|Outside City Centre|       1|
+|               Daegu|      1226.99|        City Centre|       3|
+|               Daegu|       878.83|Outside City Centre|       3|
+|         Kuwait City|       910.86|        City Centre|       1|
+|         Kuwait City|        689.6|Outside City Centre|       1|
+|         Kuwait City|      1784.85|        City Centre|       3|
+|         Kuwait City|      1363.71|Outside City Centre|       3|
+|               Macau|      1155.61|        City Centre|       1|
+|               Macau|       881.42|Outside City Centre|       1|
+|               Macau|      1967.62|        City Centre|       3|
+|               Macau|      1848.91|Outside City Centre|       3|
+|        Kuala Lumpur|       493.83|        City Centre|       1|
+|        Kuala Lumpur|       307.07|Outside City Centre|       1|
+|        Kuala Lumpur|       909.09|        City Centre|       3|
+|        Kuala Lumpur|       546.84|Outside City Centre|       3|
+|         Johor Bahru|       304.96|        City Centre|       1|
+|         Johor Bahru|       216.52|Outside City Centre|       1|
+|         Johor Bahru|       442.19|        City Centre|       3|
+|         Johor Bahru|       337.99|Outside City Centre|       3|
+|         George Town|       330.88|        City Centre|       1|
+|         George Town|       258.83|Outside City Centre|       1|
+|         George Town|       656.42|        City Centre|       3|
+|         George Town|       517.66|Outside City Centre|       3|
+|       Kota Kinabalu|       311.67|        City Centre|       1|
+|       Kota Kinabalu|       149.43|Outside City Centre|       1|
+|       Kota Kinabalu|       508.77|        City Centre|       3|
+|       Kota Kinabalu|       254.03|Outside City Centre|       3|
+|                Ipoh|       288.18|        City Centre|       1|
+|                Ipoh|       170.78|Outside City Centre|       1|
+|                Ipoh|       747.14|        City Centre|       3|
+|                Ipoh|        320.2|Outside City Centre|       3|
+|         Mexico City|       885.79|        City Centre|       1|
+|         Mexico City|       543.77|Outside City Centre|       1|
+|         Mexico City|      1754.29|        City Centre|       3|
+|         Mexico City|      1159.55|Outside City Centre|       3|
+|             Tijuana|       708.76|        City Centre|       1|
+|             Tijuana|       465.95|Outside City Centre|       1|
+|             Tijuana|      1257.42|        City Centre|       3|
+|             Tijuana|       957.37|Outside City Centre|       3|
+|         Guadalajara|       613.43|        City Centre|       1|
+|         Guadalajara|       403.47|Outside City Centre|       1|
+|         Guadalajara|      1239.09|        City Centre|       3|
+|         Guadalajara|       860.86|Outside City Centre|       3|
+|              Cancun|       748.07|        City Centre|       1|
+|              Cancun|       451.14|Outside City Centre|       1|
+|              Cancun|      1257.81|        City Centre|       3|
+|              Cancun|       928.25|Outside City Centre|       3|
+|    Playa del Carmen|       954.97|        City Centre|       1|
+|    Playa del Carmen|       623.16|Outside City Centre|       1|
+|    Playa del Carmen|      1914.93|        City Centre|       3|
+|    Playa del Carmen|      1066.19|Outside City Centre|       3|
+|           Monterrey|       974.91|        City Centre|       1|
+|           Monterrey|       625.95|Outside City Centre|       1|
+|           Monterrey|       1749.0|        City Centre|       3|
+|           Monterrey|      1058.46|Outside City Centre|       3|
+|            Auckland|      1348.63|        City Centre|       1|
+|            Auckland|       1267.4|Outside City Centre|       1|
+|            Auckland|      2498.16|        City Centre|       3|
+|            Auckland|      2015.97|Outside City Centre|       3|
+|          Wellington|      1532.76|        City Centre|       1|
+|          Wellington|      1369.29|Outside City Centre|       1|
+|          Wellington|      2605.36|        City Centre|       3|
+|          Wellington|      2159.31|Outside City Centre|       3|
+|        Christchurch|      1214.84|        City Centre|       1|
+|        Christchurch|       920.18|Outside City Centre|       1|
+|        Christchurch|      1883.56|        City Centre|       3|
+|        Christchurch|      1443.05|Outside City Centre|       3|
+|            Hamilton|      1250.91|        City Centre|       1|
+|            Hamilton|      1212.37|Outside City Centre|       1|
+|            Hamilton|       1997.0|        City Centre|       3|
+|            Hamilton|      1838.21|Outside City Centre|       3|
+|                Oslo|      1383.28|        City Centre|       1|
+|                Oslo|      1120.56|Outside City Centre|       1|
+|                Oslo|      2099.46|        City Centre|       3|
+|                Oslo|      1632.67|Outside City Centre|       3|
+|              Bergen|      1068.55|        City Centre|       1|
+|              Bergen|       862.97|Outside City Centre|       1|
+|              Bergen|      1886.38|        City Centre|       3|
+|              Bergen|      1436.51|Outside City Centre|       3|
+|           Trondheim|       1084.2|        City Centre|       1|
+|           Trondheim|       901.31|Outside City Centre|       1|
+|           Trondheim|      2032.89|        City Centre|       3|
+|           Trondheim|      1479.95|Outside City Centre|       3|
+|           Stavanger|      1119.88|        City Centre|       1|
+|           Stavanger|       831.42|Outside City Centre|       1|
+|           Stavanger|      1959.79|        City Centre|       3|
+|           Stavanger|      1382.35|Outside City Centre|       3|
+|              Tromso|       1213.2|        City Centre|       1|
+|              Tromso|      1059.88|Outside City Centre|       1|
+|              Tromso|      1953.95|        City Centre|       3|
+|              Tromso|      1451.69|Outside City Centre|       3|
+|              Muscat|       624.53|        City Centre|       1|
+|              Muscat|       432.97|Outside City Centre|       1|
+|              Muscat|      1249.83|        City Centre|       3|
+|              Muscat|       849.48|Outside City Centre|       3|
+|              Warsaw|       995.44|        City Centre|       1|
+|              Warsaw|       757.91|Outside City Centre|       1|
+|              Warsaw|      1802.18|        City Centre|       3|
+|              Warsaw|      1287.61|Outside City Centre|       3|
+|              Krakow|       875.11|        City Centre|       1|
+|              Krakow|       658.04|Outside City Centre|       1|
+|              Krakow|      1427.55|        City Centre|       3|
+|              Krakow|      1087.22|Outside City Centre|       3|
+|              Gdansk|       775.26|        City Centre|       1|
+|              Gdansk|       619.33|Outside City Centre|       1|
+|              Gdansk|      1247.02|        City Centre|       3|
+|              Gdansk|       921.11|Outside City Centre|       3|
+|                Lodz|       606.52|        City Centre|       1|
+|                Lodz|       513.21|Outside City Centre|       1|
+|                Lodz|        984.7|        City Centre|       3|
+|                Lodz|       878.72|Outside City Centre|       3|
+|            Katowice|       585.19|        City Centre|       1|
+|            Katowice|       433.94|Outside City Centre|       1|
+|            Katowice|       898.47|        City Centre|       3|
+|            Katowice|       700.97|Outside City Centre|       3|
+|             Wroclaw|       798.52|        City Centre|       1|
+|             Wroclaw|        620.8|Outside City Centre|       1|
+|             Wroclaw|      1186.99|        City Centre|       3|
+|             Wroclaw|      1027.99|Outside City Centre|       3|
+|              Poznan|       659.07|        City Centre|       1|
+|              Poznan|       538.25|Outside City Centre|       1|
+|              Poznan|      1007.28|        City Centre|       3|
+|              Poznan|       879.16|Outside City Centre|       3|
+|            Szczecin|       746.87|        City Centre|       1|
+|            Szczecin|       632.13|Outside City Centre|       1|
+|            Szczecin|      1126.56|        City Centre|       3|
+|            Szczecin|       819.89|Outside City Centre|       3|
+|           Bydgoszcz|       542.42|        City Centre|       1|
+|           Bydgoszcz|       421.42|Outside City Centre|       1|
+|           Bydgoszcz|      1051.46|        City Centre|       3|
+|           Bydgoszcz|       876.22|Outside City Centre|       3|
+|                Doha|      1750.94|        City Centre|       1|
+|                Doha|      1054.63|Outside City Centre|       1|
+|                Doha|      3247.78|        City Centre|       3|
+|                Doha|      2122.59|Outside City Centre|       3|
+|           Bucharest|       550.72|        City Centre|       1|
+|           Bucharest|       378.84|Outside City Centre|       1|
+|           Bucharest|       966.55|        City Centre|       3|
+|           Bucharest|       656.51|Outside City Centre|       3|
+|              Moscow|       778.93|        City Centre|       1|
+|              Moscow|       469.35|Outside City Centre|       1|
+|              Moscow|      1713.56|        City Centre|       3|
+|              Moscow|       915.95|Outside City Centre|       3|
+|               Kazan|       348.06|        City Centre|       1|
+|               Kazan|       205.48|Outside City Centre|       1|
+|               Kazan|       625.37|        City Centre|       3|
+|               Kazan|        379.1|Outside City Centre|       3|
+|       Yekaterinburg|       367.38|        City Centre|       1|
+|       Yekaterinburg|       234.12|Outside City Centre|       1|
+|       Yekaterinburg|       798.05|        City Centre|       3|
+|       Yekaterinburg|       525.03|Outside City Centre|       3|
+|               Sochi|       548.84|        City Centre|       1|
+|               Sochi|       392.03|Outside City Centre|       1|
+|               Sochi|      1008.06|        City Centre|       3|
+|               Sochi|       719.65|Outside City Centre|       3|
+|         Vladivostok|       491.59|        City Centre|       1|
+|         Vladivostok|        329.3|Outside City Centre|       1|
+|         Vladivostok|       840.05|        City Centre|       3|
+|         Vladivostok|       541.37|Outside City Centre|       3|
+|              Riyadh|      1085.88|        City Centre|       1|
+|              Riyadh|       689.71|Outside City Centre|       1|
+|              Riyadh|      1551.54|        City Centre|       3|
+|              Riyadh|       958.43|Outside City Centre|       3|
+|              Jeddah|       502.52|        City Centre|       1|
+|              Jeddah|       373.83|Outside City Centre|       1|
+|              Jeddah|       909.61|        City Centre|       3|
+|              Jeddah|       653.27|Outside City Centre|       3|
+|               Mecca|       266.64|        City Centre|       1|
+|               Mecca|       326.64|Outside City Centre|       1|
+|               Mecca|       586.61|        City Centre|       3|
+|               Mecca|        453.2|Outside City Centre|       3|
+|            Belgrade|       772.02|        City Centre|       1|
+|            Belgrade|       477.04|Outside City Centre|       1|
+|            Belgrade|      1411.78|        City Centre|       3|
+|            Belgrade|       849.94|Outside City Centre|       3|
+|            Novi Sad|       530.79|        City Centre|       1|
+|            Novi Sad|       373.63|Outside City Centre|       1|
+|            Novi Sad|       969.89|        City Centre|       3|
+|            Novi Sad|       693.25|Outside City Centre|       3|
+|           Singapore|      3003.06|        City Centre|       1|
+|           Singapore|      2221.24|Outside City Centre|       1|
+|           Singapore|      6102.75|        City Centre|       3|
+|           Singapore|      3960.04|Outside City Centre|       3|
+|           Stockholm|      1451.29|        City Centre|       1|
+|           Stockholm|       974.98|Outside City Centre|       1|
+|           Stockholm|      2356.33|        City Centre|       3|
+|           Stockholm|      1616.92|Outside City Centre|       3|
+|               Malmo|       881.17|        City Centre|       1|
+|               Malmo|       653.51|Outside City Centre|       1|
+|               Malmo|      1303.63|        City Centre|       3|
+|               Malmo|       991.31|Outside City Centre|       3|
+|          Gothenburg|      1105.82|        City Centre|       1|
+|          Gothenburg|       788.01|Outside City Centre|       1|
+|          Gothenburg|      1546.01|        City Centre|       3|
+|          Gothenburg|      1081.69|Outside City Centre|       3|
+|             Uppsala|       858.03|        City Centre|       1|
+|             Uppsala|       600.47|Outside City Centre|       1|
+|             Uppsala|      1404.77|        City Centre|       3|
+|             Uppsala|        957.8|Outside City Centre|       3|
+|              Taipei|        635.2|        City Centre|       1|
+|              Taipei|       454.82|Outside City Centre|       1|
+|              Taipei|      1574.48|        City Centre|       3|
+|              Taipei|      1096.92|Outside City Centre|       3|
+|           Kaohsiung|       337.71|        City Centre|       1|
+|           Kaohsiung|       232.94|Outside City Centre|       1|
+|           Kaohsiung|       775.58|        City Centre|       3|
+|           Kaohsiung|       549.57|Outside City Centre|       3|
+|              Tainan|       342.92|        City Centre|       1|
+|              Tainan|       228.99|Outside City Centre|       1|
+|              Tainan|       686.97|        City Centre|       3|
+|              Tainan|        707.5|Outside City Centre|       3|
+|             Taoyuan|       350.59|        City Centre|       1|
+|             Taoyuan|       252.68|Outside City Centre|       1|
+|             Taoyuan|       751.71|        City Centre|       3|
+|             Taoyuan|       489.56|Outside City Centre|       3|
+|             Bangkok|       724.14|        City Centre|       1|
+|             Bangkok|        340.0|Outside City Centre|       1|
+|             Bangkok|      1627.78|        City Centre|       3|
+|             Bangkok|       834.31|Outside City Centre|       3|
+|          Chiang Mai|        369.6|        City Centre|       1|
+|          Chiang Mai|        226.4|Outside City Centre|       1|
+|          Chiang Mai|       761.47|        City Centre|       3|
+|          Chiang Mai|       459.92|Outside City Centre|       3|
+|              Phuket|       513.45|        City Centre|       1|
+|              Phuket|       458.29|Outside City Centre|       1|
+|              Phuket|      1666.52|        City Centre|       3|
+|              Phuket|      1424.23|Outside City Centre|       3|
+|             Pattaya|       468.24|        City Centre|       1|
+|             Pattaya|        290.1|Outside City Centre|       1|
+|             Pattaya|       966.75|        City Centre|       3|
+|             Pattaya|       637.75|Outside City Centre|       3|
+|            Istanbul|       693.36|        City Centre|       1|
+|            Istanbul|       441.54|Outside City Centre|       1|
+|            Istanbul|      1432.81|        City Centre|       3|
+|            Istanbul|       813.17|Outside City Centre|       3|
+|              Ankara|       472.59|        City Centre|       1|
+|              Ankara|       329.35|Outside City Centre|       1|
+|              Ankara|       779.14|        City Centre|       3|
+|              Ankara|       516.99|Outside City Centre|       3|
+|             Antalya|       725.86|        City Centre|       1|
+|             Antalya|       513.03|Outside City Centre|       1|
+|             Antalya|      1105.07|        City Centre|       3|
+|             Antalya|       855.93|Outside City Centre|       3|
+|               Izmir|       474.05|        City Centre|       1|
+|               Izmir|       329.95|Outside City Centre|       1|
+|               Izmir|       774.31|        City Centre|       3|
+|               Izmir|       526.02|Outside City Centre|       3|
+|               Bursa|       394.12|        City Centre|       1|
+|               Bursa|       275.39|Outside City Centre|       1|
+|               Bursa|       593.35|        City Centre|       3|
+|               Bursa|       377.88|Outside City Centre|       3|
+|                Kyiv|        510.2|        City Centre|       1|
+|                Kyiv|       293.86|Outside City Centre|       1|
+|                Kyiv|       903.77|        City Centre|       3|
+|                Kyiv|       514.51|Outside City Centre|       3|
+|             Kharkiv|       329.81|        City Centre|       1|
+|             Kharkiv|       222.87|Outside City Centre|       1|
+|             Kharkiv|       772.83|        City Centre|       3|
+|             Kharkiv|       464.17|Outside City Centre|       3|
+|                Lviv|       489.81|        City Centre|       1|
+|                Lviv|       338.75|Outside City Centre|       1|
+|                Lviv|       762.16|        City Centre|       3|
+|                Lviv|       500.45|Outside City Centre|       3|
+|             Donetsk|         NULL|        City Centre|       1|
+|             Donetsk|         NULL|Outside City Centre|       1|
+|             Donetsk|         NULL|        City Centre|       3|
+|             Donetsk|         NULL|Outside City Centre|       3|
+|              London|      2875.84|        City Centre|       1|
+|              London|      2042.82|Outside City Centre|       1|
+|              London|      5219.61|        City Centre|       3|
+|              London|      3321.62|Outside City Centre|       3|
+|          Birmingham|      1154.91|        City Centre|       1|
+|          Birmingham|       930.25|Outside City Centre|       1|
+|          Birmingham|      2244.55|        City Centre|       3|
+|          Birmingham|      1453.96|Outside City Centre|       3|
+|          Manchester|      1330.49|        City Centre|       1|
+|          Manchester|       949.11|Outside City Centre|       1|
+|          Manchester|      2308.94|        City Centre|       3|
+|          Manchester|      1392.12|Outside City Centre|       3|
+|           Edinburgh|      1490.31|        City Centre|       1|
+|           Edinburgh|      1065.36|Outside City Centre|       1|
+|           Edinburgh|      2817.22|        City Centre|       3|
+|           Edinburgh|      1746.69|Outside City Centre|       3|
+|             Glasgow|      1165.54|        City Centre|       1|
+|             Glasgow|       902.12|Outside City Centre|       1|
+|             Glasgow|      2027.12|        City Centre|       3|
+|             Glasgow|      1393.77|Outside City Centre|       3|
+|           Liverpool|      1047.23|        City Centre|       1|
+|           Liverpool|       737.64|Outside City Centre|       1|
+|           Liverpool|      1907.65|        City Centre|       3|
+|           Liverpool|      1177.05|Outside City Centre|       3|
+|             Cardiff|       1059.6|        City Centre|       1|
+|             Cardiff|       864.97|Outside City Centre|       1|
+|             Cardiff|      2151.17|        City Centre|       3|
+|             Cardiff|      1400.11|Outside City Centre|       3|
+|           Sheffield|       939.61|        City Centre|       1|
+|           Sheffield|       769.36|Outside City Centre|       1|
+|           Sheffield|      1880.25|        City Centre|       3|
+|           Sheffield|      1307.35|Outside City Centre|       3|
+|               Leeds|      1071.08|        City Centre|       1|
+|               Leeds|       799.38|Outside City Centre|       1|
+|               Leeds|      1981.16|        City Centre|       3|
+|               Leeds|      1354.61|Outside City Centre|       3|
+|             Belfast|      1125.37|        City Centre|       1|
+|             Belfast|       827.66|Outside City Centre|       1|
+|             Belfast|      1751.54|        City Centre|       3|
+|             Belfast|      1141.79|Outside City Centre|       3|
+| Newcastle upon Tyne|       985.88|        City Centre|       1|
+| Newcastle upon Tyne|       701.12|Outside City Centre|       1|
+| Newcastle upon Tyne|      1908.15|        City Centre|       3|
+| Newcastle upon Tyne|      1237.19|Outside City Centre|       3|
+|          Montevideo|       607.65|        City Centre|       1|
+|          Montevideo|       457.58|Outside City Centre|       1|
+|          Montevideo|       985.64|        City Centre|       3|
+|          Montevideo|       870.45|Outside City Centre|       3|
+|       New York City|       4030.3|        City Centre|       1|
+|       New York City|      2693.25|Outside City Centre|       1|
+|       New York City|      7579.04|        City Centre|       3|
+|       New York City|      4532.47|Outside City Centre|       3|
+|         Los Angeles|      2640.77|        City Centre|       1|
+|         Los Angeles|      2153.97|Outside City Centre|       1|
+|         Los Angeles|      5133.87|        City Centre|       3|
+|         Los Angeles|      4118.97|Outside City Centre|       3|
+|             Chicago|      2556.89|        City Centre|       1|
+|             Chicago|      1786.57|Outside City Centre|       1|
+|             Chicago|      4602.17|        City Centre|       3|
+|             Chicago|       3481.0|Outside City Centre|       3|
+|             Houston|      1839.33|        City Centre|       1|
+|             Houston|      1567.06|Outside City Centre|       1|
+|             Houston|      3706.88|        City Centre|       3|
+|             Houston|      2577.42|Outside City Centre|       3|
+|             Phoenix|      1893.48|        City Centre|       1|
+|             Phoenix|      1629.52|Outside City Centre|       1|
+|             Phoenix|      3150.65|        City Centre|       3|
+|             Phoenix|      2737.57|Outside City Centre|       3|
+|              Dallas|      1969.14|        City Centre|       1|
+|              Dallas|      1665.29|Outside City Centre|       1|
+|              Dallas|      4212.44|        City Centre|       3|
+|              Dallas|      2963.82|Outside City Centre|       3|
+|        Philadelphia|      1904.26|        City Centre|       1|
+|        Philadelphia|       1371.6|Outside City Centre|       1|
+|        Philadelphia|      3273.15|        City Centre|       3|
+|        Philadelphia|      2146.13|Outside City Centre|       3|
+|         San Antonio|      1774.15|        City Centre|       1|
+|         San Antonio|      1416.17|Outside City Centre|       1|
+|         San Antonio|       2912.5|        City Centre|       3|
+|         San Antonio|       2145.0|Outside City Centre|       3|
+|           San Diego|      2985.59|        City Centre|       1|
+|           San Diego|      2440.44|Outside City Centre|       1|
+|           San Diego|       5272.5|        City Centre|       3|
+|           San Diego|       4388.1|Outside City Centre|       3|
+|              Dallas|      1969.14|        City Centre|       1|
+|              Dallas|      1665.29|Outside City Centre|       1|
+|              Dallas|      4212.44|        City Centre|       3|
+|              Dallas|      2963.82|Outside City Centre|       3|
+|            San Jose|      3009.86|        City Centre|       1|
+|            San Jose|      2754.12|Outside City Centre|       1|
+|            San Jose|      5454.44|        City Centre|       3|
+|            San Jose|      4256.67|Outside City Centre|       3|
+|              Austin|      2493.59|        City Centre|       1|
+|              Austin|      1658.03|Outside City Centre|       1|
+|              Austin|      4825.94|        City Centre|       3|
+|              Austin|      2939.74|Outside City Centre|       3|
+|        Jacksonville|      1646.45|        City Centre|       1|
+|        Jacksonville|      1414.91|Outside City Centre|       1|
+|        Jacksonville|      2829.62|        City Centre|       3|
+|        Jacksonville|       2157.0|Outside City Centre|       3|
+|               Miami|      2785.44|        City Centre|       1|
+|               Miami|      2019.56|Outside City Centre|       1|
+|               Miami|      5201.37|        City Centre|       3|
+|               Miami|      3508.54|Outside City Centre|       3|
+|            Columbus|      1570.56|        City Centre|       1|
+|            Columbus|       1145.0|Outside City Centre|       1|
+|            Columbus|      3092.22|        City Centre|       3|
+|            Columbus|       2080.5|Outside City Centre|       3|
+|        Indianapolis|       1473.0|        City Centre|       1|
+|        Indianapolis|       1205.0|Outside City Centre|       1|
+|        Indianapolis|       2325.0|        City Centre|       3|
+|        Indianapolis|      1818.75|Outside City Centre|       3|
+|           Charlotte|       2075.0|        City Centre|       1|
+|           Charlotte|      1834.73|Outside City Centre|       1|
+|           Charlotte|       4684.0|        City Centre|       3|
+|           Charlotte|      2942.92|Outside City Centre|       3|
+|       San Francisco|      3374.97|        City Centre|       1|
+|       San Francisco|      2733.33|Outside City Centre|       1|
+|       San Francisco|      6121.76|        City Centre|       3|
+|       San Francisco|      5226.26|Outside City Centre|       3|
+|             Seattle|      2685.58|        City Centre|       1|
+|             Seattle|      2113.35|Outside City Centre|       1|
+|             Seattle|      5320.37|        City Centre|       3|
+|             Seattle|      3805.79|Outside City Centre|       3|
+|              Denver|      2193.58|        City Centre|       1|
+|              Denver|      1783.32|Outside City Centre|       1|
+|              Denver|       3842.4|        City Centre|       3|
+|              Denver|      3104.53|Outside City Centre|       3|
+|          Washington|      2752.17|        City Centre|       1|
+|          Washington|      2391.12|Outside City Centre|       1|
+|          Washington|      5935.71|        City Centre|       3|
+|          Washington|      4161.11|Outside City Centre|       3|
+|           Nashville|       2500.0|        City Centre|       1|
+|           Nashville|      2285.91|Outside City Centre|       1|
+|           Nashville|      4320.45|        City Centre|       3|
+|           Nashville|      3422.08|Outside City Centre|       3|
+|              Boston|      3101.74|        City Centre|       1|
+|              Boston|      2263.89|Outside City Centre|       1|
+|              Boston|      5391.89|        City Centre|       3|
+|              Boston|      3568.42|Outside City Centre|       3|
+|            Portland|      1853.17|        City Centre|       1|
+|            Portland|      1567.12|Outside City Centre|       1|
+|            Portland|      3371.52|        City Centre|       3|
+|            Portland|      2743.55|Outside City Centre|       3|
+|           Las Vegas|      1471.42|        City Centre|       1|
+|           Las Vegas|      1361.04|Outside City Centre|       1|
+|           Las Vegas|      2647.32|        City Centre|       3|
+|           Las Vegas|      2221.14|Outside City Centre|       3|
+|             Detroit|      1316.67|        City Centre|       1|
+|             Detroit|       888.83|Outside City Centre|       1|
+|             Detroit|       3000.0|        City Centre|       3|
+|             Detroit|       1500.0|Outside City Centre|       3|
+|             Memphis|       1164.2|        City Centre|       1|
+|             Memphis|      1021.25|Outside City Centre|       1|
+|             Memphis|      2183.33|        City Centre|       3|
+|             Memphis|       1860.0|Outside City Centre|       3|
+|          Louisville|       1450.0|        City Centre|       1|
+|          Louisville|        937.0|Outside City Centre|       1|
+|          Louisville|       2150.0|        City Centre|       3|
+|          Louisville|       1850.0|Outside City Centre|       3|
+|           Baltimore|      1429.94|        City Centre|       1|
+|           Baltimore|       1482.5|Outside City Centre|       1|
+|           Baltimore|       3000.0|        City Centre|       3|
+|           Baltimore|       2625.0|Outside City Centre|       3|
+|           Milwaukee|      1613.33|        City Centre|       1|
+|           Milwaukee|       1315.0|Outside City Centre|       1|
+|           Milwaukee|      2978.33|        City Centre|       3|
+|           Milwaukee|      1863.33|Outside City Centre|       3|
+|              Kansas|       1439.9|        City Centre|       1|
+|              Kansas|       1120.0|Outside City Centre|       1|
+|              Kansas|      2971.88|        City Centre|       3|
+|              Kansas|      1884.38|Outside City Centre|       3|
+|         Albuquerque|      1772.73|        City Centre|       1|
+|         Albuquerque|      1377.11|Outside City Centre|       1|
+|         Albuquerque|      2838.33|        City Centre|       3|
+|         Albuquerque|      2410.62|Outside City Centre|       3|
+|          Sacramento|      2264.38|        City Centre|       1|
+|          Sacramento|       1813.9|Outside City Centre|       1|
+|          Sacramento|       3435.0|        City Centre|       3|
+|          Sacramento|       2917.0|Outside City Centre|       3|
+|             Atlanta|       2193.0|        City Centre|       1|
+|             Atlanta|      1783.82|Outside City Centre|       1|
+|             Atlanta|      3921.05|        City Centre|       3|
+|             Atlanta|      2856.67|Outside City Centre|       3|
+|               Omaha|      1554.29|        City Centre|       1|
+|               Omaha|      1246.67|Outside City Centre|       1|
+|               Omaha|      3018.75|        City Centre|       3|
+|               Omaha|      1983.33|Outside City Centre|       3|
+|      Virginia Beach|      1641.67|        City Centre|       1|
+|      Virginia Beach|       1355.0|Outside City Centre|       1|
+|      Virginia Beach|       3375.0|        City Centre|       3|
+|      Virginia Beach|       2560.0|Outside City Centre|       3|
+|         Minneapolis|      1706.43|        City Centre|       1|
+|         Minneapolis|      1217.08|Outside City Centre|       1|
+|         Minneapolis|      3137.22|        City Centre|       3|
+|         Minneapolis|      2103.75|Outside City Centre|       3|
+|               Quito|       426.18|        City Centre|       1|
+|               Quito|       258.33|Outside City Centre|       1|
+|               Quito|       664.62|        City Centre|       3|
+|               Quito|       482.69|Outside City Centre|       3|
+|           Guayaquil|       368.75|        City Centre|       1|
+|           Guayaquil|       272.22|Outside City Centre|       1|
+|           Guayaquil|       622.22|        City Centre|       3|
+|           Guayaquil|       794.44|Outside City Centre|       3|
+|            Asuncion|       371.83|        City Centre|       1|
+|            Asuncion|       297.58|Outside City Centre|       1|
+|            Asuncion|       706.13|        City Centre|       3|
+|            Asuncion|       627.86|Outside City Centre|       3|
+|         Panama City|       965.24|        City Centre|       1|
+|         Panama City|       603.95|Outside City Centre|       1|
+|         Panama City|      2136.36|        City Centre|       3|
+|         Panama City|      1217.65|Outside City Centre|       3|
+|        Buenos Aires|       435.09|        City Centre|       1|
+|        Buenos Aires|       284.44|Outside City Centre|       1|
+|        Buenos Aires|       735.61|        City Centre|       3|
+|        Buenos Aires|       521.43|Outside City Centre|       3|
+|             Cordoba|       228.26|        City Centre|       1|
+|             Cordoba|        177.5|Outside City Centre|       1|
+|             Cordoba|       306.25|        City Centre|       3|
+|             Cordoba|        332.5|Outside City Centre|       3|
+|       Mar del Plata|       168.33|        City Centre|       1|
+|       Mar del Plata|        122.0|Outside City Centre|       1|
+|       Mar del Plata|        316.0|        City Centre|       3|
+|       Mar del Plata|        245.0|Outside City Centre|       3|
+|             Rosario|       150.33|        City Centre|       1|
+|             Rosario|       118.83|Outside City Centre|       1|
+|             Rosario|        269.0|        City Centre|       3|
+|             Rosario|       171.75|Outside City Centre|       3|
++--------------------+-------------+-------------------+--------+
+[2023-11-25T10:41:28.158+0000] {taskinstance.py:1943} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 192, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.8/site-packages/airflow/operators/python.py", line 209, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/scripts/pyspark.py", line 134, in merge_and_transform_rent
+    numbeo_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
+  File "/opt/airflow/dags/scripts/pyspark.py", line 134, in <listcomp>
+    numbeo_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
+TypeError: type NoneType doesn't define __round__ method
+[2023-11-25T10:41:28.186+0000] {taskinstance.py:1400} INFO - Marking task as UP_FOR_RETRY. dag_id=col_api_etl, task_id=merge_and_transform_rent, execution_date=20231125T103017, start_date=20231125T104118, end_date=20231125T104128
+[2023-11-25T10:41:28.202+0000] {standard_task_runner.py:104} ERROR - Failed to execute job 77 for task merge_and_transform_rent (type NoneType doesn't define __round__ method; 14074)
+[2023-11-25T10:41:28.225+0000] {local_task_job_runner.py:228} INFO - Task exited with return code 1

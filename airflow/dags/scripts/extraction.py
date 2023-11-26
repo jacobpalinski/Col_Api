@@ -77,7 +77,10 @@ def extract_livingcost_prices_from_city() -> None:
                     break
         # Special case for Hong Kong and Macau
         else:
-            url_to_extract = f'https://livingcost.org/cost/china/{formatted_city_name}'
+            if formatted_city_name == 'Hong-Kong':
+                url_to_extract = f'https://livingcost.org/cost/china/hong-kong'
+            else:
+                url_to_extract = f'https://livingcost.org/cost/china/macau'
         
         # Request city prices page
         response = requests.get(url_to_extract)

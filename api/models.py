@@ -28,6 +28,8 @@ class ResourceAddUpdateDelete():
         return orm.session.commit()
 
 class User(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'user'
+
     id = orm.Column(orm.Integer, primary_key=True)
     email = orm.Column(orm.String(50), unique=True, nullable=False)
     password_hash = orm.Column(orm.String(120), nullable=False)
@@ -88,6 +90,8 @@ class User(orm.Model, ResourceAddUpdateDelete):
             return 'Invalid token. Please log in again'
         
 class BlacklistToken(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'blacklisttoken'
+
     id = orm.Column(orm.Integer, primary_key=True)
     token = orm.Column(orm.String(500), unique=True, nullable=False)
     blacklisted_on = orm.Column(orm.TIMESTAMP, server_default=orm.func.current_timestamp(), nullable=False)
@@ -105,6 +109,8 @@ class BlacklistToken(orm.Model, ResourceAddUpdateDelete):
             return False
 
 class Currency(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'currency'
+
     id = orm.Column(orm.Integer, primary_key=True)
     abbreviation = orm.Column(orm.String(3), unique=True, nullable=False)
     usd_to_local_exchange_rate = orm.Column(orm.Float, nullable=False) # USD is the default currency
@@ -124,15 +130,17 @@ class Currency(orm.Model, ResourceAddUpdateDelete):
         self.usd_to_local_exchange_rate=usd_to_local_exchange_rate
 
 class Location(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'location'
+
     id = orm.Column(orm.Integer, primary_key=True)
     country = orm.Column(orm.String(50), nullable=False)
     city = orm.Column(orm.String(50), unique=True, nullable=False)
     currency_id = orm.Column(orm.Integer, orm.ForeignKey('currency.id'), nullable=False)
-    home_purchase = orm.relationship('HomePurchase', backref=orm.backref('location'))
+    homepurchase = orm.relationship('HomePurchase', backref=orm.backref('location'))
     rent = orm.relationship('Rent', backref=orm.backref('location'))
     utlities = orm.relationship('Utilities', backref=orm.backref('location'))
     transportation = orm.relationship('Transportation', backref=orm.backref('location'))
-    food_and_beverage = orm.relationship('FoodBeverage', backref=orm.backref('location'))
+    foodbeverage = orm.relationship('FoodBeverage', backref=orm.backref('location'))
     childcare = orm.relationship('Childcare', backref=orm.backref('location'))
     apparel = orm.relationship('Apparel', backref=orm.backref('location'))
     leisure = orm.relationship('Leisure', backref=orm.backref('location'))
@@ -151,6 +159,8 @@ class Location(orm.Model, ResourceAddUpdateDelete):
         self.currency = currency
     
 class HomePurchase(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'homepurchase'
+
     id = orm.Column(orm.Integer, primary_key=True)
     property_location = orm.Column(orm.String(30), nullable=False)
     price_per_sqm = orm.Column(orm.Float, nullable=False)
@@ -173,6 +183,8 @@ class HomePurchase(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class Rent(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'rent'
+
     id = orm.Column(orm.Integer, primary_key=True)
     property_location = orm.Column(orm.String(30), nullable=False)
     bedrooms = orm.Column(orm.Integer, nullable=False)
@@ -195,6 +207,8 @@ class Rent(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class Utilities(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'utilities'
+
     id = orm.Column(orm.Integer, primary_key=True)
     utility = orm.Column(orm.String(80), nullable=False)
     monthly_price = orm.Column(orm.Float, nullable=False)
@@ -215,6 +229,8 @@ class Utilities(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class Transportation(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'transportation'
+
     id = orm.Column(orm.Integer, primary_key=True)
     type = orm.Column(orm.String(70), nullable=False)
     price = orm.Column(orm.Float, nullable=False)
@@ -235,6 +251,8 @@ class Transportation(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class FoodBeverage(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'foodbeverage'
+
     id = orm.Column(orm.Integer, primary_key=True)
     item_category = orm.Column(orm.String(20), nullable=False)
     purchase_point = orm.Column(orm.String(20), nullable=False)
@@ -260,6 +278,8 @@ class FoodBeverage(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class Childcare(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'childcare'
+
     id = orm.Column(orm.Integer, primary_key=True)
     type = orm.Column(orm.String(80), nullable=False)
     annual_price = orm.Column(orm.Float, nullable=False)
@@ -280,6 +300,8 @@ class Childcare(orm.Model, ResourceAddUpdateDelete):
         self.location=location
 
 class Apparel(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'apparel'
+
     id = orm.Column(orm.Integer, primary_key=True)
     item = orm.Column(orm.String(70), nullable=False)
     price = orm.Column(orm.Float, nullable=False)
@@ -300,6 +322,8 @@ class Apparel(orm.Model, ResourceAddUpdateDelete):
         self.location = location
 
 class Leisure(orm.Model, ResourceAddUpdateDelete):
+    __tablename__ = 'leisure'
+
     id = orm.Column(orm.Integer, primary_key=True)
     activity = orm.Column(orm.String(50), nullable=False)
     price = orm.Column(orm.Float, nullable=False)

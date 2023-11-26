@@ -4,6 +4,7 @@ import os
 import boto3
 import datetime
 from dotenv import load_dotenv
+from typing import Union
 
 # Load Environment Variables
 load_dotenv()
@@ -20,7 +21,7 @@ def get_data(file_prefix: str) -> None:
     return json.loads(contents)
 
 # Put json file into S3 Bucket
-def put_data(file_prefix: str, data: list, bucket_type: str) -> None | Exception:
+def put_data(file_prefix: str, data: list, bucket_type: str) -> Union[None, Exception]:
     data_json = json.dumps(data)
     boto3_s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
     current_date = datetime.date.today().strftime('%Y%m%d')
