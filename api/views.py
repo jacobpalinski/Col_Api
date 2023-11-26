@@ -664,9 +664,12 @@ class RentListResource(Resource):
             # Track new rent rows added
             rent_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in rent_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city = location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Rent.is_unique(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']):
@@ -836,9 +839,12 @@ class UtilitiesListResource(Resource):
             # Track new utilities rows added
             utilities_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in utilities_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Utilities.is_unique(location_id=location.id, utility=data['Utility']):
@@ -1007,9 +1013,12 @@ class TransportationListResource(Resource):
             # Track new transportation rows added
             transportation_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in transportation_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Transportation.is_unique(location_id=location.id, type=data['Type']):
@@ -1180,9 +1189,12 @@ class FoodBeverageListResource(Resource):
             # Track new foodbeverage rows added
             foodbeverage_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in foodbeverage_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not FoodBeverage.is_unique(location_id=location.id, item_category=data['Item Category'],
@@ -1355,9 +1367,12 @@ class ChildcareListResource(Resource):
             # Track new childcare rows added
             childcare_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in childcare_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Childcare.is_unique(location_id=location.id, type=data['Type']):
@@ -1525,9 +1540,12 @@ class ApparelListResource(Resource):
             # Track new apparel rows added
             apparel_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in apparel_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Apparel.is_unique(location_id=location.id, item=data['Item']):
@@ -1695,9 +1713,12 @@ class LeisureListResource(Resource):
             # Track new leisure rows added
             leisure_added = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in leisure_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 if location:
                     if not Leisure.is_unique(location_id=location.id, activity=data['Activity']):
