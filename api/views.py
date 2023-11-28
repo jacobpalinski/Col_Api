@@ -506,7 +506,8 @@ class HomePurchaseListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    continue
+                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
+                    return response, HttpStatus.notfound_404.value
                 
             response = {'message': f'Successfully added {homepurchase_added} homepurchase records'}
             return response, HttpStatus.created_201.value
@@ -530,11 +531,13 @@ class HomePurchaseListResource(Resource):
             # Track homepurchase rows updated
             homepurchase_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in homepurchase_data:
-                # Check if homepurchase has been updated
                 has_been_updated = False
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     homepurchase = HomePurchase.query.filter_by(location_id=location.id, property_location=data['Property Location']).first()
@@ -681,9 +684,6 @@ class RentListResource(Resource):
                         location=location)
                         rent.add(rent)
                         rent_added += 1
-                        query = Rent.query.get(rent.id)
-                        dump_result = rent_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -714,9 +714,12 @@ class RentListResource(Resource):
             # Track rent rows updated
             rent_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in rent_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     rent = Rent.query.filter_by(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']).first()
@@ -724,6 +727,7 @@ class RentListResource(Resource):
                         continue
                     elif data['Monthly Price'] != rent.monthly_price:
                         rent.monthly_price = data['Monthly Price']
+                        rent_updated += 1
                     else:
                         continue
                 
@@ -855,9 +859,6 @@ class UtilitiesListResource(Resource):
                         location=location)
                         utilities.add(utilities)
                         utilities_added += 1
-                        query = Utilities.query.get(utilities.id)
-                        dump_result = utilities_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -888,9 +889,12 @@ class UtilitiesListResource(Resource):
             # Track utilities rows updated
             utilities_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in utilities_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     utilities = Utilities.query.filter_by(location_id=location.id, utility=data['Utility']).first()
@@ -898,6 +902,7 @@ class UtilitiesListResource(Resource):
                         continue
                     elif data['Utility'] != utilities.monthly_price:
                         utilities.monthly_price = data['Monthly Price']
+                        utilities_updated +=1
                     else:
                         continue
                 
@@ -1029,9 +1034,6 @@ class TransportationListResource(Resource):
                         location=location)
                         transportation.add(transportation)
                         transportation_added += 1
-                        query = Transportation.query.get(transportation.id)
-                        dump_result = transportation_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -1062,9 +1064,12 @@ class TransportationListResource(Resource):
             # Track transportation updated
             transportation_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in transportation_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     transportation = Transportation.query.filter_by(location_id=location.id, type=data['Type']).first()
@@ -1072,6 +1077,7 @@ class TransportationListResource(Resource):
                         continue
                     elif data['Price'] != transportation.price:
                         transportation.price = data['Price']
+                        transportation_updated += 1
                     else:
                         continue
                 
@@ -1208,9 +1214,6 @@ class FoodBeverageListResource(Resource):
                         location=location)
                         foodbeverage.add(foodbeverage)
                         foodbeverage_added += 1
-                        query = FoodBeverage.query.get(foodbeverage.id)
-                        dump_result = foodbeverage_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -1241,9 +1244,12 @@ class FoodBeverageListResource(Resource):
             # Track foodbeverage updated
             foodbeverage_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in foodbeverage_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     foodbeverage = FoodBeverage.query.filter_by(location_id=location.id, item_category=data['Item Category'],
@@ -1252,6 +1258,7 @@ class FoodBeverageListResource(Resource):
                         continue
                     elif data['Price'] != foodbeverage.price:
                         foodbeverage.price = data['Price']
+                        foodbeverage_updated += 1
                     else:
                         continue
                 
@@ -1383,9 +1390,6 @@ class ChildcareListResource(Resource):
                         location=location)
                         childcare.add(childcare)
                         childcare_added += 1
-                        query = Childcare.query.get(childcare.id)
-                        dump_result = childcare_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -1413,12 +1417,12 @@ class ChildcareListResource(Resource):
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
 
-            # Track childcare updated
-            childcare_updated = 0
+            # Retrieve all locations
+            locations = Location.query.all()
 
             for data in childcare_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     childcare = Childcare.query.filter_by(location_id=location.id, type=data['Type']).first()
@@ -1426,6 +1430,7 @@ class ChildcareListResource(Resource):
                         continue
                     elif data['Annual Price'] != childcare.annual_price:
                         childcare.annual_price = data['Annual Price']
+                        childcare_updated += 1
                     else:
                         continue
                 
@@ -1556,9 +1561,6 @@ class ApparelListResource(Resource):
                         location=location)
                         apparel.add(apparel)
                         apparel_added += 1
-                        query = Apparel.query.get(apparel.id)
-                        dump_result = apparel_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -1589,9 +1591,12 @@ class ApparelListResource(Resource):
             # Track apparel updated
             apparel_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in apparel_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     apparel = Apparel.query.filter_by(location_id=location.id, item=data['Item']).first()
@@ -1599,6 +1604,7 @@ class ApparelListResource(Resource):
                         continue
                     elif data['Price'] != apparel.price:
                         apparel.price = data['Price']
+                        apparel_updated += 1
                     else:
                         continue
                 
@@ -1729,9 +1735,6 @@ class LeisureListResource(Resource):
                         location=location)
                         leisure.add(leisure)
                         leisure_added += 1
-                        query = Leisure.query.get(leisure.id)
-                        dump_result = leisure_schema.dump(query)
-                        print(f'{HttpStatus.created_201.value} {dump_result}')
 
                     except SQLAlchemyError as e:
                         sql_alchemy_error_response(e)
@@ -1762,9 +1765,12 @@ class LeisureListResource(Resource):
             # Track apparel updated
             leisure_updated = 0
 
+            # Retrieve all locations
+            locations = Location.query.all()
+
             for data in leisure_data:
                 location_city = data['City']
-                location = Location.query.filter_by(city=location_city).first()
+                location = next((loc for loc in locations if loc.city == location_city), None)
 
                 try:
                     leisure = Leisure.query.filter_by(location_id=location.id, activity=data['Activity']).first()
@@ -1772,6 +1778,7 @@ class LeisureListResource(Resource):
                         continue
                     elif data['Price'] != leisure.price:
                         leisure.price = data['Price']
+                        leisure_updated += 1
                     else:
                         continue
                 
