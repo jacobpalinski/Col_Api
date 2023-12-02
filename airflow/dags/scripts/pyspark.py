@@ -1,6 +1,6 @@
 import boto3
 from pyspark.sql import SparkSession, Row, functions
-from pyspark.sql.types import FloatType, StringType
+from pyspark.sql.types import FloatType, StringType, StructType, StructField
 from itertools import chain
 from utils.spark_utils import *
 from utils.aws_utils import *
@@ -33,6 +33,12 @@ def merge_locations_with_currencies(spark_session: SparkSession) -> None:
    # Create dataframes from row objects
    locations_df = spark_session.createDataFrame(locations_rows)
    currency_conversion_rates_df = spark_session.createDataFrame(currency_conversion_rates_rows)
+
+   # Add new row for USD with USD_to_local = 1.00
+   usd_row = spark_session.createDataFrame([('USD', '1.00')], schema = ['Abbreviation', 'USD_to_local'])
+
+   # Append row to currency_conversion_rates_df
+   currency_conversion_rates_df = currency_conversion_rates_df.union(usd_row)
 
    # Create map based on country_abbreviation_combinations
    country_abbreviation_combinations_map = functions.create_map(*[functions.lit(combination) for combination in chain(*country_abbreviation_combinations.items())])

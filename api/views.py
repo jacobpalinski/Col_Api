@@ -119,6 +119,8 @@ class LoginResource(Resource):
 
         try:
             user = User.query.filter_by(email=user_dict['email']).first()
+            print(user)
+            print(user.id)
             if user and user.verify_password(user_dict['password']):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
@@ -487,6 +489,8 @@ class HomePurchaseListResource(Resource):
             # Retrieve all locations
             locations = Location.query.all()
 
+            print(len(homepurchase_data))
+
             for data in homepurchase_data:
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
@@ -506,8 +510,7 @@ class HomePurchaseListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {homepurchase_added} homepurchase records'}
             return response, HttpStatus.created_201.value
@@ -539,21 +542,22 @@ class HomePurchaseListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    homepurchase = HomePurchase.query.filter_by(location_id=location.id, property_location=data['Property Location']).first()
-                    if homepurchase == None:
-                        continue
-                    if data['Price per Square Meter'] != homepurchase.price_per_sqm:
-                        homepurchase.price_per_sqm = data['Price per Square Meter']
-                        has_been_updated = True
-                    if data['Mortgage Interest'] != homepurchase.mortgage_interest:
-                        homepurchase.mortgage_interest = data['Mortgage Interest']
-                        has_been_updated = True
-                    else:
-                        continue
+                if location != None:
+                    try:
+                        homepurchase = HomePurchase.query.filter_by(location_id=location.id, property_location=data['Property Location']).first()
+                        if homepurchase == None:
+                            continue
+                        if data['Price per Square Meter'] != homepurchase.price_per_sqm:
+                            homepurchase.price_per_sqm = data['Price per Square Meter']
+                            has_been_updated = True
+                        if data['Mortgage Interest'] != homepurchase.mortgage_interest:
+                            homepurchase.mortgage_interest = data['Mortgage Interest']
+                            has_been_updated = True
+                        else:
+                            continue
                 
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
                 
                 if has_been_updated == True:
                     homepurchase_updated += 1
@@ -689,8 +693,7 @@ class RentListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {rent_added} rent records'}
             return response, HttpStatus.created_201.value
@@ -721,18 +724,19 @@ class RentListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    rent = Rent.query.filter_by(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']).first()
-                    if rent == None:
-                        continue
-                    elif data['Monthly Price'] != rent.monthly_price:
-                        rent.monthly_price = data['Monthly Price']
-                        rent_updated += 1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        rent = Rent.query.filter_by(location_id=location.id, property_location=data['Property Location'], bedrooms=data['Bedrooms']).first()
+                        if rent == None:
+                            continue
+                        elif data['Monthly Price'] != rent.monthly_price:
+                            rent.monthly_price = data['Monthly Price']
+                            rent_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {rent_updated} rent records'}
             return response, HttpStatus.ok_200.value
@@ -864,8 +868,7 @@ class UtilitiesListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {utilities_added} utilities records'}
             return response, HttpStatus.created_201.value
@@ -896,18 +899,19 @@ class UtilitiesListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    utilities = Utilities.query.filter_by(location_id=location.id, utility=data['Utility']).first()
-                    if utilities == None:
-                        continue
-                    elif data['Utility'] != utilities.monthly_price:
-                        utilities.monthly_price = data['Monthly Price']
-                        utilities_updated +=1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        utilities = Utilities.query.filter_by(location_id=location.id, utility=data['Utility']).first()
+                        if utilities == None:
+                            continue
+                        elif data['Monthly Price'] != utilities.monthly_price:
+                            utilities.monthly_price = data['Monthly Price']
+                            utilities_updated +=1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {utilities_updated} utilities records'}
             return response, HttpStatus.ok_200.value
@@ -1039,8 +1043,7 @@ class TransportationListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {transportation_added} transportation records'}
             return response, HttpStatus.created_201.value
@@ -1071,18 +1074,19 @@ class TransportationListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    transportation = Transportation.query.filter_by(location_id=location.id, type=data['Type']).first()
-                    if transportation == None:
-                        continue
-                    elif data['Price'] != transportation.price:
-                        transportation.price = data['Price']
-                        transportation_updated += 1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        transportation = Transportation.query.filter_by(location_id=location.id, type=data['Type']).first()
+                        if transportation == None:
+                            continue
+                        elif data['Price'] != transportation.price:
+                            transportation.price = data['Price']
+                            transportation_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {transportation_updated} transportation records'}
             return response, HttpStatus.ok_200.value
@@ -1219,8 +1223,7 @@ class FoodBeverageListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {foodbeverage_added} foodbeverage records'}
             return response, HttpStatus.created_201.value
@@ -1251,19 +1254,20 @@ class FoodBeverageListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    foodbeverage = FoodBeverage.query.filter_by(location_id=location.id, item_category=data['Item Category'],
-                    purchase_point=data['Purchase Point'], item=data['Item']).first()
-                    if foodbeverage == None:
-                        continue
-                    elif data['Price'] != foodbeverage.price:
-                        foodbeverage.price = data['Price']
-                        foodbeverage_updated += 1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        foodbeverage = FoodBeverage.query.filter_by(location_id=location.id, item_category=data['Item Category'],
+                        purchase_point=data['Purchase Point'], item=data['Item']).first()
+                        if foodbeverage == None:
+                            continue
+                        elif data['Price'] != foodbeverage.price:
+                            foodbeverage.price = data['Price']
+                            foodbeverage_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {foodbeverage_updated} foodbeverage records'}
             return response, HttpStatus.ok_200.value
@@ -1395,8 +1399,7 @@ class ChildcareListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {childcare_added} childcare records'}
             return response, HttpStatus.created_201.value
@@ -1416,6 +1419,9 @@ class ChildcareListResource(Resource):
             except botocore.exceptions.ClientError as e:
                 response = {'message': e}
                 return response, HttpStatus.notfound_404.value
+            
+            # Track childcare updated
+            childcare_updated = 0
 
             # Retrieve all locations
             locations = Location.query.all()
@@ -1423,19 +1429,20 @@ class ChildcareListResource(Resource):
             for data in childcare_data:
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
-
-                try:
-                    childcare = Childcare.query.filter_by(location_id=location.id, type=data['Type']).first()
-                    if childcare == None:
-                        continue
-                    elif data['Annual Price'] != childcare.annual_price:
-                        childcare.annual_price = data['Annual Price']
-                        childcare_updated += 1
-                    else:
-                        continue
                 
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        childcare = Childcare.query.filter_by(location_id=location.id, type=data['Type']).first()
+                        if childcare == None:
+                            continue
+                        elif data['Annual Price'] != childcare.annual_price:
+                            childcare.annual_price = data['Annual Price']
+                            childcare_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {childcare_updated} childcare records'}
             return response, HttpStatus.ok_200.value
@@ -1566,8 +1573,7 @@ class ApparelListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
+                    continue
                 
             response = {'message': f'Successfully added {apparel_added} apparel records'}
             return response, HttpStatus.created_201.value
@@ -1598,18 +1604,19 @@ class ApparelListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    apparel = Apparel.query.filter_by(location_id=location.id, item=data['Item']).first()
-                    if apparel == None:
-                        continue
-                    elif data['Price'] != apparel.price:
-                        apparel.price = data['Price']
-                        apparel_updated += 1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        apparel = Apparel.query.filter_by(location_id=location.id, item=data['Item']).first()
+                        if apparel == None:
+                            continue
+                        elif data['Price'] != apparel.price:
+                            apparel.price = data['Price']
+                            apparel_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {apparel_updated} apparel records'}
             return response, HttpStatus.ok_200.value
@@ -1740,9 +1747,7 @@ class LeisureListResource(Resource):
                         sql_alchemy_error_response(e)
 
                 else:
-                    response = {'message': 'Specified city doesnt exist in /locations/ API endpoint'}
-                    return response, HttpStatus.notfound_404.value
-                
+                    continue
             response = {'message': f'Successfully added {leisure_added} leisure records'}
             return response, HttpStatus.created_201.value
         
@@ -1772,18 +1777,19 @@ class LeisureListResource(Resource):
                 location_city = data['City']
                 location = next((loc for loc in locations if loc.city == location_city), None)
 
-                try:
-                    leisure = Leisure.query.filter_by(location_id=location.id, activity=data['Activity']).first()
-                    if leisure == None:
-                        continue
-                    elif data['Price'] != leisure.price:
-                        leisure.price = data['Price']
-                        leisure_updated += 1
-                    else:
-                        continue
-                
-                except SQLAlchemyError as e:
-                    sql_alchemy_error_response(e)
+                if location != None:
+                    try:
+                        leisure = Leisure.query.filter_by(location_id=location.id, activity=data['Activity']).first()
+                        if leisure == None:
+                            continue
+                        elif data['Price'] != leisure.price:
+                            leisure.price = data['Price']
+                            leisure_updated += 1
+                        else:
+                            continue
+                    
+                    except SQLAlchemyError as e:
+                        sql_alchemy_error_response(e)
             
             response = {'message': f'Successfully updated {leisure_updated} leisure records'}
             return response, HttpStatus.ok_200.value
