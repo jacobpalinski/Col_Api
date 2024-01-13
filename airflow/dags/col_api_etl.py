@@ -13,7 +13,7 @@ default_args = {
     'retry_delay': timedelta(seconds = 30)
 }
 
-with DAG(dag_id = 'col_api_etl', default_args = default_args, schedule_interval = timedelta(1), catchup = False) as dag:
+with DAG(dag_id = 'col_api_etl', default_args = default_args, schedule_interval = timedelta(7), catchup = False) as dag:
     # Functions from extraction.py
     extract_currency_conversion_rates = PythonOperator(
         task_id = 'extract_currency_conversion_rates',

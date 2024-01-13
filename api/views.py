@@ -119,8 +119,6 @@ class LoginResource(Resource):
 
         try:
             user = User.query.filter_by(email=user_dict['email']).first()
-            print(user)
-            print(user.id)
             if user and user.verify_password(user_dict['password']):
                 auth_token = user.encode_auth_token(user.id)
                 if auth_token:
