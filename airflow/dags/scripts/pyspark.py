@@ -101,6 +101,9 @@ def merge_and_transform_homepurchase(spark_session : SparkSession) -> None:
    # Rename 'Price' to 'Mortgage Interest'
    joined_df = joined_df.withColumnRenamed('Price', 'Mortgage Interest')
 
+   # Remove any rows with null values in numeric columns
+   joined_df = joined_df.dropna(subset=['Price per Square Meter', 'Mortgage Interest'])
+
    # Convert to list of dictionaries
    joined_dict = [{**row.asDict(), 'Price per Square Meter': round(row['Price per Square Meter'], 2), 
    'Mortgage Interest': round(row['Mortgage Interest'], 2)} for row in joined_df.collect()]
@@ -135,7 +138,9 @@ def merge_and_transform_rent(spark_session: SparkSession) -> None:
    # Remove 'Item' column
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.select([column for column in numbeo_price_info_df_filtered.columns if column != 'Item'])
    
-   numbeo_price_info_df_filtered.show(2000)
+   # Remove any rows with null values in numeric columns
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.dropna(subset=['Monthly Price'])
+
    # Convert to list of dictionaries
    numbeo_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
 
@@ -179,6 +184,9 @@ def merge_and_transform_foodbeverage(spark_session: SparkSession) -> None:
    # Combine dataframes into single dataframe
    combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
 
+   # Remove any rows with null values in numeric columns
+   combined_price_info_df = combined_price_info_df.dropna(subset=['Price'])
+
    # Convert to list of dictionaries
    combined_price_info = [{**row.asDict(), 'Price': round(row.Price, 2)} for row in combined_price_info_df.collect()]
 
@@ -212,6 +220,9 @@ def merge_and_transform_utilities(spark_session: SparkSession) -> None:
    # Combine dataframes into single dataframe
    combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
 
+   # Remove any rows with null values in numeric columns
+   combined_price_info_df = combined_price_info_df.dropna(subset=['Monthly Price'])
+
    # Convert to list of dictionaries
    combined_price_info = [{**row.asDict(), 'Monthly Price': round(row['Monthly Price'], 2)} for row in combined_price_info_df.collect()]
 
@@ -238,6 +249,9 @@ def merge_and_transform_transportation(spark_session: SparkSession) -> None:
 
    # Combine dataframes into single dataframe
    combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
+
+   # Remove any rows with null values in numeric columns
+   combined_price_info_df = combined_price_info_df.dropna(subset=['Price'])
 
    # Convert to list of dictionaries
    combined_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in combined_price_info_df.collect()]
@@ -268,6 +282,9 @@ def merge_and_transform_childcare(spark_session: SparkSession) -> None:
    # Rename 'Item' column to 'Type'
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Type')
 
+   # Remove any rows with null values in numeric columns
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.dropna(subset=['Annual Price'])
+
    # Convert to list of dictionaries
    numbeo_price_info = [{**row.asDict(), 'Annual Price': round(row['Annual Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
 
@@ -291,6 +308,9 @@ def merge_and_transform_apparel(spark_session: SparkSession) -> None:
    # Combine dataframes into single dataframe
    combined_price_info_df = numbeo_price_info_df_filtered.union(livingcost_price_info_df_filtered)
 
+   # Remove any rows with null values in numeric columns
+   combined_price_info_df = combined_price_info_df.dropna(subset=['Price'])
+
    # Convert to list of dictionaries
    combined_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in combined_price_info_df.collect()]
 
@@ -309,6 +329,9 @@ def merge_and_transform_leisure(spark_session: SparkSession) -> None:
 
    # Rename 'Item' column to 'Activity'
    numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.withColumnRenamed('Item', 'Activity')
+
+   # Remove any rows with null values in numeric columns
+   numbeo_price_info_df_filtered = numbeo_price_info_df_filtered.dropna(subset=['Price'])
 
    # Convert to list of dictionaries
    numbeo_price_info = [{**row.asDict(), 'Price': round(row['Price'], 2)} for row in numbeo_price_info_df_filtered.collect()]
